@@ -1,0 +1,147 @@
+/*
+ * Tokens de la marca Atalia Café para Tailwind CSS v4 (@theme).
+ * Extraídos de la referencia (docs/REFERENCE.md §2): tailwind.config.js, styles/variables.css y globals.css.
+ * La marca no se cambia (CLAUDE.md).
+ */
+@theme {
+  /* Colores de la marca */
+  --color-primary: #6b7f5a; /* verde */
+  --color-secondary: #6b4a3a; /* café: botón principal */
+  --color-accent: #f6f1eb; /* crema: fondo */
+  --color-dark: #2e2e2e; /* texto */
+
+  /* Tonos de apoyo vistos en el diseño aprobado (docs/design) */
+  --color-sage-soft: #e6ebe0; /* placeholders de foto y etiquetas verdes */
+  --color-sand: #f2e8d8; /* nota de anticipación */
+  --color-blush: #efe4e0; /* días agotados */
+  --color-muted: #6b6560; /* texto secundario sobre crema, contraste AA */
+
+  /* Tipografía */
+  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-body: 'Poppins', system-ui, sans-serif;
+
+  /* Radios (variables.css) */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  /* Sombras (variables.css) */
+  --shadow-sm: 0 2px 4px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 8px rgb(0 0 0 / 0.12);
+  --shadow-lg: 0 8px 24px rgb(0 0 0 / 0.15);
+
+  /* Animaciones de la referencia */
+  --animate-fade-in: fade-in 0.6s ease-out;
+  --animate-slide-up: slide-up 0.4s ease-out;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(40px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-accent);
+    color: var(--color-dark);
+    font-family: var(--font-body);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-secondary);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /*
+   * Botón principal de la referencia: fondo café, texto blanco, radio completo.
+   * Corrige el salto de la referencia: el borde existe desde el inicio (transparente).
+   */
+  .btn-primary {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 2px solid transparent;
+    border-radius: 9999px;
+    background-color: var(--color-secondary);
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    color: #fff;
+    transition:
+      background-color 0.3s,
+      color 0.3s,
+      border-color 0.3s,
+      transform 0.3s;
+  }
+
+  .btn-primary:hover {
+    border-color: var(--color-secondary);
+    background-color: transparent;
+    color: var(--color-secondary);
+    transform: translateY(-0.25rem);
+  }
+
+  .btn-outline {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid var(--color-secondary);
+    border-radius: 9999px;
+    background-color: transparent;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    color: var(--color-secondary);
+  }
+
+  .container-custom {
+    margin-inline: auto;
+    max-width: 72rem;
+    padding-inline: 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .container-custom {
+      padding-inline: 1.5rem;
+    }
+  }
+}

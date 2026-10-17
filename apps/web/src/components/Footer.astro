@@ -1,0 +1,58 @@
+---
+// Pie de página del diseño aprobado (docs/design/01-inicio.png).
+// Los datos (eslogan, horario, dirección, teléfono) vienen de la BD; se conectan en la Fase 2 con /catalog.
+import { localizedPath, t, type Locale } from '../i18n'
+
+interface Props {
+  locale: Locale
+  tagline?: string
+  hours?: readonly string[]
+  address?: string
+  directionsUrl?: string
+  phone?: string
+}
+
+const { locale, tagline, hours = [], address, directionsUrl, phone } = Astro.props
+const year = new Date().getFullYear()
+---
+
+<footer class="bg-secondary pb-24 pt-12 text-white md:pb-10">
+  <div class="container-custom grid gap-8 md:grid-cols-4">
+    <div>
+      <p class="font-heading text-2xl font-bold">{t(locale, 'brand.name')}</p>
+      {tagline && <p class="mt-2 text-white/85">{tagline}</p>}
+    </div>
+
+    <div>
+      <h2 class="font-semibold">{t(locale, 'footer.hours')}</h2>
+      <ul class="mt-2 space-y-1 text-white/85">
+        {hours.map((line) => <li>{line}</li>)}
+      </ul>
+    </div>
+
+    <div>
+      <h2 class="font-semibold">{t(locale, 'footer.location')}</h2>
+      {address && <p class="mt-2 text-white/85">{address}</p>}
+      {
+        directionsUrl && (
+          <a href={directionsUrl} class="mt-1 inline-flex min-h-11 items-center font-semibold underline">
+            {t(locale, 'footer.directions')}
+          </a>
+        )
+      }
+    </div>
+
+    <div>
+      <h2 class="font-semibold">{t(locale, 'footer.contact')}</h2>
+      {phone && <p class="mt-2 text-white/85">{phone}</p>}
+      <a href={localizedPath('/policies', locale)} class="mt-1 inline-flex min-h-11 items-center underline">
+        {t(locale, 'footer.policies')}
+      </a>
+    </div>
+  </div>
+
+  <p class="container-custom mt-10 border-t border-white/15 pt-6 text-sm text-white/75">
+    © {year}
+    {t(locale, 'brand.name')}. {t(locale, 'footer.rights')}
+  </p>
+</footer>

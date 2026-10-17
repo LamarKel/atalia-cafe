@@ -1,0 +1,13 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Una sola versión de Vite: Astro 5 usa Vite 6. Sin esto, Vitest trae Vite 7.
+# (@tailwindcss/vite toma Vite como peer: por eso apps/web también declara vite ^6.)
+overrides:
+  vite: ^6.4.4
+
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - workerd

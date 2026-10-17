@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Lint, tipos, pruebas y build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Formato
+        run: pnpm format:check
+
+      - name: Tipos (TypeScript strict + astro check)
+        run: pnpm typecheck
+
+      - name: Pruebas unitarias
+        run: pnpm test
+
+      - name: Pruebas de la base de datos (PGlite)
+        run: pnpm test:db
+
+      - name: Build del sitio
+        run: pnpm --filter @atalia/web build
+
+      - name: Empaquetado del Worker (sin publicar)
+        run: pnpm --filter @atalia/api exec wrangler deploy --dry-run --outdir dist
+
+  db-concurrency:
+    name: BD en Postgres 17 + concurrencia
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Migraciones, pruebas y 20 checkouts simultáneos
+        run: bash db/tests/run.sh

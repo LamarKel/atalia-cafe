@@ -1,0 +1,9 @@
+node_modules
+dist
+.astro
+.wrangler
+pnpm-lock.yaml
+.claude/
+db/
+docs/
+*.md

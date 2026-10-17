@@ -1,0 +1,77 @@
+---
+// Encabezado del diseño aprobado (docs/design/01-inicio.png): logo, navegación, idioma, carrito y CTA.
+import { localizedPath, otherLocale, t, type Locale } from '../i18n'
+
+interface Props {
+  locale: Locale
+  currentPath: string
+}
+
+const { locale, currentPath } = Astro.props
+const other = otherLocale(locale)
+
+const links = [
+  { href: '/', label: t(locale, 'nav.home') },
+  { href: '/catering', label: t(locale, 'nav.catering') },
+  { href: '/menu', label: t(locale, 'nav.menu') },
+  { href: '/about', label: t(locale, 'nav.about') },
+  { href: '/contact', label: t(locale, 'nav.contact') },
+] as const
+
+const basePath = localizedPath(currentPath, 'en')
+const isActive = (href: string) => (href === '/' ? basePath === '/' : basePath.startsWith(href))
+---
+
+<header class="sticky top-0 z-40 bg-white/95 shadow-sm backdrop-blur">
+  <div class="container-custom flex h-16 items-center justify-between gap-4 md:h-20">
+    <a
+      href={localizedPath('/', locale)}
+      class="font-heading text-2xl font-bold text-secondary"
+      aria-label={t(locale, 'a11y.home')}
+    >
+      {t(locale, 'brand.name')}
+    </a>
+
+    <nav aria-label={t(locale, 'a11y.main_nav')} class="hidden md:block">
+      <ul class="flex items-center gap-7">
+        {
+          links.map((link) => (
+            <li>
+              <a
+                href={localizedPath(link.href, locale)}
+                aria-current={isActive(link.href) ? 'page' : undefined}
+                class:list={[
+                  'inline-flex min-h-11 items-center border-b-2 font-medium transition-colors hover:text-secondary',
+                  isActive(link.href) ? 'border-secondary text-secondary' : 'border-transparent text-dark',
+                ]}
+              >
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="flex items-center gap-3">
+      <a
+        href={localizedPath(currentPath, other)}
+        hreflang={other}
+        lang={other}
+        class="inline-flex min-h-11 items-center rounded-full border border-dark/20 px-4 text-sm font-medium"
+        aria-label={`${t(locale, 'a11y.language')}: ${t(locale, 'lang.switch_to')}`}
+      >
+        <span aria-hidden="true">{t(locale, 'lang.code_current')} · {t(locale, 'lang.code_other')}</span>
+      </a>
+      <a
+        href={localizedPath('/cart', locale)}
+        class="hidden min-h-11 items-center rounded-full border border-dark/20 px-4 text-sm font-medium md:inline-flex"
+      >
+        {t(locale, 'nav.cart')}
+      </a>
+      <a href={localizedPath('/catering', locale)} class="btn-primary hidden md:inline-flex">
+        {t(locale, 'nav.order_catering')}
+      </a>
+    </div>
+  </div>
+</header>

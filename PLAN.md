@@ -292,14 +292,15 @@ Cada fase se cierra con un PR revisado, el CI en verde y el deploy a staging.
 - [ ] Pedirle a la clienta: fotos, precios por personas, qué incluye cada bandeja, anticipación, horario, dirección, si quiere delivery y la política de cancelación.
 
 ### Fase 1 — Base
-- [ ] **Auditar `D:\Dev\atalia-cafe-react`** y generar `docs/REFERENCE.md` con: páginas y rutas, componentes, estilos (colores, fuentes, espaciados, radios, sombras, breakpoints), estructura del menú y del admin, consultas a Supabase y textos de i18n. Agregar capturas de cada pantalla en `docs/screenshots/`.
-- [ ] Monorepo con pnpm, TypeScript `strict`, ESLint, Prettier.
-- [ ] `packages/ui`: tokens **extraídos de la referencia** en Tailwind, fuentes y componentes base (Button, Card, Chip, Stepper, Toast) con el mismo aspecto que los actuales.
-- [ ] `apps/web` con Astro: layout, header/footer, i18n EN/ES.
-- [ ] `apps/api` con Hono, health check y manejo de errores.
-- [ ] `db/migrations`: esquema v2 + los cambios de la sección 8 + RLS.
-- [ ] CI: lint, typecheck y tests en cada PR; deploy a staging en `main`.
-- [ ] `CLAUDE.md` con las reglas del proyecto.
+- [x] **Auditar `D:\Dev\atalia-cafe-react`** y generar `docs/REFERENCE.md`. Pendiente: capturas de cada pantalla en `docs/screenshots/`.
+- [x] Monorepo con pnpm, TypeScript `strict`, ESLint, Prettier.
+- [ ] `packages/ui`: tokens **extraídos de la referencia** en Tailwind ✅, fuentes ✅ y componentes base (Button, Card, Chip, Stepper, Toast) con el mismo aspecto que los actuales (pendiente: solo hay `.btn-primary` y `.btn-outline`).
+- [x] `apps/web` con Astro: layout, header/footer, i18n EN/ES.
+- [x] `apps/api` con Hono, health check y manejo de errores.
+- [x] `packages/shared`: dinero en centavos y registro de reglas configurables, con pruebas.
+- [x] `db/migrations`: esquema v3 + RLS (aplicado en staging; ver `docs/DATABASE.md`).
+- [ ] CI: lint, typecheck y tests en cada PR ✅; deploy a staging en `main` (pendiente: necesita la cuenta de Cloudflare, Fase 0).
+- [x] `CLAUDE.md` con las reglas del proyecto.
 
 ### Fase 2 — Menú y catálogo
 - [ ] **Migrar el menú actual** desde la referencia, idéntico visual y funcionalmente; validarlo comparando lado a lado con las capturas.

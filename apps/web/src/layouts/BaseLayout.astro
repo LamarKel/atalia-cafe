@@ -1,0 +1,51 @@
+---
+import '../styles/global.css'
+import Footer from '../components/Footer.astro'
+import Header from '../components/Header.astro'
+import MobileNav from '../components/MobileNav.astro'
+import { localizedPath, t, type Locale } from '../i18n'
+
+interface Props {
+  locale: Locale
+  title?: string
+  description?: string
+}
+
+const { locale, title, description } = Astro.props
+const currentPath = Astro.url.pathname
+const pageTitle = title ? `${title} · ${t(locale, 'brand.name')}` : t(locale, 'brand.name')
+const site = Astro.site ?? new URL('https://atalia.cafe')
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description ?? t(locale, 'meta.description')} />
+    <link rel="alternate" hreflang="en" href={new URL(localizedPath(currentPath, 'en'), site)} />
+    <link rel="alternate" hreflang="es" href={new URL(localizedPath(currentPath, 'es'), site)} />
+    <link rel="alternate" hreflang="x-default" href={new URL(localizedPath(currentPath, 'en'), site)} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600&display=swap"
+    />
+  </head>
+  <body class="min-h-dvh">
+    <a
+      href="#main"
+      class="sr-only z-50 rounded-full bg-secondary px-4 py-2 text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+    >
+      {t(locale, 'a11y.skip_to_content')}
+    </a>
+    <Header locale={locale} currentPath={currentPath} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer locale={locale} />
+    <MobileNav locale={locale} currentPath={currentPath} />
+  </body>
+</html>
