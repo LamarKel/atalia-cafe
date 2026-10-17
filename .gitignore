@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.astro/
+.wrangler/
+.env
+.env.*
+!.env.example
+.claude/settings.local.json
+# Skills de terceros instaladas en local (UI UX Pro Max, etc.): no se versionan
+.claude/skills/
+*.log
