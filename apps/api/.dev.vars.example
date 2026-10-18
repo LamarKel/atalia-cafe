@@ -1,0 +1,4 @@
+# Copia este archivo como .dev.vars para desarrollo local (está en .gitignore por el patrón .env/.dev.vars).
+# Nunca subas los valores reales.
+SUPABASE_URL=https://<proyecto>.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=

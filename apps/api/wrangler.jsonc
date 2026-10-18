@@ -1,0 +1,22 @@
+// Cloudflare Worker de la API (PLAN.md §6). Sin secretos aquí:
+// SUPABASE_SERVICE_ROLE_KEY, STRIPE_SECRET_KEY, etc. se cargan con `wrangler secret put` (RNF-S04).
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "atalia-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  "observability": { "enabled": true },
+  "vars": {
+    "ENVIRONMENT": "development",
+    "ALLOWED_ORIGINS": "http://localhost:4321",
+  },
+  "env": {
+    "staging": {
+      "name": "atalia-api-staging",
+      "vars": {
+        "ENVIRONMENT": "staging",
+        "ALLOWED_ORIGINS": "",
+      },
+    },
+  },
+}

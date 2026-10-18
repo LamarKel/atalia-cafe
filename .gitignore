@@ -5,6 +5,9 @@ dist/
 .env
 .env.*
 !.env.example
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
 .claude/settings.local.json
 # Skills de terceros instaladas en local (UI UX Pro Max, etc.): no se versionan
 .claude/skills/

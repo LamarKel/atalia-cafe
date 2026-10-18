@@ -1,0 +1,45 @@
+---
+// Barra inferior fija en el móvil: Catering · Menú · Carrito (PLAN.md §9).
+import { localizedPath, t, type Locale } from '../i18n'
+
+interface Props {
+  locale: Locale
+  currentPath: string
+}
+
+const { locale, currentPath } = Astro.props
+const basePath = localizedPath(currentPath, 'en')
+
+const items = [
+  { href: '/catering', label: t(locale, 'nav.catering') },
+  { href: '/menu', label: t(locale, 'nav.menu') },
+  { href: '/cart', label: t(locale, 'nav.cart') },
+] as const
+---
+
+<nav
+  aria-label={t(locale, 'a11y.mobile_nav')}
+  class="fixed inset-x-0 bottom-0 z-40 border-t border-dark/10 bg-white pb-[env(safe-area-inset-bottom)] md:hidden"
+>
+  <ul class="grid grid-cols-3">
+    {
+      items.map((item) => {
+        const active = basePath.startsWith(item.href)
+        return (
+          <li>
+            <a
+              href={localizedPath(item.href, locale)}
+              aria-current={active ? 'page' : undefined}
+              class:list={[
+                'flex min-h-14 items-center justify-center text-sm font-medium',
+                active ? 'text-secondary' : 'text-dark',
+              ]}
+            >
+              {item.label}
+            </a>
+          </li>
+        )
+      })
+    }
+  </ul>
+</nav>

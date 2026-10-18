@@ -1,0 +1,14 @@
+---
+// Inicio (ES). El contenido (hero, categorías, "Así de fácil") se conecta a site_content en la Fase 2.
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import { t } from '../../i18n'
+
+const locale = 'es'
+---
+
+<BaseLayout locale={locale}>
+  <section class="container-custom py-24 text-center">
+    <h1 class="font-heading text-4xl font-bold md:text-6xl">{t(locale, 'brand.name')}</h1>
+    <p class="mt-4 text-muted">{t(locale, 'home.loading')}</p>
+  </section>
+</BaseLayout>
