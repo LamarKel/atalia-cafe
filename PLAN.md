@@ -294,7 +294,7 @@ Cada fase se cierra con un PR revisado, el CI en verde y el deploy a staging.
 ### Fase 1 — Base
 - [x] **Auditar `D:\Dev\atalia-cafe-react`** y generar `docs/REFERENCE.md`. Pendiente: capturas de cada pantalla en `docs/screenshots/`.
 - [x] Monorepo con pnpm, TypeScript `strict`, ESLint, Prettier.
-- [ ] `packages/ui`: tokens **extraídos de la referencia** en Tailwind ✅, fuentes ✅ y componentes base (Button, Card, Chip, Stepper, Toast) con el mismo aspecto que los actuales (pendiente: solo hay `.btn-primary` y `.btn-outline`).
+- [x] `packages/ui`: tokens **extraídos de la referencia** en Tailwind, fuentes y componentes base (Button, Card, Chip/OptionGroup/Tag, Stepper/QuantityStepper, Toast) con el mismo aspecto que los actuales, en React, con pruebas de accesibilidad.
 - [x] `apps/web` con Astro: layout, header/footer, i18n EN/ES.
 - [x] `apps/api` con Hono, health check y manejo de errores.
 - [x] `packages/shared`: dinero en centavos y registro de reglas configurables, con pruebas.
@@ -396,6 +396,7 @@ Solo ella puede responderlas. Entre paréntesis va la regla de `docs/REGLAS.md` 
 - [ ] ¿Cuáles son las piezas y los rellenos de las picaderas, y cuánto cuesta cada paquete (5, 10, 15 y 20)?
 - [ ] ¿Hay un mínimo o un máximo de piezas de un mismo tipo dentro de un paquete?
 - [ ] ¿Tienen fotos propias de cada producto, el logo y los textos de "Nosotros"?
+- [ ] El verde de la marca (#6B7F5A) con texto blanco da 4.37:1 y no llega al mínimo de accesibilidad (4.5:1, riesgo ADA). ¿Aprueban usar un verde apenas más oscuro (#5F7250, 5.24:1) solo en botones y chips con texto? El verde de la marca se mantiene en todo lo demás. (`--color-primary-ink` en `packages/ui/src/tokens.css`)
 - [ ] ¿Tienen reseñas reales (por ejemplo, de Google) que se puedan mostrar con permiso del cliente?
 
 ### Tiempos y capacidad

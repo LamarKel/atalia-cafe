@@ -1,2 +1,5 @@
 @import 'tailwindcss';
 @import '@atalia/ui/tokens.css';
+
+/* Tailwind tiene que leer los componentes del paquete compartido para generar sus clases. */
+@source '../../../../packages/ui/src';
