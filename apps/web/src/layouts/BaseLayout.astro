@@ -3,18 +3,20 @@ import '../styles/global.css'
 import Footer from '../components/Footer.astro'
 import Header from '../components/Header.astro'
 import MobileNav from '../components/MobileNav.astro'
+import { getSiteContent, getStoreInfo } from '../lib/catalog'
 import { localizedPath, t, type Locale } from '../i18n'
 
 interface Props {
   locale: Locale
-  title?: string
-  description?: string
+  title?: string | undefined
+  description?: string | undefined
 }
 
 const { locale, title, description } = Astro.props
 const currentPath = Astro.url.pathname
 const pageTitle = title ? `${title} · ${t(locale, 'brand.name')}` : t(locale, 'brand.name')
 const site = Astro.site ?? new URL('https://atalia.cafe')
+const [store, content] = await Promise.all([getStoreInfo(), getSiteContent(locale)])
 ---
 
 <!doctype html>
@@ -45,7 +47,7 @@ const site = Astro.site ?? new URL('https://atalia.cafe')
     <main id="main">
       <slot />
     </main>
-    <Footer locale={locale} />
+    <Footer locale={locale} store={store} tagline={content['footer.tagline']} />
     <MobileNav locale={locale} currentPath={currentPath} />
   </body>
 </html>

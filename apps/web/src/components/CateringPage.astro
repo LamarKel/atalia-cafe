@@ -1,0 +1,34 @@
+---
+// Catálogo de catering (docs/design/02-catalogo.png). Datos de la BD; filtros en la isla CatalogBrowser.
+import CatalogBrowser from '../islands/CatalogBrowser'
+import BaseLayout from '../layouts/BaseLayout.astro'
+import { getCateringCategories, getCateringProducts, getSiteContent } from '../lib/catalog'
+import { localizedPath, messagesFor, type Locale } from '../i18n'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+const [c, categories, products] = await Promise.all([
+  getSiteContent(locale),
+  getCateringCategories(locale),
+  getCateringProducts(locale),
+])
+const title = c['catering.title'] ?? 'Catering'
+---
+
+<BaseLayout locale={locale} title={title} description={c['catering.subtitle']}>
+  <CatalogBrowser
+    client:load
+    locale={locale}
+    title={title}
+    subtitle={c['catering.subtitle']}
+    leadTimeNote={c['catering.lead_time_note']}
+    categories={categories}
+    products={products}
+    messages={messagesFor(locale)}
+    detailBase={localizedPath('/catering', locale)}
+    picaderaHref={localizedPath('/picadera', locale)}
+  />
+</BaseLayout>

@@ -1,0 +1,165 @@
+---
+// Inicio (docs/design/01-inicio.png): hero, "¿Qué vas a celebrar?" (3 categorías) y "Así de fácil".
+// Los textos vienen de site_content y las categorías de la BD; nada queda escrito en el código.
+import { Image } from 'astro:assets'
+import heroFallback from '../assets/hero.png'
+import BaseLayout from '../layouts/BaseLayout.astro'
+import { getCateringCategories, getSiteContent } from '../lib/catalog'
+import { localizedPath, t, type Locale } from '../i18n'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+const [c, categories] = await Promise.all([getSiteContent(locale), getCateringCategories(locale)])
+const heroUrl = c['home.hero.image_url']
+const remoteHero = heroUrl?.startsWith('https://') ? heroUrl : null
+
+// Tono del recuadro de foto mientras no haya imagen (como el diseño)
+const tints = ['bg-sage-soft', 'bg-blush', 'bg-sand'] as const
+// Picaderas tiene su propio armador; las demás categorías abren el catálogo filtrado
+const categoryHref = (slug: string) =>
+  slug === 'picaderas'
+    ? localizedPath('/picadera', locale)
+    : `${localizedPath('/catering', locale)}?category=${slug}`
+
+const steps = [1, 2, 3].map((n) => ({
+  n,
+  title: c[`home.how.step${n}.title`],
+  body: c[`home.how.step${n}.body`],
+}))
+---
+
+<BaseLayout locale={locale}>
+  <!-- Hero -->
+  <section class="relative isolate overflow-hidden">
+    {
+      remoteHero ? (
+        <img
+          src={remoteHero}
+          alt=""
+          class="absolute inset-0 -z-10 size-full object-cover"
+          fetchpriority="high"
+        />
+      ) : (
+        <Image
+          src={heroFallback}
+          alt=""
+          widths={[640, 1024, 1600, 2200]}
+          sizes="100vw"
+          class="absolute inset-0 -z-10 size-full object-cover"
+          loading="eager"
+          fetchpriority="high"
+        />
+      )
+    }
+    <div class="absolute inset-0 -z-10 bg-gradient-to-r from-black/70 via-black/45 to-black/10"></div>
+    <div
+      class="mx-auto flex min-h-[520px] max-w-7xl flex-col justify-center px-4 py-20 md:min-h-[560px] md:px-8"
+    >
+      {
+        c['home.hero.badge'] && (
+          <p class="mb-5 inline-flex w-fit rounded-full bg-primary-ink px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-white">
+            {c['home.hero.badge']}
+          </p>
+        )
+      }
+      <h1 class="max-w-2xl font-heading text-4xl font-bold leading-tight text-white md:text-6xl">
+        {c['home.hero.title']}
+      </h1>
+      {
+        c['home.hero.subtitle'] && (
+          <p class="mt-5 max-w-xl text-lg text-white/90">{c['home.hero.subtitle']}</p>
+        )
+      }
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href={localizedPath('/catering', locale)} class="btn-primary">{c['home.hero.cta_primary']}</a>
+        <a
+          href={localizedPath('/menu', locale)}
+          class="inline-flex min-h-11 items-center rounded-full bg-accent px-6 py-3 font-medium text-dark transition-colors hover:bg-white"
+        >
+          {c['home.hero.cta_secondary']}
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ¿Qué vas a celebrar? -->
+  <section class="py-16 md:py-24" aria-labelledby="celebrate-title">
+    <div class="mx-auto max-w-7xl px-4 md:px-8">
+      <h2 id="celebrate-title" class="text-center font-heading text-3xl font-bold md:text-5xl">
+        {c['home.categories.title']}
+      </h2>
+      {
+        c['home.categories.subtitle'] && (
+          <p class="mt-3 text-center text-muted">{c['home.categories.subtitle']}</p>
+        )
+      }
+
+      <ul class="mt-10 grid gap-6 md:grid-cols-3">
+        {
+          categories.map((cat, i) => (
+            <li class="overflow-hidden rounded-2xl bg-white shadow-sm transition-shadow hover:shadow-md">
+              <a href={categoryHref(cat.slug)} class="group block h-full focus-visible:outline-offset-[-4px]">
+                {cat.imageUrl ? (
+                  <img src={cat.imageUrl} alt="" loading="lazy" class="h-56 w-full object-cover md:h-60" />
+                ) : (
+                  <div
+                    class:list={['flex h-56 items-center justify-center md:h-60', tints[i % tints.length]]}
+                    aria-hidden="true"
+                  >
+                    <span class="text-sm text-muted">{t(locale, 'catalog.photo_placeholder')}</span>
+                  </div>
+                )}
+                <div class="p-6">
+                  <h3 class="font-heading text-2xl font-bold">{cat.name}</h3>
+                  {cat.description && <p class="mt-1 text-sm text-muted">{cat.description}</p>}
+                  {cat.ctaLabel && (
+                    <p class="mt-4 inline-flex items-center gap-1 font-semibold text-secondary">
+                      {cat.ctaLabel}
+                      <span
+                        aria-hidden="true"
+                        class="transition-transform motion-safe:group-hover:translate-x-1"
+                      >
+                        →
+                      </span>
+                    </p>
+                  )}
+                </div>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- Así de fácil -->
+  <section class="pb-20 md:pb-28" aria-labelledby="how-title">
+    <div class="mx-auto max-w-7xl px-4 md:px-8">
+      <h2 id="how-title" class="text-center font-heading text-3xl font-bold md:text-5xl">
+        {c['home.how.title']}
+      </h2>
+      <ol class="mt-10 grid gap-6 md:grid-cols-3">
+        {
+          steps.map((step) => (
+            <li class="rounded-2xl bg-white p-7 shadow-sm">
+              <span
+                class="inline-flex size-11 items-center justify-center rounded-full bg-secondary font-semibold text-white"
+                aria-hidden="true"
+              >
+                {step.n}
+              </span>
+              <h3 class="mt-5 text-lg font-semibold">
+                <span class="sr-only">{t(locale, 'home.how.step', { n: step.n })}: </span>
+                {step.title}
+              </h3>
+              {step.body && <p class="mt-2 text-muted">{step.body}</p>}
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+</BaseLayout>
