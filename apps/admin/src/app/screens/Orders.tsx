@@ -20,6 +20,7 @@ import {
 import { supabase } from '../../lib/supabase'
 import type { AdminKey } from '../../i18n'
 import { useI18n } from '../i18n-context'
+import { RefundDialog } from './RefundDialog'
 
 interface OrderItem {
   id: string
@@ -49,6 +50,7 @@ interface Order {
   tax_cents: number
   tip_cents: number
   total_cents: number
+  refunded_cents: number
   needs_review: boolean
   review_reason: string | null
   pickup: { name_es: string | null; name_en: string } | null
@@ -56,7 +58,7 @@ interface Order {
 }
 
 const SELECT = `id, code, status, payment_status, payment_method, scheduled_for, created_at, customer_name,
-  customer_phone, customer_email, note, subtotal_cents, discount_cents, tax_cents, tip_cents, total_cents,
+  customer_phone, customer_email, note, subtotal_cents, discount_cents, tax_cents, tip_cents, total_cents, refunded_cents,
   needs_review, review_reason,
   pickup:pickup_locations(name_es, name_en),
   items:order_items(id, product_name_snapshot, size_label_snapshot, quantity, line_total_cents, notes, extras,
@@ -86,7 +88,7 @@ function beep() {
   }
 }
 
-export function Orders() {
+export function Orders({ role }: { role: 'owner' | 'admin' | 'staff' }) {
   const { t, locale } = useI18n()
   const toast = useToast()
   const [tab, setTab] = useState<'board' | 'history'>('board')
@@ -99,6 +101,7 @@ export function Orders() {
   const [timezone, setTimezone] = useState('America/New_York')
   const [openId, setOpenId] = useState<string | null>(null)
   const [noShow, setNoShow] = useState<Order | null>(null)
+  const [refunding, setRefunding] = useState<Order | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [sound, setSound] = useState(() => {
     try {
@@ -515,6 +518,22 @@ export function Orders() {
           onClose={() => setOpenId(null)}
           onMove={(to) => void move(opened, to)}
           onNoShow={() => setNoShow(opened)}
+          onRefund={role === 'staff' ? null : () => setRefunding(opened)}
+        />
+      )}
+
+      {refunding !== null && (
+        <RefundDialog
+          orderId={refunding.id}
+          code={refunding.code}
+          status={refunding.status}
+          onClose={() => setRefunding(null)}
+          onDone={() => {
+            setRefunding(null)
+            setOpenId(null)
+            void loadBoard()
+            setHistory(null)
+          }}
         />
       )}
 
@@ -553,6 +572,8 @@ function OrderDetail(props: {
   onClose: () => void
   onMove: (to: OrderStatus) => void
   onNoShow: () => void
+  /** null = el rol no puede reembolsar (equipo). */
+  onRefund: (() => void) | null
 }) {
   const { t, locale } = useI18n()
   const { order: o } = props
@@ -602,13 +623,18 @@ function OrderDetail(props: {
       size="lg"
       footer={
         <div className="flex flex-wrap items-center justify-between gap-2">
-          {canMarkNoShow(o.status) ? (
-            <Button variant="outline" onClick={props.onNoShow}>
-              {t('orders.no_show')}
-            </Button>
-          ) : (
-            <span />
-          )}
+          <div className="flex flex-wrap gap-2">
+            {canMarkNoShow(o.status) && (
+              <Button variant="outline" onClick={props.onNoShow}>
+                {t('orders.no_show')}
+              </Button>
+            )}
+            {props.onRefund !== null && o.payment_status !== 'unpaid' && o.refunded_cents < o.total_cents && (
+              <Button variant="outline" onClick={props.onRefund}>
+                {t('rf.open')}
+              </Button>
+            )}
+          </div>
           {next !== undefined && (
             <Button onClick={() => props.onMove(next)}>
               {t('orders.advance_to', { status: t(statusKey(next)) })}
@@ -621,6 +647,11 @@ function OrderDetail(props: {
         <span className="rounded-full bg-sage-soft px-3 py-1 text-xs font-semibold">
           {t(statusKey(o.status))}
         </span>
+        {o.refunded_cents > 0 && (
+          <span className="ml-2 rounded-full bg-blush px-3 py-1 text-xs font-semibold">
+            {t('rf.refunded_badge', { amount: usd(o.refunded_cents) })}
+          </span>
+        )}
       </p>
       {o.needs_review && (
         <p role="alert" className="mt-4 rounded-xl bg-blush px-4 py-3 text-sm">

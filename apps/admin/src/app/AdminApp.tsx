@@ -64,7 +64,7 @@ function Panel({ role, email, onSignOut }: { role: Role; email: string; onSignOu
       {route === 'dashboard' ? (
         <Dashboard email={email} />
       ) : route === 'orders' ? (
-        <Orders />
+        <Orders role={role} />
       ) : route === 'catalog' ? (
         <Catalog section="menu" />
       ) : route === 'catering' ? (
