@@ -34,6 +34,8 @@ describe('Button', () => {
   it('deshabilitado usa el beige del diseño', () => {
     render(<Button disabled>Agregar paquete de 10</Button>)
     expect(screen.getByRole('button')).toHaveClass('bg-disabled')
+    // Sin el fondo café: si quedan las dos clases, gana la que Tailwind ponga después en el CSS.
+    expect(screen.getByRole('button')).not.toHaveClass('bg-secondary')
   })
 
   it('ButtonLink es un enlace, no un botón', () => {

@@ -33,6 +33,15 @@ const variants: Record<ButtonVariant, string> = {
 const disabledClasses =
   'border-transparent bg-disabled text-white hover:translate-y-0 hover:border-transparent hover:bg-disabled hover:text-white'
 
+/**
+ * Inactivo: los botones llenos pasan al beige del diseño (sin mezclar clases de fondo, que en Tailwind
+ * compiten por orden en el CSS y no por orden en el atributo); los de borde solo se atenúan.
+ */
+function inactiveVariant(variant: ButtonVariant, inactive: boolean): string {
+  if (!inactive) return variants[variant]
+  return variant === 'primary' || variant === 'green' ? disabledClasses : `${variants[variant]} opacity-50`
+}
+
 const sizes: Record<ButtonSize, string> = {
   md: 'px-6 py-3 text-base',
   lg: 'px-8 py-4 text-lg',
@@ -69,14 +78,7 @@ export function Button({
       type={type}
       disabled={inactive}
       aria-busy={loading || undefined}
-      className={cx(
-        base,
-        variants[variant],
-        sizes[size],
-        inactive && disabledClasses,
-        fullWidth && 'w-full',
-        className,
-      )}
+      className={cx(base, inactiveVariant(variant, inactive), sizes[size], fullWidth && 'w-full', className)}
       {...rest}
     >
       {loading && (
