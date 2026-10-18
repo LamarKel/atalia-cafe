@@ -1,0 +1,66 @@
+[
+  {
+    "viewport": "desktop",
+    "page": "index",
+    "title": "Atalia Café",
+    "errors": [
+      "pageerror: Cannot access 'allCategories' before initialization"
+    ]
+  },
+  {
+    "viewport": "desktop",
+    "page": "menu",
+    "title": "Menu — Atalia Café",
+    "errors": []
+  },
+  {
+    "viewport": "desktop",
+    "page": "cart",
+    "title": "Cart — Atalia Café",
+    "errors": []
+  },
+  {
+    "viewport": "desktop",
+    "page": "checkout",
+    "title": "Cart — Atalia Café",
+    "errors": []
+  },
+  {
+    "viewport": "desktop",
+    "page": "admin",
+    "title": "Atalia Café — Admin",
+    "errors": []
+  },
+  {
+    "viewport": "mobile",
+    "page": "index",
+    "title": "Atalia Café",
+    "errors": [
+      "pageerror: Cannot access 'allCategories' before initialization"
+    ]
+  },
+  {
+    "viewport": "mobile",
+    "page": "menu",
+    "title": "Menu — Atalia Café",
+    "errors": []
+  },
+  {
+    "viewport": "mobile",
+    "page": "cart",
+    "title": "Cart — Atalia Café",
+    "errors": []
+  },
+  {
+    "viewport": "mobile",
+    "page": "checkout",
+    "title": "Cart — Atalia Café",
+    "errors": []
+  },
+  {
+    "viewport": "mobile",
+    "page": "admin",
+    "title": "Atalia Café — Admin",
+    "errors": []
+  }
+]
