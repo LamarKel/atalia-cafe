@@ -4,6 +4,7 @@ import { HTTPException } from 'hono/http-exception'
 import { secureHeaders } from 'hono/secure-headers'
 import { checkoutRoutes, type CheckoutWiring } from './checkout-routes'
 import { quoteRoutes, type QuoteWiring } from './quote-routes'
+import { teamRoutes, type TeamWiring } from './team-routes'
 import { ApiError, errorBody } from './errors'
 
 export interface Bindings {
@@ -21,13 +22,15 @@ export interface Bindings {
   STRIPE_WEBHOOK_SECRET?: string
   RESEND_API_KEY?: string
   TURNSTILE_SECRET?: string
+  /** URL del panel (correo de invitación al equipo). */
+  ADMIN_URL?: string
 }
 
 export type AppEnv = { Bindings: Bindings }
 
 export const API_VERSION = '0.1.0'
 
-export function createApp(wiring?: CheckoutWiring, quotes?: QuoteWiring): Hono<AppEnv> {
+export function createApp(wiring?: CheckoutWiring, quotes?: QuoteWiring, team?: TeamWiring): Hono<AppEnv> {
   const app = new Hono<AppEnv>()
 
   // RNF-S02: encabezados de seguridad. La API solo devuelve JSON.
@@ -48,7 +51,7 @@ export function createApp(wiring?: CheckoutWiring, quotes?: QuoteWiring): Hono<A
     return cors({
       origin: (origin) => (allowed.includes(origin) ? origin : null),
       allowMethods: ['GET', 'POST', 'OPTIONS'],
-      allowHeaders: ['Content-Type', 'Idempotency-Key'],
+      allowHeaders: ['Content-Type', 'Idempotency-Key', 'Authorization'],
       maxAge: 600,
     })(c, next)
   })
@@ -65,6 +68,7 @@ export function createApp(wiring?: CheckoutWiring, quotes?: QuoteWiring): Hono<A
 
   if (wiring !== undefined) checkoutRoutes(app, wiring)
   if (quotes !== undefined) quoteRoutes(app, quotes)
+  if (team !== undefined) teamRoutes(app, team)
 
   app.notFound((c) => c.json(errorBody('not_found', 'Ruta no encontrada'), 404))
 
