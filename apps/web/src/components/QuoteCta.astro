@@ -1,0 +1,21 @@
+---
+// Aviso "¿Evento grande?" que lleva al formulario de cotización (PLAN.md RF-Q02).
+import { localizedPath, t, type Locale } from '../i18n'
+
+interface Props {
+  locale: Locale
+  /** Producto que se marca de una vez en el formulario (detalle de una mesa). */
+  productId?: string | undefined
+}
+
+const { locale, productId } = Astro.props
+const href = `${localizedPath('/quote', locale)}${productId === undefined ? '' : `?product=${productId}`}`
+---
+
+<section class="rounded-3xl bg-sand p-6 md:flex md:items-center md:justify-between md:gap-6 md:p-8">
+  <div>
+    <h2 class="font-heading text-2xl font-bold text-dark">{t(locale, 'quote.cta_title')}</h2>
+    <p class="mt-1 text-muted">{t(locale, 'quote.cta_text')}</p>
+  </div>
+  <a href={href} class="btn-primary mt-4 shrink-0 md:mt-0">{t(locale, 'quote.cta')}</a>
+</section>

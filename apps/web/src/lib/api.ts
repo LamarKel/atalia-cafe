@@ -6,6 +6,7 @@ import type {
   CheckoutResponse,
   OrderSummary,
 } from '@atalia/shared/checkout'
+import type { QuoteRequest, QuoteResponse } from '@atalia/shared/quotes'
 import type { CartItem } from './cart'
 
 const BASE = import.meta.env.PUBLIC_API_URL.replace(/\/$/, '')
@@ -59,5 +60,7 @@ export const api = {
     call<AvailabilityResponse>('/availability', { method: 'POST', body: JSON.stringify(body) }),
   checkout: (body: CheckoutRequest) =>
     call<CheckoutResponse>('/checkout', { method: 'POST', body: JSON.stringify(body) }),
+  quote: (body: QuoteRequest) =>
+    call<QuoteResponse>('/quotes', { method: 'POST', body: JSON.stringify(body) }),
   order: (accessToken: string) => call<OrderSummary>(`/orders/${encodeURIComponent(accessToken)}`),
 }
