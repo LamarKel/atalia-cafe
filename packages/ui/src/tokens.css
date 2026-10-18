@@ -161,3 +161,22 @@
     }
   }
 }
+
+/*
+ * Regla del proyecto: nunca se ven barras de scroll (pedido del cliente, 2026-10-18).
+ * Se ocultan en todo el sitio y el admin; el scroll sigue funcionando con rueda, dedo y teclado.
+ */
+@layer base {
+  html,
+  * {
+    scrollbar-width: none; /* Firefox y Chrome 121+ */
+    -ms-overflow-style: none; /* Edge antiguo */
+  }
+
+  html::-webkit-scrollbar,
+  *::-webkit-scrollbar {
+    display: none; /* Safari y Chrome antiguo */
+    width: 0;
+    height: 0;
+  }
+}

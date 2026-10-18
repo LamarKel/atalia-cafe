@@ -202,7 +202,7 @@ function Menu({ locale, messages: m, categories, stores }: MenuBrowserProps) {
         aria-label={m['menu.jump_to']}
         className="sticky top-16 z-30 -mx-4 mt-4 border-b border-dark/5 bg-accent/95 px-4 py-2 backdrop-blur lg:hidden"
       >
-        <ul className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+        <ul className="flex gap-2 overflow-x-auto pb-1">
           {visible.map((c) => (
             <li key={c.id} className="shrink-0">
               <button
