@@ -17,6 +17,7 @@ const table: CatalogProduct = {
   minLeadHours: 48,
   active: true,
   sizes: [],
+  extras: [],
 }
 
 const request: QuoteRequest = {

@@ -37,6 +37,7 @@ const tray: CatalogProduct = {
       active: true,
     },
   ],
+  extras: [],
 }
 
 const request: CheckoutRequest = {

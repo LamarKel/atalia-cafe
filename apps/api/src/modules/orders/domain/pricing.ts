@@ -2,6 +2,7 @@
 // Lógica pura: recibe el catálogo ya leído y las reglas vigentes; no conoce Supabase ni Stripe.
 import type { CartLine } from '@atalia/shared/checkout'
 import {
+  addCents,
   cents,
   computeOrderTotals,
   multiplyCents,
@@ -34,6 +35,15 @@ export interface CatalogProduct {
   minLeadHours: number
   active: boolean
   sizes: CatalogSize[]
+  extras: CatalogExtra[]
+}
+
+export interface CatalogExtra {
+  id: string
+  nameEn: string
+  nameEs: string | null
+  priceCents: number
+  active: boolean
 }
 
 export interface CatalogPiece {
@@ -56,6 +66,7 @@ export type PricingErrorCode =
   | 'quantity_exceeded'
   | 'picadera_invalid'
   | 'piece_unavailable'
+  | 'extra_unavailable'
 
 export class PricingError extends Error {
   override readonly name = 'PricingError'
@@ -79,6 +90,8 @@ export interface PricedLine {
   unitPriceCents: Cents
   quantity: number
   components: Array<{ optionId: string; labelSnapshot: string; qty: number }>
+  /** Extras elegidos con su precio de ese momento; ya están sumados en unitPriceCents. */
+  extras: Array<{ id: string; nameSnapshot: string; priceCents: Cents }>
 }
 
 export interface PricedCart {
@@ -124,8 +137,21 @@ export function priceCart(
     if (total > rules.maxQtyPerProduct) throw new PricingError('quantity_exceeded', index)
     qtyByProduct.set(product.id, total)
 
-    const unitPrice = optionPrice(product, size)
-    if (unitPrice === null) throw new PricingError('price_missing', index)
+    const basePrice = optionPrice(product, size)
+    if (basePrice === null) throw new PricingError('price_missing', index)
+
+    if (new Set(item.extraIds).size !== item.extraIds.length)
+      throw new PricingError('extra_unavailable', index)
+    const extras = item.extraIds.map((id) => {
+      const extra = product.extras.find((e) => e.id === id && e.active)
+      if (extra === undefined) throw new PricingError('extra_unavailable', index)
+      return {
+        id: extra.id,
+        nameSnapshot: pick(locale, extra.nameEn, extra.nameEs),
+        priceCents: cents(extra.priceCents),
+      }
+    })
+    const unitPrice = addCents(basePrice, ...extras.map((e) => e.priceCents))
 
     let components: PricedLine['components'] = []
     if (product.type === 'picadera_pack') {
@@ -155,6 +181,7 @@ export function priceCart(
       unitPriceCents: unitPrice,
       quantity: item.quantity,
       components,
+      extras,
     }
   })
 

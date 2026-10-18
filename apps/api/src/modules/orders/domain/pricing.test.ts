@@ -8,6 +8,10 @@ const PICADERA = '00000000-0000-4000-8000-000000000002'
 const S10 = '00000000-0000-4000-8000-000000000010'
 const S20 = '00000000-0000-4000-8000-000000000020'
 const P10 = '00000000-0000-4000-8000-000000000030'
+const LATTE = '00000000-0000-4000-8000-000000000003'
+const OAT = '00000000-0000-4000-8000-000000000051'
+const SHOT = '00000000-0000-4000-8000-000000000052'
+const OLD = '00000000-0000-4000-8000-000000000053'
 const Q1 = '00000000-0000-4000-8000-000000000041'
 const Q2 = '00000000-0000-4000-8000-000000000042'
 
@@ -35,6 +39,7 @@ const catalog = new Map<string, CatalogProduct>([
       minLeadHours: 24,
       active: true,
       sizes: [size(S10, { serves: 10, priceCents: 9000 }), size(S20, { serves: 20, priceCents: null })],
+      extras: [],
     },
   ],
   [
@@ -48,6 +53,25 @@ const catalog = new Map<string, CatalogProduct>([
       minLeadHours: 1,
       active: true,
       sizes: [size(P10, { units: 10, priceModifierCents: 500 })],
+      extras: [],
+    },
+  ],
+  [
+    LATTE,
+    {
+      id: LATTE,
+      type: 'menu',
+      nameEn: 'Latte',
+      nameEs: 'Latte',
+      priceCents: 450,
+      minLeadHours: 0,
+      active: true,
+      sizes: [],
+      extras: [
+        { id: OAT, nameEn: 'Oat milk', nameEs: 'Leche de avena', priceCents: 75, active: true },
+        { id: SHOT, nameEn: 'Extra shot', nameEs: 'Shot extra', priceCents: 100, active: true },
+        { id: OLD, nameEn: 'Old syrup', nameEs: 'Sirope viejo', priceCents: 50, active: false },
+      ],
     },
   ],
 ])
@@ -138,5 +162,29 @@ describe('cartNeeds', () => {
       { productId: PICADERA, sizeId: P10, quantity: 2 },
     ].map((i) => cartLineSchema.parse(i))
     expect(cartNeeds(items, catalog)).toEqual({ needs: { tray: 1, picadera_pack: 2 }, leadHours: 24 })
+  })
+})
+
+describe('extras del menú', () => {
+  it('suma los extras al precio de la unidad con el precio de la BD', () => {
+    const cart = price([{ productId: LATTE, sizeId: null, quantity: 2, extraIds: [OAT, SHOT] }])
+    expect(cart.lines[0]?.unitPriceCents).toBe(625)
+    expect(cart.lines[0]?.extras).toEqual([
+      { id: OAT, nameSnapshot: 'Leche de avena', priceCents: 75 },
+      { id: SHOT, nameSnapshot: 'Shot extra', priceCents: 100 },
+    ])
+    expect(cart.totals.subtotalCents).toBe(1250)
+  })
+
+  it('rechaza extras inactivos, de otro producto o repetidos', () => {
+    expect(code(() => price([{ productId: LATTE, sizeId: null, quantity: 1, extraIds: [OLD] }]))).toBe(
+      'extra_unavailable',
+    )
+    expect(code(() => price([{ productId: TRAY, sizeId: S10, quantity: 1, extraIds: [OAT] }]))).toBe(
+      'extra_unavailable',
+    )
+    expect(code(() => price([{ productId: LATTE, sizeId: null, quantity: 1, extraIds: [OAT, OAT] }]))).toBe(
+      'extra_unavailable',
+    )
   })
 })

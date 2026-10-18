@@ -14,6 +14,8 @@ export const cartLineSchema = z.object({
   quantity: z.number().int().min(1).max(100),
   notes: z.string().trim().max(500).default(''),
   components: z.array(picaderaComponentSchema).max(50).default([]),
+  /** Extras del menú (leche de avena, shot extra…); el precio lo pone el servidor. */
+  extraIds: z.array(z.uuid()).max(10).default([]),
 })
 
 export type CartLineInput = z.input<typeof cartLineSchema>
