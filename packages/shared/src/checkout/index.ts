@@ -26,6 +26,7 @@ export const availabilityRequestSchema = z
   .object({
     from: isoDate,
     to: isoDate,
+    locale: z.enum(LOCALES).default('en'),
     items: cartSchema,
   })
   .refine((v) => v.from <= v.to, { message: 'invalid_range', path: ['to'] })
@@ -44,10 +45,20 @@ export interface AvailabilitySlot {
   reason: z.infer<typeof slotReasonSchema>
 }
 
+/** Precio calculado por el Worker para mostrar en el resumen; null si algo del carrito aún no tiene precio. */
+export interface CartQuote {
+  lines: Array<{ name: string; detail: string | null; quantity: number; lineTotalCents: number }>
+  subtotalCents: number
+  taxLabel: string
+  taxCents: number
+  totalCents: number
+}
+
 export interface AvailabilityResponse {
   timezone: string
   leadHours: number
   slots: AvailabilitySlot[]
+  quote: CartQuote | null
 }
 
 export const customerSchema = z.object({

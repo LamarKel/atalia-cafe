@@ -5,6 +5,7 @@ import type { CatalogProduct } from '../../orders/domain/pricing'
 import type { CheckoutSessionInput, CreatedOrder, NewOrder, SlotRow } from '../ports'
 import {
   CheckoutError,
+  getAvailability,
   handlePaymentEvent,
   startCheckout,
   type CheckoutDeps,
@@ -227,5 +228,47 @@ describe('handlePaymentEvent', () => {
   it('cancela y libera el cupo cuando la sesión vence', async () => {
     const { deps } = setup()
     expect(await handlePaymentEvent(deps, event({ type: 'checkout.session.expired' }))).toBe('cancelled')
+  })
+})
+
+describe('getAvailability', () => {
+  it('devuelve las horas y el precio calculado en el servidor', async () => {
+    const { deps } = setup()
+    const res = await getAvailability(deps, {
+      from: '2026-10-21',
+      to: '2026-10-21',
+      locale: 'es',
+      items: checkoutRequestSchema.parse(request).items,
+    })
+    expect(res.slots).toHaveLength(1)
+    expect(res.quote).toMatchObject({
+      subtotalCents: 18000,
+      taxCents: 1193,
+      totalCents: 19193,
+      taxLabel: 'Impuesto de NJ',
+    })
+  })
+
+  it('sin precio todavía: horas sí, total no', async () => {
+    const { deps } = setup()
+    const base = tray.sizes[0]
+    if (base === undefined) throw new Error('fixture')
+    deps.catalog.products = () =>
+      Promise.resolve(new Map([[TRAY, { ...tray, sizes: [{ ...base, priceCents: null }] }]]))
+    const res = await getAvailability(deps, {
+      from: '2026-10-21',
+      to: '2026-10-21',
+      locale: 'es',
+      items: checkoutRequestSchema.parse(request).items,
+    })
+    expect(res.quote).toBeNull()
+    expect(res.slots).toHaveLength(1)
+  })
+
+  it('rechaza rangos de más de dos meses', async () => {
+    const { deps } = setup()
+    await expect(
+      getAvailability(deps, { from: '2026-01-01', to: '2026-12-31', locale: 'en', items: [] }),
+    ).rejects.toEqual(new CheckoutError('range_too_long'))
   })
 })

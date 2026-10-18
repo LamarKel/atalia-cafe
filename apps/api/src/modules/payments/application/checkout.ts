@@ -3,13 +3,14 @@
 import type {
   AvailabilityResponse,
   CartLine,
+  CartQuote,
   CheckoutRequestParsed,
   CheckoutResponse,
   OrderSummary,
 } from '@atalia/shared/checkout'
 import { ppm } from '@atalia/shared/money'
 import { getRule, snapshotRules } from '@atalia/shared/rules'
-import { cartNeeds, priceCart } from '../../orders/domain/pricing'
+import { PricingError, cartNeeds, lineTotal, priceCart } from '../../orders/domain/pricing'
 import type { AvailabilityRepo, CatalogRepo, Mailer, OrdersRepo, PaymentGateway, StoreRepo } from '../ports'
 
 export type CheckoutErrorCode =
@@ -45,15 +46,50 @@ const pieceIds = (items: readonly CartLine[]) => [
 
 export async function getAvailability(
   deps: CheckoutDeps,
-  input: { from: string; to: string; items: CartLine[] },
+  input: { from: string; to: string; items: CartLine[]; locale: 'en' | 'es' },
 ): Promise<AvailabilityResponse> {
   const days = (Date.parse(input.to) - Date.parse(input.from)) / 86_400_000
   if (days > MAX_RANGE_DAYS) throw new CheckoutError('range_too_long')
+  const now = deps.now?.() ?? new Date()
   const store = await deps.stores.defaultStore()
-  const catalog = await deps.catalog.products(productIds(input.items))
+  const [rows, catalog, pieces] = await Promise.all([
+    deps.stores.rules(store.id),
+    deps.catalog.products(productIds(input.items)),
+    deps.catalog.pieces(pieceIds(input.items)),
+  ])
   const { needs, leadHours } = cartNeeds(input.items, catalog)
   const slots = await deps.availability.slots(store.id, input.from, input.to, needs, leadHours)
-  return { timezone: store.timezone, leadHours, slots }
+
+  let quote: CartQuote | null = null
+  try {
+    const cart = priceCart(
+      input.items,
+      catalog,
+      pieces,
+      {
+        taxRatePpm: ppm(getRule('tax.rate_ppm', rows, { storeId: store.id, at: now })),
+        maxQtyPerProduct: getRule('orders.max_qty_per_product', rows, { storeId: store.id, at: now }),
+      },
+      input.locale,
+    )
+    quote = {
+      lines: cart.lines.map((l) => ({
+        name: l.nameSnapshot,
+        detail: l.sizeLabelSnapshot,
+        quantity: l.quantity,
+        lineTotalCents: lineTotal(l),
+      })),
+      subtotalCents: cart.totals.subtotalCents,
+      taxLabel: getRule('tax.label', rows, { storeId: store.id, at: now })[input.locale],
+      taxCents: cart.totals.taxCents,
+      totalCents: cart.totals.totalCents,
+    }
+  } catch (err) {
+    // Sin precio todavía: se muestran las horas igual y el resumen dice "precio por confirmar".
+    if (!(err instanceof PricingError && err.code === 'price_missing')) throw err
+  }
+
+  return { timezone: store.timezone, leadHours, slots, quote }
 }
 
 export async function startCheckout(

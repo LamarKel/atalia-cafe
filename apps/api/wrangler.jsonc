@@ -9,7 +9,7 @@
   "vars": {
     "ENVIRONMENT": "development",
     "ALLOWED_ORIGINS": "http://localhost:4321,http://127.0.0.1:4321",
-    "SITE_URL": "http://localhost:4321",
+    "SITE_URL": "http://127.0.0.1:4321",
   },
   "env": {
     "staging": {
