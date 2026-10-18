@@ -201,8 +201,8 @@ export const RULES = {
     group: 'refunds',
     label: { en: 'Menu orders: full refund until', es: 'Menú: reembolso total hasta' },
     help: {
-      en: 'Order status after which menu orders are not refunded.',
-      es: 'Estado a partir del cual no se reembolsa.',
+      en: 'Last order status that still gets a full refund (after it, none).',
+      es: 'Último estado en que todavía se reembolsa todo (después, ya no).',
     },
     schema: z.enum(['confirmed', 'preparing']),
     default: 'confirmed',

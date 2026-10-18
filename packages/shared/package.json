@@ -11,7 +11,8 @@
     "./checkout": "./src/checkout/index.ts",
     "./quotes": "./src/quotes/index.ts",
     "./catalog": "./src/catalog/index.ts",
-    "./promos": "./src/promos/index.ts"
+    "./promos": "./src/promos/index.ts",
+    "./refunds": "./src/refunds/index.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
