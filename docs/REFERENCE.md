@@ -1,5 +1,9 @@
 # Referencia: `D:\Dev\atalia-cafe-react`
 
+> **Actualización 2026-10-18.** La app **publicada** ([ataliacafe.netlify.app](https://ataliacafe.netlify.app/)) **no es esta**, sino `D:\Dev\cafe` (rama `v2-supabase`, HTML + JS + funciones de Netlify). Es más completa: i18n EN/ES real, búsqueda, info nutricional, puntos de recogida, cupones, Stripe (`netlify/functions/create-checkout.js`), seguimiento del pedido (`/track`) y admin con Supabase Auth, tamaños, extras e imágenes. Ahora es la **referencia funcional principal** (ver `CLAUDE.md`, "Referencias"); este documento queda como apoyo. Sus capturas están en `docs/screenshots/netlify/`. Su auditoría completa está pendiente (PLAN.md, Fase 1).
+>
+> El **aspecto** ya no se copia de ninguna de las dos apps viejas: lo definen las 6 pantallas aprobadas (`docs/design/`).
+
 > Auditoría del proyecto actual (Fase 1, tarea 1 de `PLAN.md`). La referencia es **solo lectura**.
 > Fecha de la auditoría: 2026-10-16. Stack auditado: Vite 8 + React 19 + React Router 7 + Tailwind 3.4 + Supabase JS 2.
 

@@ -11,19 +11,24 @@ Web de **catering y pedidos online** para Atalia Café, un negocio en EE.UU. El 
 
 **Prioridad de la clienta:** catering (bandejas, mesas y picaderas) con precios por cantidad de personas, pedido y **pago en línea**. El menú normal se mantiene, pero no es prioridad.
 
-**Diseño:** mantener la línea visual actual, que a la clienta le gusta. El lienzo de diseño aprobado tiene 6 pantallas: Inicio, Catálogo, Detalle de bandeja, Arma tu picadera, Checkout y Confirmación.
+**Diseño (decisión de la clienta, 2026-10-18):** lo que se ve lo definen **las 6 pantallas aprobadas** (`docs/design/`): Inicio, Catálogo, Detalle de bandeja, Arma tu picadera, Checkout y Confirmación.
 
-### Proyecto de referencia (OBLIGATORIO leer antes de diseñar o programar)
+Lo que no tiene pantalla propia (el menú del café, el carrito y el admin) sigue el mismo lenguaje visual. El menú, en particular, se basa en la pantalla 02 (Catálogo): filtros, búsqueda y tarjetas. La marca de Atalia (colores, fuentes y botones) se mantiene en todo.
 
-📁 **`D:\Dev\atalia-cafe-react`** es el proyecto actual. Es la **fuente de verdad** para:
+### Apps de referencia funcional (OBLIGATORIO revisarlas antes de programar una pantalla)
 
-- **El menú:** se mantiene **igual** (diseño, layout, categorías, modal de producto con tamaños, extras e info nutricional, selector de tienda, búsqueda). Se migra a la nueva arquitectura **sin rediseñarlo**.
-- **El admin:** se mantiene **igual** en diseño y funciones (dashboard, productos, categorías, pedidos activos, historial con exportación a CSV, configuración del negocio, tiendas y puntos de recogida, códigos promocionales) y **se amplía** con lo de catering.
-- **El estilo global:** colores, fuentes, espaciados, sombras, radios, botones, header, footer e imágenes.
-- **Los textos y el i18n** (EN/ES) existentes.
-- **La lógica existente** (carrito, checkout, tracking, consultas a Supabase), como referencia funcional al reescribir.
+Hay **dos** versiones de la app vieja. Las dos son de **solo lectura** y sirven para saber **qué hace** cada pantalla, no para copiar su aspecto:
 
-Regla: **lo que ya existe se replica tal cual en la v3; solo se rediseña lo nuevo (catering).** Ante cualquier duda de cómo se ve o funciona algo, se revisa la referencia antes de inventar.
+| App | Qué es |
+|---|---|
+| 📁 **`D:\Dev\cafe`** (rama `v2-supabase`) | **La que está publicada** en [ataliacafe.netlify.app](https://ataliacafe.netlify.app/). HTML + JS, con funciones de Netlify. Es la más completa: **referencia principal** |
+| 📁 **`D:\Dev\atalia-cafe-react`** | Versión en React, no publicada. Apoyo. Auditada en `docs/REFERENCE.md` |
+
+- **El menú:** conserva **todas sus funciones** (categorías, búsqueda, modal de producto con tamaños, extras e info nutricional, selector de tienda, carrito), con el **diseño nuevo**.
+- **El admin:** conserva **las secciones y funciones** de `D:\Dev\cafe/admin.html` (dashboard, productos con tamaños, extras e imágenes, categorías, pedidos, historial con CSV, configuración, tiendas y puntos de recogida, cupones) y **se amplía** con lo de catering.
+- **La lógica existente** (carrito, checkout, tracking, consultas a Supabase, i18n) es la referencia funcional al reescribir.
+
+Regla: **no se pierde ninguna función que ya exista; el aspecto sigue el diseño nuevo.** Ante una duda sobre qué hace algo, se revisan las apps viejas antes de inventar.
 
 ---
 
@@ -77,7 +82,7 @@ App móvil nativa, programa de lealtad, integración con un POS, 3D, **pagos en 
 - **RF17** Reembolso total o parcial desde el admin.
 
 ### Menú (existente, se conserva)
-- **RF-M01** El menú se replica con el **mismo diseño y las mismas funciones** que en `D:\Dev\atalia-cafe-react`: categorías, modal de producto (tamaños, extras, info nutricional), selector de tienda, búsqueda y carrito.
+- **RF-M01** El menú conserva **las mismas funciones** que la app publicada (`D:\Dev\cafe`): categorías, búsqueda, modal de producto (tamaños, extras, info nutricional), selector de tienda y carrito, con el **diseño nuevo** (lenguaje visual de las pantallas aprobadas, en especial la 02 · Catálogo).
 - **RF-M02** Todo el contenido del menú se edita desde el admin; nada queda escrito a mano en el código.
 
 ### Admin — editable al 100%
@@ -292,9 +297,11 @@ Cada fase se cierra con un PR revisado, el CI en verde y el deploy a staging.
 - [ ] Pedirle a la clienta: fotos, precios por personas, qué incluye cada bandeja, anticipación, horario, dirección, si quiere delivery y la política de cancelación.
 
 ### Fase 1 — Base
-- [x] **Auditar `D:\Dev\atalia-cafe-react`** y generar `docs/REFERENCE.md`. Pendiente: capturas de cada pantalla en `docs/screenshots/`.
+- [x] **Auditar `D:\Dev\atalia-cafe-react`** y generar `docs/REFERENCE.md`.
+- [x] Capturas de la app publicada en `docs/screenshots/netlify/` (escritorio y móvil). Tomadas después de la migración v3, así que muestran el layout pero no los datos de entonces.
+- [ ] **Auditar `D:\Dev\cafe`** (la app publicada, referencia principal) y agregarla a `docs/REFERENCE.md`.
 - [x] Monorepo con pnpm, TypeScript `strict`, ESLint, Prettier.
-- [x] `packages/ui`: tokens **extraídos de la referencia** en Tailwind, fuentes y componentes base (Button, Card, Chip/OptionGroup/Tag, Stepper/QuantityStepper, Toast) con el mismo aspecto que los actuales, en React, con pruebas de accesibilidad.
+- [x] `packages/ui`: tokens en Tailwind, fuentes y componentes base (Button, Card, Chip/OptionGroup/Tag, Stepper/QuantityStepper, Toast) en React, con pruebas de accesibilidad.
 - [x] `apps/web` con Astro: layout, header/footer, i18n EN/ES.
 - [x] `apps/api` con Hono, health check y manejo de errores.
 - [x] `packages/shared`: dinero en centavos y registro de reglas configurables, con pruebas.
@@ -303,7 +310,7 @@ Cada fase se cierra con un PR revisado, el CI en verde y el deploy a staging.
 - [x] `CLAUDE.md` con las reglas del proyecto.
 
 ### Fase 2 — Menú y catálogo
-- [ ] **Migrar el menú actual** desde la referencia, idéntico visual y funcionalmente; validarlo comparando lado a lado con las capturas.
+- [ ] **Migrar el menú actual** con todas sus funciones (`D:\Dev\cafe/menu.html`) y el diseño nuevo (lenguaje visual de las pantallas aprobadas, en especial la 02 · Catálogo); validar que no se pierde ninguna función.
 - [ ] Endpoint `/catalog` con caché en el edge.
 - [ ] Páginas: Inicio, Catálogo, Detalle.
 - [ ] Isla del armador de picaderas, con la validación compartida (Zod) en `packages/shared`.
@@ -319,7 +326,7 @@ Cada fase se cierra con un PR revisado, el CI en verde y el deploy a staging.
 - [ ] Tests: 20 peticiones simultáneas con el mismo token → 1 pedido y 1 sesión.
 
 ### Fase 4 — Admin
-- [ ] **Migrar el admin actual** desde la referencia, con el mismo diseño y las mismas secciones.
+- [ ] **Migrar el admin actual** (`D:\Dev\cafe/admin.html`) con las mismas secciones y funciones.
 - [ ] Agregar las secciones nuevas: Catering, Picaderas, Contenido del sitio, Capacidad y días cerrados, y **Reglas** (formulario generado desde el registro de reglas, RF-A05).
 - [ ] Subida de imágenes a Storage, con optimización.
 - [ ] Checklist: cada texto, precio e imagen visible en el sitio debe poder editarse desde el admin.

@@ -2,12 +2,16 @@
 
 Lee PLAN.md antes de cualquier tarea.
 
-## Referencia (fuente de verdad)
-- Proyecto actual: D:\Dev\atalia-cafe-react — SOLO LECTURA, nunca modificarlo.
-- Resumen en docs/REFERENCE.md (generarlo en la primera tarea si no existe).
-- El MENÚ y el ADMIN se replican IGUAL que en la referencia (diseño, layout, flujos). No rediseñar lo existente.
-- Antes de crear un componente o pantalla que ya existe en la referencia, ábrelo y cópiale el aspecto y el comportamiento.
-- Solo lo nuevo (catering, armador de picaderas, checkout con fecha y hora) sigue el lienzo de diseño nuevo, con los mismos estilos de la referencia.
+## Referencias (decisión de la clienta, 2026-10-18)
+- **Diseño visual (cómo se ve) — manda esto:** las 6 pantallas aprobadas en docs/design/. Nada más.
+  Lo que no tiene pantalla propia (el menú del café, el carrito, el admin) sigue el mismo lenguaje visual
+  de esas pantallas; el menú, en particular, el de la pantalla 02 (Catálogo).
+- **Funciones (qué hace cada pantalla):** las dos apps viejas, SOLO LECTURA, nunca modificarlas:
+  1. D:\Dev\cafe, rama v2-supabase: la que está publicada en ataliacafe.netlify.app. Referencia principal.
+  2. D:\Dev\atalia-cafe-react: apoyo. Resumen en docs/REFERENCE.md.
+- El MENÚ conserva TODAS las funciones de la app vieja (categorías, búsqueda, modal con tamaños, extras e info nutricional, selector de tienda, carrito), pero con el diseño nuevo, no idéntico al viejo.
+- El ADMIN conserva las secciones y funciones de la app vieja (D:\Dev\cafe/admin.html) y se amplía con lo de catering.
+- Antes de crear una pantalla que ya existe en una app vieja, revisa qué hace allí para no perder ninguna función.
 - Todo contenido visible (textos, precios, imágenes, horarios) debe venir de la BD y poder editarse desde el admin. Nada hardcodeado.
 
 ## Marca (no cambiar)
