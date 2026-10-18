@@ -219,3 +219,10 @@ values ('home.hero.image_url', 'en', '/images/hero.png'), ('home.hero.image_url'
        ('footer.tagline', 'en', 'Catering and café in Passaic, NJ'),
        ('footer.tagline', 'es', 'Catering y café en Passaic, NJ')
 on conflict (key, locale) do update set value = excluded.value;
+
+-- Sección "Visítanos" del inicio, con el mapa (pedido de la clienta, 2026-10-18)
+insert into public.site_content (key, locale, value)
+values ('home.visit.title', 'en', 'Visit us'), ('home.visit.title', 'es', 'Visítanos'),
+       ('home.visit.subtitle', 'en', 'Pick up your order at our café in Passaic, NJ.'),
+       ('home.visit.subtitle', 'es', 'Recoge tu pedido en nuestro café en Passaic, NJ.')
+on conflict (key, locale) do update set value = excluded.value;
