@@ -14,7 +14,7 @@ import { PricingError, cartNeeds, lineTotal, priceCart } from '../../orders/doma
 import type { AvailabilityRepo, CatalogRepo, Mailer, OrdersRepo, PaymentGateway, StoreRepo } from '../ports'
 
 export type CheckoutErrorCode =
-  'payments_disabled' | 'slot_unavailable' | 'checkout_closed' | 'range_too_long'
+  'payments_disabled' | 'slot_unavailable' | 'checkout_closed' | 'range_too_long' | 'pickup_unavailable'
 
 export class CheckoutError extends Error {
   override readonly name = 'CheckoutError'
@@ -127,9 +127,17 @@ export async function startCheckout(
   const slot = slots.find((s) => s.time === req.pickup.time)
   if (slot === undefined || !slot.available) throw new CheckoutError('slot_unavailable')
 
+  if (
+    req.pickupLocationId !== null &&
+    !(await deps.stores.pickupLocationIds(store.id)).includes(req.pickupLocationId)
+  ) {
+    throw new CheckoutError('pickup_unavailable')
+  }
+
   const order = await deps.orders.createCheckoutOrder({
     checkoutToken: req.checkoutToken,
     storeId: store.id,
+    pickupLocationId: req.pickupLocationId,
     customer: req.customer,
     locale: req.locale,
     note: req.note,

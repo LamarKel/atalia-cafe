@@ -51,6 +51,15 @@ export function storeRepo(db: SupabaseClient): StoreRepo {
       if (error) fail('business_rules', error)
       return data as Array<{ key: string; store_id: string | null; value: unknown; effective_from: string }>
     },
+    async pickupLocationIds(storeId) {
+      const { data, error } = await db
+        .from('pickup_locations')
+        .select('id')
+        .eq('store_id', storeId)
+        .eq('active', true)
+      if (error) fail('pickup_locations', error)
+      return (data as Array<{ id: string }>).map((r) => r.id)
+    },
   }
 }
 
@@ -246,6 +255,7 @@ export function ordersRepo(db: SupabaseClient): OrdersRepo {
         p_order: {
           checkout_token: order.checkoutToken,
           store_id: order.storeId,
+          pickup_location_id: order.pickupLocationId,
           customer_name: order.customer.name,
           customer_phone: order.customer.phone,
           customer_email: order.customer.email,

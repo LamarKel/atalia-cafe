@@ -20,6 +20,7 @@ export interface SlotRow {
 export interface NewOrder {
   checkoutToken: string
   storeId: string
+  pickupLocationId: string | null
   customer: { name: string; phone: string; email: string }
   locale: 'en' | 'es'
   note: string
@@ -55,6 +56,8 @@ export type ConfirmResult =
 export interface StoreRepo {
   defaultStore(): Promise<Store>
   rules(storeId: string): Promise<StoredRule[]>
+  /** Ids de los puntos de recogida activos de la tienda. */
+  pickupLocationIds(storeId: string): Promise<string[]>
 }
 
 export interface CatalogRepo {

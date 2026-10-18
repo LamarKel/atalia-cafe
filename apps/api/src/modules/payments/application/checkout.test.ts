@@ -13,6 +13,7 @@ import {
 } from './checkout'
 
 const STORE = '69de0e2e-c905-4d36-93f6-446572005410'
+const PICKUP = '5b0f2a51-7c3e-4e0f-9a51-0c1d6a3e0002'
 const TRAY = '00000000-0000-4000-8000-000000000001'
 const S10 = '00000000-0000-4000-8000-000000000010'
 const TOKEN = '11111111-1111-4111-8111-111111111111'
@@ -67,6 +68,7 @@ function setup(opts: { rules?: StoredRule[]; slots?: SlotRow[]; created?: Partia
     now: () => new Date('2026-10-18T12:00:00Z'),
     stores: {
       defaultStore: () => Promise.resolve({ id: STORE, timezone: 'America/New_York' }),
+      pickupLocationIds: () => Promise.resolve([PICKUP]),
       rules: () => Promise.resolve(opts.rules ?? []),
     },
     catalog: {
@@ -191,6 +193,23 @@ describe('startCheckout', () => {
     const res = await run(deps)
     expect(res.url).toBe('https://checkout.stripe.com/old')
     expect(sessions).toHaveLength(0)
+  })
+})
+
+describe('punto de recogida', () => {
+  it('guarda el punto elegido si es de la tienda', async () => {
+    const { deps, orders } = setup()
+    await startCheckout(deps, checkoutRequestSchema.parse({ ...request, pickupLocationId: PICKUP }))
+    expect(orders[0]?.pickupLocationId).toBe(PICKUP)
+  })
+  it('rechaza un punto que no existe o está inactivo', async () => {
+    const { deps } = setup()
+    await expect(
+      startCheckout(
+        deps,
+        checkoutRequestSchema.parse({ ...request, pickupLocationId: '5b0f2a51-7c3e-4e0f-9a51-0c1d6a3e00ff' }),
+      ),
+    ).rejects.toEqual(new CheckoutError('pickup_unavailable'))
   })
 })
 

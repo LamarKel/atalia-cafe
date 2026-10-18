@@ -79,6 +79,8 @@ export const checkoutRequestSchema = z.object({
   checkoutToken: z.uuid(),
   locale: z.enum(LOCALES),
   pickup: z.object({ date: isoDate, time: timeOfDay }),
+  /** Dónde lo recoge: en la tienda, en el carro… (pickup_locations). */
+  pickupLocationId: z.uuid().nullable().default(null),
   customer: customerSchema,
   note: z.string().trim().max(500).default(''),
   items: cartSchema,
