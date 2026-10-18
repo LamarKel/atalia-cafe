@@ -10,6 +10,10 @@ export type ErrorCode =
   | 'not_found'
   | 'conflict'
   | 'rate_limited'
+  | 'cart_invalid'
+  | 'slot_unavailable'
+  | 'checkout_closed'
+  | 'payments_disabled'
   | 'internal_error'
 
 export class ApiError extends Error {

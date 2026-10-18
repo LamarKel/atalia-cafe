@@ -1,4 +1,17 @@
-# Copia este archivo como .dev.vars para desarrollo local (está en .gitignore por el patrón .env/.dev.vars).
-# Nunca subas los valores reales.
-SUPABASE_URL=https://<proyecto>.supabase.co
+# Copia este archivo como .dev.vars (ya está en .gitignore) y llena los valores.
+# Nunca subas .dev.vars a git ni pegues estas claves en el frontend.
+
+# Supabase → Project Settings → API Keys → "secret" (sb_secret_...) o la legacy "service_role"
+SUPABASE_URL=https://cvmdrixxsnwcgzrndhcy.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=
+
+# Stripe (modo prueba) → Developers → API keys → Secret key (sk_test_...)
+STRIPE_SECRET_KEY=
+# Stripe → sale al correr `stripe listen` (whsec_...)
+STRIPE_WEBHOOK_SECRET=
+
+# Resend → API Keys → Create API key (re_...)
+RESEND_API_KEY=
+
+# Remitente de los correos (no es secreto). En desarrollo, un dominio verificado en tu cuenta de Resend.
+EMAIL_FROM=Atalia Café <pedidos@tu-dominio-verificado>
