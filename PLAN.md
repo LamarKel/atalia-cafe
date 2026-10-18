@@ -354,7 +354,8 @@ Cada fase se cierra con un PR revisado, el CI en verde y el deploy a staging.
 - [ ] Backups a R2, reconciliación, detector de duplicados, Sentry y alertas.
 
 ### Fase 6 — Lanzamiento
-- [ ] Stripe en vivo (Radar activo).
+- [ ] Stripe en vivo (Radar activo): cambiar las claves de prueba del desarrollador por las de la cuenta de la clienta.
+- [ ] Correos: verificar el dominio de la clienta en Resend y cambiar el remitente (en desarrollo se usa kemenu.app, dominio de prueba del desarrollador).
 - [ ] Dominio y DNS en Cloudflare.
 - [ ] Prueba con un pago real pequeño y su reembolso.
 - [ ] Capacitación de la clienta en el admin.
@@ -426,6 +427,7 @@ Solo ella puede responderlas. Entre paréntesis va la regla de `docs/REGLAS.md` 
 - [ ] ¿Quieren ofrecer propina en el checkout? (B9)
 - [ ] ¿Los códigos promocionales aplican también al catering? (B14)
 - [ ] ¿Ya abrieron la cuenta de Stripe a nombre del negocio? ¿Quieren solicitar el pago a cuotas (Klarna, Afterpay, Affirm)?
+- [ ] ¿Tienen dominio propio (por ejemplo ataliacafe.com)? Hace falta para enviar los correos de pedidos y cotizaciones desde una dirección del negocio.
 
 ### Cancelaciones y cambios
 - [ ] ¿Hasta cuántas horas antes se puede cancelar con reembolso completo? ¿Hay reembolso parcial después? (B6; mientras tanto, 100 % con 48 h, 50 % con 24 h)
