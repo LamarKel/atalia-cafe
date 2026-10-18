@@ -1,0 +1,25 @@
+---
+// Carrito. Todo lo interactivo vive en la isla CartView (lee localStorage, por eso client:only).
+import CartView from '../islands/CartView'
+import BaseLayout from '../layouts/BaseLayout.astro'
+import { localizedPath, messagesFor, t, type Locale } from '../i18n'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+---
+
+<BaseLayout locale={locale} title={t(locale, 'cart.title')}>
+  <div class="mx-auto max-w-7xl px-4 pb-24 pt-10 md:px-8 md:pt-14">
+    <h1 class="mb-8 font-heading text-4xl font-bold text-dark md:text-5xl">{t(locale, 'cart.title')}</h1>
+    <CartView
+      client:only="react"
+      locale={locale}
+      messages={messagesFor(locale)}
+      cateringHref={localizedPath('/catering', locale)}
+      checkoutHref={localizedPath('/checkout', locale)}
+    />
+  </div>
+</BaseLayout>

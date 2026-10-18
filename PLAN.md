@@ -45,7 +45,7 @@ Regla: **no se pierde ninguna función que ya exista; el aspecto sigue el diseñ
 ### Fase 2
 - Pago a plazos (Klarna / Afterpay / Affirm vía Stripe), cuando la clienta tenga la cuenta aprobada.
 - Delivery con zonas y costo de envío (pendiente de confirmar con la clienta).
-- Cotización personalizada para eventos grandes.
+- ~~Cotización personalizada para eventos grandes.~~ Pasa a la fase 1, con envío por correo (RF-Q01–Q05).
 
 ### Fuera de alcance
 App móvil nativa, programa de lealtad, integración con un POS, 3D, **pagos en efectivo** y cuadre de caja o contabilidad (el sitio solo acepta pagos virtuales).
@@ -72,6 +72,13 @@ App móvil nativa, programa de lealtad, integración con un POS, 3D, **pagos en 
 - **RF11** Capacidad por día o franja (ej. un máximo de N bandejas el sábado).
 - **RF12** Notas del pedido (alergias, tipo de evento).
 - **RF13** **Solo pagos virtuales.** Todos los pedidos (menú y catering) pasan por el mismo checkout y se pagan en línea con Stripe antes de confirmarse. El sitio **no acepta efectivo**.
+
+### Cotización de eventos
+- **RF-Q01** Formulario "Pide una cotización" para eventos grandes o a medida: nombre, email, teléfono, fecha del evento, número de invitados, tipo de evento, productos de interés (opcional) y notas.
+- **RF-Q02** Aparece en el catálogo, en el detalle de una mesa y cuando el número de invitados supera la regla `orders.quote_threshold_guests` (REGLAS.md B12).
+- **RF-Q03** Al enviarse, la solicitud se guarda en la BD (`quote_requests`) y se envían **dos correos** con Resend: uno al negocio, con todos los datos, a los destinatarios de la regla `notifications.order_recipients`; y uno de confirmación al cliente.
+- **RF-Q04** Protección: Turnstile, rate limit, validación con Zod y sanitización (RNF-S07, RNF-S09). Se envía por el Worker; nunca directo a la BD.
+- **RF-Q05** En el admin: lista de cotizaciones con su estado (`new` → `contacted` → `won` / `lost`) y notas internas.
 
 ### Pagos
 - **RF14** Métodos de pago para cualquier pedido, cada grupo activable o desactivable desde el admin:

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   directionsUrl,
+  perPersonCents,
   formatTime,
   fromPrice,
   groupHours,
@@ -106,5 +107,16 @@ describe('cómo llegar', () => {
       'https://www.google.com/maps/dir/?api=1&destination=40.8635565,-74.1185816',
     )
     expect(directionsUrl(null, 1)).toBeNull()
+  })
+})
+
+describe('perPersonCents', () => {
+  it('divide y redondea al centavo', () => {
+    expect(perPersonCents(9000, 10)).toBe(900)
+    expect(perPersonCents(10000, 3)).toBe(3333)
+  })
+  it('sin precio o sin personas no muestra nada', () => {
+    expect(perPersonCents(null, 10)).toBeNull()
+    expect(perPersonCents(9000, null)).toBeNull()
   })
 })

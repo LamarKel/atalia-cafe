@@ -94,3 +94,9 @@ export function directionsUrl(lat: number | null, lng: number | null): string | 
   if (lat === null || lng === null) return null
   return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
 }
+
+/** "≈ $ por persona" (solo para mostrar): precio de la opción entre las personas, redondeado al centavo. */
+export function perPersonCents(priceCents: number | null, serves: number | null): number | null {
+  if (priceCents === null || serves === null || serves <= 0) return null
+  return Math.round(priceCents / serves)
+}

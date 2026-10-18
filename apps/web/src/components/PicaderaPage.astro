@@ -1,0 +1,34 @@
+---
+// Arma tu picadera (docs/design/04-arma-tu-picadera.png). Datos de la BD; la interacción en la isla.
+import PicaderaBuilder from '../islands/PicaderaBuilder'
+import BaseLayout from '../layouts/BaseLayout.astro'
+import { getPicaderaBuilder, getSiteContent } from '../lib/catalog'
+import { messagesFor, t, type Locale } from '../i18n'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+const [c, data] = await Promise.all([getSiteContent(locale), getPicaderaBuilder(locale)])
+const title = c['picadera.title'] ?? data?.product.name ?? t(locale, 'type.picadera_pack')
+---
+
+<BaseLayout locale={locale} title={title} description={c['picadera.subtitle']}>
+  {
+    data === null ? (
+      <p class="mx-auto max-w-7xl px-4 py-20 text-center text-muted md:px-8">
+        {t(locale, 'catalog.no_results')}
+      </p>
+    ) : (
+      <PicaderaBuilder
+        client:load
+        locale={locale}
+        title={title}
+        subtitle={c['picadera.subtitle']}
+        messages={messagesFor(locale)}
+        {...data}
+      />
+    )
+  }
+</BaseLayout>

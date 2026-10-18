@@ -1,0 +1,14 @@
+---
+import type { GetStaticPaths } from 'astro'
+import ProductPage from '../../components/ProductPage.astro'
+import { getProductDetails, type ProductDetail } from '../../lib/catalog'
+
+export const getStaticPaths = (async () => {
+  const products = await getProductDetails('en')
+  return products.map((product) => ({ params: { slug: product.slug }, props: { product } }))
+}) satisfies GetStaticPaths
+
+const { product } = Astro.props as { product: ProductDetail }
+---
+
+<ProductPage locale="en" product={product} />
