@@ -469,4 +469,72 @@ begin
   raise notice 'PASS: RNF-S11 bitácora activa; get_rule respeta tienda y vigencia';
 end $$;
 
+-- ─────────────────────────────────────────────────────────────
+-- 8. Cotizaciones de eventos (RF-Q01–Q05)
+-- ─────────────────────────────────────────────────────────────
+insert into public.quote_requests (id, customer_name, customer_email, customer_phone, language, event_date,
+  event_type, guests, products, notes)
+values ('cccc0000-0000-4000-8000-000000000001', 'Ana Pérez', 'ana@example.com', '+1 973 555 0100', 'es',
+  '2026-12-12', 'wedding', 120, '[{"product_id": null, "name": "Mesa para eventos"}]', 'Boda en la tarde');
+
+do $$
+declare q public.quote_requests;
+begin
+  select * into q from public.quote_requests where id = 'cccc0000-0000-4000-8000-000000000001';
+  if q.code !~ '^CT-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}$' or q.status <> 'new' then
+    raise exception 'FAIL: cotización con código o estado incorrecto: % %', q.code, q.status;
+  end if;
+  if not exists (select 1 from public.audit_log where entity = 'quote_requests' and action = 'INSERT') then
+    raise exception 'FAIL: la bitácora no registró la cotización';
+  end if;
+  raise notice 'PASS: RF-Q03 el Worker guarda la cotización (código %, estado new, bitácora)', q.code;
+end $$;
+
+begin;
+set local role anon;
+select public.t_expect_error($q$ insert into public.quote_requests (customer_name, customer_email, customer_phone, event_date, event_type, guests) values ('Bot', 'bot@x.com', '5555555555', '2026-12-12', 'other', 10) $q$,
+  'row-level security', 'anon no puede crear cotizaciones directo en la BD (RF-Q04)');
+do $$
+begin
+  if (select count(*) from public.quote_requests) <> 0 then
+    raise exception 'FAIL: anon ve cotizaciones';
+  end if;
+  raise notice 'PASS: anon no ve cotizaciones';
+end $$;
+rollback;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000002", "aal": "aal2"}';
+do $$
+begin
+  if (select count(*) from public.quote_requests) <> 1 then
+    raise exception 'FAIL: staff no ve las cotizaciones';
+  end if;
+  update public.quote_requests set status = 'won';
+  if (select status from public.quote_requests where id = 'cccc0000-0000-4000-8000-000000000001') <> 'new' then
+    raise exception 'FAIL: staff cambió el estado de una cotización';
+  end if;
+  raise notice 'PASS: staff ve las cotizaciones pero no cambia su estado';
+end $$;
+rollback;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "09b5dce9-55d8-4859-844e-47bae15d71fd", "aal": "aal2"}';
+do $$
+begin
+  update public.quote_requests set status = 'contacted', internal_notes = 'Llamé el lunes'
+   where id = 'cccc0000-0000-4000-8000-000000000001';
+  if (select status from public.quote_requests where id = 'cccc0000-0000-4000-8000-000000000001') <> 'contacted' then
+    raise exception 'FAIL: el owner no pudo cambiar el estado';
+  end if;
+  raise notice 'PASS: RF-Q05 el owner cambia estado y notas internas';
+end $$;
+select public.t_expect_error($q$ update public.quote_requests set guests = 5 where id = 'cccc0000-0000-4000-8000-000000000001' $q$,
+  'quote_field_not_editable', 'nadie del admin cambia lo que escribió el cliente');
+select public.t_expect_error($q$ update public.quote_requests set status = 'paid' where id = 'cccc0000-0000-4000-8000-000000000001' $q$,
+  'check constraint', 'solo estados válidos');
+rollback;
+
 \echo '=== TODAS LAS PRUEBAS PASARON ==='
