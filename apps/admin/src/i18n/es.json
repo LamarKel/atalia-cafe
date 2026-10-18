@@ -62,5 +62,21 @@
   "soon.text": "Esta sección llega en la fase {n} del panel.",
   "login.show": "Mostrar contraseña",
   "login.hide": "Ocultar contraseña",
-  "app.notifications": "Notificaciones"
+  "app.notifications": "Notificaciones",
+  "login.forgot": "¿Olvidaste tu contraseña?",
+  "reset.title": "Recupera tu acceso",
+  "reset.text": "Escribe tu correo y te enviamos un enlace para crear una contraseña nueva.",
+  "reset.send": "Enviar enlace",
+  "reset.sent": "Si ese correo tiene acceso, te llegará un enlace en unos minutos. Ábrelo en este mismo navegador.",
+  "reset.back": "Volver a iniciar sesión",
+  "reset.rate": "Ya se envió un enlace hace poco. Espera unos minutos y vuelve a intentarlo.",
+  "newpw.title": "Crea tu contraseña nueva",
+  "newpw.text": "Usa al menos 12 caracteres. Una frase larga es más segura y fácil de recordar.",
+  "newpw.password": "Contraseña nueva",
+  "newpw.confirm": "Repite la contraseña",
+  "newpw.save": "Guardar contraseña",
+  "newpw.short": "Debe tener al menos 12 caracteres.",
+  "newpw.mismatch": "Las contraseñas no coinciden.",
+  "newpw.error": "No se pudo guardar. El enlace pudo vencer: pide uno nuevo.",
+  "newpw.weak": "Esa contraseña es muy común o apareció en filtraciones. Elige otra."
 }

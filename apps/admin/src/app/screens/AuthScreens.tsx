@@ -33,6 +33,18 @@ const inputClass =
   'mt-2 block min-h-11 w-full rounded-xl border border-dark/15 bg-white px-4 py-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary'
 
 export function LoginScreen() {
+  const [mode, setMode] = useState<'login' | 'forgot'>('login')
+  return mode === 'login' ? (
+    <LoginForm onForgot={() => setMode('forgot')} />
+  ) : (
+    <ForgotForm onBack={() => setMode('login')} />
+  )
+}
+
+const linkClass =
+  'min-h-11 px-1 text-sm font-medium text-secondary underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary'
+
+function LoginForm({ onForgot }: { onForgot: () => void }) {
   const { t } = useI18n()
   const emailId = useId()
   const passwordId = useId()
@@ -112,6 +124,141 @@ export function LoginScreen() {
         )}
         <Button type="submit" size="lg" fullWidth loading={busy} loadingLabel={t('app.loading')}>
           {t('login.submit')}
+        </Button>
+        <button type="button" onClick={onForgot} className={linkClass}>
+          {t('login.forgot')}
+        </button>
+      </form>
+    </AuthCard>
+  )
+}
+
+function ForgotForm({ onBack }: { onBack: () => void }) {
+  const { t } = useI18n()
+  const id = useId()
+  const [email, setEmail] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [sent, setSent] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault()
+    setBusy(true)
+    setError(null)
+    // El enlace vuelve a este mismo panel, que pide la contraseña nueva.
+    const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}${window.location.pathname}`,
+    })
+    setBusy(false)
+    // Mismo mensaje exista o no la cuenta (no revela qué correos tienen acceso).
+    if (err?.status === 429) setError(t('reset.rate'))
+    else setSent(true)
+  }
+
+  return (
+    <AuthCard title={t('reset.title')} text={t('reset.text')}>
+      {sent ? (
+        <p role="status" className="mt-6 rounded-xl bg-sage-soft px-4 py-3 text-sm">
+          {t('reset.sent')}
+        </p>
+      ) : (
+        <form onSubmit={(e) => void submit(e)} className="mt-6 grid gap-4">
+          <div>
+            <label htmlFor={id} className="font-medium">
+              {t('login.email')}
+            </label>
+            <input
+              id={id}
+              type="email"
+              autoComplete="username"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+          {error !== null && (
+            <p role="alert" className="rounded-xl bg-blush px-4 py-3 text-sm">
+              {error}
+            </p>
+          )}
+          <Button type="submit" size="lg" fullWidth loading={busy} loadingLabel={t('app.loading')}>
+            {t('reset.send')}
+          </Button>
+        </form>
+      )}
+      <div className="mt-4">
+        <button type="button" onClick={onBack} className={linkClass}>
+          {t('reset.back')}
+        </button>
+      </div>
+    </AuthCard>
+  )
+}
+
+const MIN_PASSWORD = 12
+
+export function NewPasswordScreen({ onDone }: { onDone: () => void }) {
+  const { t } = useI18n()
+  const pwId = useId()
+  const confirmId = useId()
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault()
+    if (password.length < MIN_PASSWORD) return setError(t('newpw.short'))
+    if (password !== confirm) return setError(t('newpw.mismatch'))
+    setBusy(true)
+    setError(null)
+    const { error: err } = await supabase.auth.updateUser({ password })
+    setBusy(false)
+    if (err) setError(err.code === 'weak_password' ? t('newpw.weak') : t('newpw.error'))
+    else onDone()
+  }
+
+  return (
+    <AuthCard title={t('newpw.title')} text={t('newpw.text')}>
+      <form onSubmit={(e) => void submit(e)} className="mt-6 grid gap-4">
+        <div>
+          <label htmlFor={pwId} className="font-medium">
+            {t('newpw.password')}
+          </label>
+          <input
+            id={pwId}
+            type="password"
+            autoComplete="new-password"
+            minLength={MIN_PASSWORD}
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label htmlFor={confirmId} className="font-medium">
+            {t('newpw.confirm')}
+          </label>
+          <input
+            id={confirmId}
+            type="password"
+            autoComplete="new-password"
+            minLength={MIN_PASSWORD}
+            required
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            className={inputClass}
+          />
+        </div>
+        {error !== null && (
+          <p role="alert" className="rounded-xl bg-blush px-4 py-3 text-sm">
+            {error}
+          </p>
+        )}
+        <Button type="submit" size="lg" fullWidth loading={busy} loadingLabel={t('app.loading')}>
+          {t('newpw.save')}
         </Button>
       </form>
     </AuthCard>

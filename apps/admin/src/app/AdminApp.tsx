@@ -3,7 +3,13 @@ import { ToastProvider } from '@atalia/ui'
 import { useAdminAuth, type Role } from './auth'
 import { I18nProvider, useI18n } from './i18n-context'
 import { Dashboard } from './screens/Dashboard'
-import { EnrollMfaScreen, LoginScreen, NotAdminScreen, VerifyMfaScreen } from './screens/AuthScreens'
+import {
+  EnrollMfaScreen,
+  LoginScreen,
+  NewPasswordScreen,
+  NotAdminScreen,
+  VerifyMfaScreen,
+} from './screens/AuthScreens'
 import { Shell, useRoute, type Route } from './Shell'
 
 export default function AdminApp() {
@@ -16,7 +22,7 @@ export default function AdminApp() {
 
 function Root() {
   const { t } = useI18n()
-  const { state, refresh, signOut } = useAdminAuth()
+  const { state, refresh, finishRecovery, signOut } = useAdminAuth()
 
   switch (state.kind) {
     case 'loading':
@@ -27,6 +33,8 @@ function Root() {
       )
     case 'signed_out':
       return <LoginScreen />
+    case 'new_password':
+      return <NewPasswordScreen onDone={() => void finishRecovery()} />
     case 'enroll_mfa':
       return <EnrollMfaScreen onDone={() => void refresh()} />
     case 'verify_mfa':

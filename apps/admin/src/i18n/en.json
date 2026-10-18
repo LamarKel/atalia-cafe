@@ -62,5 +62,21 @@
   "soon.text": "This section arrives in phase {n} of the panel.",
   "login.show": "Show password",
   "login.hide": "Hide password",
-  "app.notifications": "Notifications"
+  "app.notifications": "Notifications",
+  "login.forgot": "Forgot your password?",
+  "reset.title": "Recover your access",
+  "reset.text": "Enter your email and we will send you a link to create a new password.",
+  "reset.send": "Send link",
+  "reset.sent": "If that email has access, a link will arrive in a few minutes. Open it in this same browser.",
+  "reset.back": "Back to sign in",
+  "reset.rate": "A link was sent recently. Wait a few minutes and try again.",
+  "newpw.title": "Create your new password",
+  "newpw.text": "Use at least 12 characters. A long phrase is safer and easier to remember.",
+  "newpw.password": "New password",
+  "newpw.confirm": "Repeat the password",
+  "newpw.save": "Save password",
+  "newpw.short": "It must have at least 12 characters.",
+  "newpw.mismatch": "The passwords do not match.",
+  "newpw.error": "Could not save it. The link may have expired: request a new one.",
+  "newpw.weak": "That password is too common or appeared in leaks. Choose another one."
 }
