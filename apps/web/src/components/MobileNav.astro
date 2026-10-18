@@ -1,5 +1,6 @@
 ---
 // Barra inferior fija en el móvil: Catering · Menú · Carrito (PLAN.md §9).
+import CartLink from '../islands/CartLink'
 import { localizedPath, t, type Locale } from '../i18n'
 
 interface Props {
@@ -13,7 +14,6 @@ const basePath = localizedPath(currentPath, 'en')
 const items = [
   { href: '/catering', label: t(locale, 'nav.catering') },
   { href: '/menu', label: t(locale, 'nav.menu') },
-  { href: '/cart', label: t(locale, 'nav.cart') },
 ] as const
 ---
 
@@ -41,5 +41,14 @@ const items = [
         )
       })
     }
+    <li>
+      <CartLink
+        client:idle
+        href={localizedPath('/cart', locale)}
+        label={t(locale, 'nav.cart')}
+        countLabel={t(locale, 'a11y.cart_count')}
+        variant="bar"
+      />
+    </li>
   </ul>
 </nav>

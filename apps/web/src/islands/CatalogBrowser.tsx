@@ -168,7 +168,7 @@ export default function CatalogBrowser(props: CatalogBrowserProps) {
               </button>
             </div>
           ) : (
-            <ul id={resultsId} className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            <ul id={resultsId} className="grid grid-cols-2 gap-3 sm:gap-6 xl:grid-cols-3">
               {visible.map((p, i) => {
                 const href = p.type === 'picadera_pack' ? props.picaderaHref : `${props.detailBase}/${p.slug}`
                 const amounts =
@@ -188,29 +188,33 @@ export default function CatalogBrowser(props: CatalogBrowserProps) {
                           src={p.imageUrl}
                           alt={p.imageAlt ?? ''}
                           loading="lazy"
-                          className="h-44 w-full object-cover"
+                          className="aspect-[4/3] w-full object-cover sm:aspect-auto sm:h-44"
                         />
                       ) : (
                         <div
                           aria-hidden="true"
-                          className={`flex h-44 items-center justify-center ${tints[i % tints.length]}`}
+                          className={`flex aspect-[4/3] items-center justify-center px-2 text-center sm:aspect-auto sm:h-44 ${tints[i % tints.length]}`}
                         >
-                          <span className="text-sm text-muted">{m['catalog.photo_placeholder']}</span>
+                          <span className="text-xs text-muted sm:text-sm">
+                            {m['catalog.photo_placeholder']}
+                          </span>
                         </div>
                       )}
-                      <div className="flex flex-1 flex-col p-5">
+                      <div className="flex flex-1 flex-col p-3 sm:p-5">
                         <div>
                           <Tag tone="sage">{m[`type.${p.type}`]}</Tag>
                         </div>
-                        <h2 className="mt-3 font-heading text-2xl font-bold leading-snug">{p.name}</h2>
-                        {amounts !== null && <p className="mt-1 text-sm text-muted">{amounts}</p>}
-                        <div className="mt-auto flex items-center justify-between gap-3 pt-5">
-                          <p className="whitespace-nowrap font-semibold text-secondary">
+                        <h2 className="mt-2 font-heading text-lg font-bold leading-snug sm:mt-3 sm:text-2xl">
+                          {p.name}
+                        </h2>
+                        {amounts !== null && <p className="mt-1 text-xs text-muted sm:text-sm">{amounts}</p>}
+                        <div className="mt-auto flex flex-col gap-1 pt-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:pt-5">
+                          <p className="text-sm font-semibold text-secondary sm:whitespace-nowrap sm:text-base">
                             {p.fromPriceCents === null
                               ? m['catalog.price_tbd']
                               : tf('catalog.from', { price: formatUSD(cents(p.fromPriceCents), locale) })}
                           </p>
-                          <p className="shrink-0 whitespace-nowrap text-sm text-muted">
+                          <p className="shrink-0 whitespace-nowrap text-xs text-muted sm:text-sm">
                             {tf('catalog.lead_hours', { n: p.minLeadHours })}
                           </p>
                         </div>
