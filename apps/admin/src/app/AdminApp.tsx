@@ -6,6 +6,10 @@ import { Dashboard } from './screens/Dashboard'
 import { Business } from './screens/Business'
 import { Catalog } from './screens/Catalog'
 import { Orders } from './screens/Orders'
+import { Promos } from './screens/Promos'
+import { Quotes } from './screens/Quotes'
+import { Reports } from './screens/Reports'
+import { Team } from './screens/Team'
 import {
   EnrollMfaScreen,
   LoginScreen,
@@ -13,7 +17,7 @@ import {
   NotAdminScreen,
   VerifyMfaScreen,
 } from './screens/AuthScreens'
-import { Shell, useRoute, type Route } from './Shell'
+import { Shell, useRoute } from './Shell'
 
 export default function AdminApp() {
   return (
@@ -53,16 +57,7 @@ function Root() {
   }
 }
 
-/** Fase del plan en la que llega cada sección (las que todavía no están hechas). */
-const PHASE: Partial<Record<Route, number>> = {
-  quotes: 5,
-  promos: 5,
-  team: 5,
-  reports: 5,
-}
-
 function Panel({ role, email, onSignOut }: { role: Role; email: string; onSignOut: () => void }) {
-  const { t } = useI18n()
   const [route, navigate] = useRoute(role)
   return (
     <Shell role={role} email={email} route={route} onNavigate={navigate} onSignOut={onSignOut}>
@@ -76,13 +71,14 @@ function Panel({ role, email, onSignOut }: { role: Role; email: string; onSignOu
         <Catalog section="catering" />
       ) : route === 'business' ? (
         <Business role={role} />
+      ) : route === 'quotes' ? (
+        <Quotes role={role} />
+      ) : route === 'promos' ? (
+        <Promos />
+      ) : route === 'reports' ? (
+        <Reports />
       ) : (
-        <div className="mx-auto max-w-3xl rounded-3xl bg-white p-8 text-center">
-          <h1 tabIndex={-1} className="font-heading text-3xl font-bold">
-            {t('soon.title')}
-          </h1>
-          <p className="mt-2 text-muted">{t('soon.text', { n: PHASE[route] ?? 2 })}</p>
-        </div>
+        <Team selfEmail={email} />
       )}
     </Shell>
   )
