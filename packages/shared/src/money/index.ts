@@ -102,6 +102,22 @@ export function formatPpm(rate: Ppm): string {
   return `${(rate / 10_000).toString()}%`
 }
 
+const PERCENT_INPUT = /^(\d{1,3})(?:\.(\d{1,4}))?\s*%?$/
+
+/**
+ * Lo que escribe el admin ("6.625", "15 %") → ppm entero (66250, 150000), sin pasar por floats.
+ * Hasta 4 decimales (la unidad mínima de ppm en porcentaje) y máximo 100 %.
+ */
+export function parsePercent(input: string): Ppm {
+  const match = PERCENT_INPUT.exec(input.trim())
+  if (!match) {
+    throw new MoneyError(`Porcentaje no válido: "${input}". Usa por ejemplo 6.625`)
+  }
+  const whole = Number(match[1] ?? '0')
+  const fraction = Number((match[2] ?? '').padEnd(4, '0'))
+  return ppm(whole * 10_000 + fraction)
+}
+
 export interface OrderLine {
   unitPriceCents: Cents
   quantity: number

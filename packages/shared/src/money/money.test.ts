@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   MoneyError,
+  parsePercent,
   applyPpm,
   cents,
   centsSchema,
@@ -168,5 +169,21 @@ describe('computeOrderTotals (orden fijo A3)', () => {
     expect(() =>
       computeOrderTotals({ lines: [{ unitPriceCents: cents(100), quantity: -1 }], taxRatePpm: tax }),
     ).toThrow(MoneyError)
+  })
+})
+
+describe('parsePercent', () => {
+  it('convierte lo que escribe el admin a ppm sin floats', () => {
+    expect(parsePercent('6.625')).toBe(66_250)
+    expect(parsePercent('15 %')).toBe(150_000)
+    expect(parsePercent('0')).toBe(0)
+    expect(parsePercent('100')).toBe(1_000_000)
+    expect(parsePercent('33.3333')).toBe(333_333)
+  })
+  it('rechaza formatos raros y más de 100 %', () => {
+    expect(() => parsePercent('6,5')).toThrow()
+    expect(() => parsePercent('abc')).toThrow()
+    expect(() => parsePercent('6.12345')).toThrow()
+    expect(() => parsePercent('150')).toThrow()
   })
 })
