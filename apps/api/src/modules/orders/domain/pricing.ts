@@ -214,5 +214,13 @@ export function cartNeeds(
   return { needs, leadHours }
 }
 
+/** Detalle visible de una línea: tamaño y extras ("Grande · 20 oz · Leche de avena"). */
+export function lineDetail(line: PricedLine): string | null {
+  const parts = [line.sizeLabelSnapshot, ...line.extras.map((e) => e.nameSnapshot)].filter(
+    (p): p is string => p !== null && p !== '',
+  )
+  return parts.length === 0 ? null : parts.join(' · ')
+}
+
 /** Total de una línea, para mostrar o comparar. */
 export const lineTotal = (line: PricedLine): Cents => multiplyCents(line.unitPriceCents, line.quantity)

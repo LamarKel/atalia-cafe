@@ -10,7 +10,7 @@ import type {
 } from '@atalia/shared/checkout'
 import { ppm } from '@atalia/shared/money'
 import { getRule, snapshotRules } from '@atalia/shared/rules'
-import { PricingError, cartNeeds, lineTotal, priceCart } from '../../orders/domain/pricing'
+import { PricingError, cartNeeds, lineDetail, lineTotal, priceCart } from '../../orders/domain/pricing'
 import type { AvailabilityRepo, CatalogRepo, Mailer, OrdersRepo, PaymentGateway, StoreRepo } from '../ports'
 
 export type CheckoutErrorCode =
@@ -75,7 +75,7 @@ export async function getAvailability(
     quote = {
       lines: cart.lines.map((l) => ({
         name: l.nameSnapshot,
-        detail: l.sizeLabelSnapshot,
+        detail: lineDetail(l),
         quantity: l.quantity,
         lineTotalCents: lineTotal(l),
       })),
@@ -181,11 +181,14 @@ export async function startCheckout(
     customerEmail: req.customer.email,
     locale: req.locale,
     lineItems: [
-      ...cart.lines.map((l) => ({
-        name: l.sizeLabelSnapshot === null ? l.nameSnapshot : `${l.nameSnapshot} · ${l.sizeLabelSnapshot}`,
-        unitAmountCents: l.unitPriceCents,
-        quantity: l.quantity,
-      })),
+      ...cart.lines.map((l) => {
+        const detail = lineDetail(l)
+        return {
+          name: detail === null ? l.nameSnapshot : `${l.nameSnapshot} · ${detail}`,
+          unitAmountCents: l.unitPriceCents,
+          quantity: l.quantity,
+        }
+      }),
       ...(cart.totals.taxCents > 0
         ? [{ name: taxLabel, unitAmountCents: cart.totals.taxCents, quantity: 1 }]
         : []),
