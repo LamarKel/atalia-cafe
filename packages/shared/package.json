@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./money": "./src/money/index.ts",
-    "./rules": "./src/rules/index.ts"
+    "./rules": "./src/rules/index.ts",
+    "./picadera": "./src/picadera/index.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
