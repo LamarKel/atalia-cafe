@@ -1,0 +1,32 @@
+---
+// Confirmación del pedido (docs/design/06-confirmacion.png). Datos de la tienda desde la BD.
+import { getRule } from '@atalia/shared/rules'
+import OrderConfirmation from '../islands/OrderConfirmation'
+import BaseLayout from '../layouts/BaseLayout.astro'
+import { getPublicRuleRows, getStoreInfo } from '../lib/catalog'
+import { directionsUrl } from '../lib/catalog-format'
+import { localizedPath, messagesFor, t, type Locale } from '../i18n'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+const [store, rules] = await Promise.all([getStoreInfo(), getPublicRuleRows()])
+---
+
+<BaseLayout locale={locale} title={t(locale, 'order.title')} checkout>
+  <div class="px-4 pb-24 pt-12 md:px-8 md:pt-16">
+    <OrderConfirmation
+      client:only="react"
+      locale={locale}
+      messages={messagesFor(locale)}
+      address={store.address}
+      directionsHref={directionsUrl(store.lat, store.lng)}
+      whatsappHref={store.whatsapp ? `https://wa.me/${store.whatsapp}` : null}
+      policyHref={localizedPath('/policies', locale)}
+      homeHref={localizedPath('/', locale)}
+      slotMinutes={getRule('time.slot_minutes', rules)}
+    />
+  </div>
+</BaseLayout>
