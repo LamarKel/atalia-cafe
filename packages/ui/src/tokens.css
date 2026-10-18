@@ -16,6 +16,22 @@
   --color-blush: #efe4e0; /* días agotados */
   --color-muted: #6b6560; /* texto secundario sobre crema, contraste AA */
 
+  /*
+   * Verde para elementos con TEXTO encima o texto verde (chips, botón "Add" del menú).
+   * El verde de la marca (#6b7f5a) da 4.37:1 con texto blanco y 3.89:1 sobre crema: no llega al
+   * 4.5:1 de WCAG AA para texto normal. Pendiente de decisión de la clienta (PLAN.md §13):
+   * cambiar este valor a #5f7250 (5.24:1 y 4.66:1) lo arregla en todos los componentes a la vez.
+   */
+  --color-primary-ink: #6b7f5a;
+
+  /* Botón deshabilitado del diseño (pantalla 04). WCAG no exige contraste en controles inactivos. */
+  --color-disabled: #c9bfb8;
+
+  /* Toasts: los mismos tonos de la referencia, un paso más oscuros para cumplir AA con texto blanco */
+  --color-toast-success: #15803d; /* 5.02:1 (la referencia usaba green-600: 3.30:1) */
+  --color-toast-error: #dc2626; /* 4.83:1 */
+  --color-toast-warning: #92400e; /* 7.09:1 (la referencia usaba yellow-600: 2.94:1) */
+
   /* Tipografía */
   --font-heading: 'Playfair Display', Georgia, serif;
   --font-body: 'Poppins', system-ui, sans-serif;
