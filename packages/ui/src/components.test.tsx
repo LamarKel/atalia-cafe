@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { Button, ButtonLink } from './Button'
 import { Card } from './Card'
+import { Dialog } from './Dialog'
 import { OptionGroup, Tag, ToggleChip, type Option } from './Chip'
 import { QuantityStepper, Stepper } from './Stepper'
 import { TOAST_DEFAULT_DURATION_MS, ToastProvider, useToast } from './Toast'
@@ -259,5 +260,40 @@ describe('Toast', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
     expect(() => render(<Trigger />)).toThrow(/ToastProvider/)
     spy.mockRestore()
+  })
+})
+
+describe('Dialog', () => {
+  // jsdom no implementa showModal/close de <dialog>
+  HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
+    this.setAttribute('open', '')
+  }
+  HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
+    this.removeAttribute('open')
+  }
+
+  it('abre con nombre accesible y cierra con el botón y con Esc', async () => {
+    const onClose = vi.fn()
+    render(
+      <Dialog open onClose={onClose} title="Latte" closeLabel="Cerrar" footer={<span>Agregar</span>}>
+        <p>Espresso y leche</p>
+      </Dialog>,
+    )
+    const dialog = screen.getByRole('dialog', { name: 'Latte' })
+    expect(dialog).toHaveAttribute('open')
+    expect(screen.getByText('Agregar')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Cerrar' }))
+    expect(onClose).toHaveBeenCalledTimes(1)
+    dialog.dispatchEvent(new Event('cancel', { cancelable: true }))
+    expect(onClose).toHaveBeenCalledTimes(2)
+  })
+
+  it('cerrado no muestra el contenido', () => {
+    render(
+      <Dialog open={false} onClose={() => undefined} title="Latte" closeLabel="Cerrar">
+        <p>Espresso y leche</p>
+      </Dialog>,
+    )
+    expect(screen.queryByText('Espresso y leche')).toBeNull()
   })
 })

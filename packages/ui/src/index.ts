@@ -9,4 +9,5 @@ export {
   type ToastOptions,
   type ToastTone,
 } from './Toast'
+export { Dialog, type DialogProps } from './Dialog'
 export { cx } from './cx'
