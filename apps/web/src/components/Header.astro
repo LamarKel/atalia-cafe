@@ -134,6 +134,19 @@ const isActive = (href: string) => (href === '/' ? basePath === '/' : basePath.s
           </li>
         ))
       }
+      <!-- Solo en el menú del teléfono: la barra de escritorio queda igual al diseño aprobado -->
+      <li>
+        <a
+          href={localizedPath('/quote', locale)}
+          aria-current={isActive('/quote') ? 'page' : undefined}
+          class:list={[
+            'flex min-h-12 items-center text-lg font-medium',
+            isActive('/quote') ? 'text-secondary' : 'text-dark',
+          ]}
+        >
+          {t(locale, 'nav.quote')}
+        </a>
+      </li>
     </ul>
     <a href={localizedPath('/catering', locale)} class="btn-primary mt-4 w-full">
       {t(locale, 'nav.order_catering')}

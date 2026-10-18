@@ -85,6 +85,12 @@ const whatsappUrl = store.whatsapp ? `https://wa.me/${store.whatsapp}` : null
         }
       </p>
       <a
+        href={localizedPath('/quote', locale)}
+        class="flex min-h-11 items-center underline underline-offset-4"
+      >
+        {t(locale, 'nav.quote')}
+      </a>
+      <a
         href={localizedPath('/policies', locale)}
         class="inline-flex min-h-11 items-center underline underline-offset-4"
       >
