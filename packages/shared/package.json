@@ -9,7 +9,8 @@
     "./rules": "./src/rules/index.ts",
     "./picadera": "./src/picadera/index.ts",
     "./checkout": "./src/checkout/index.ts",
-    "./quotes": "./src/quotes/index.ts"
+    "./quotes": "./src/quotes/index.ts",
+    "./catalog": "./src/catalog/index.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
