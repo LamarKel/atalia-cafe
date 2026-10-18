@@ -57,6 +57,9 @@ export default function CartView({ locale, messages: m, cateringHref, checkoutHr
                       ? tf('cart.pieces', { n: item.units })
                       : item.sizeLabel}
                 </p>
+                {item.extras.length > 0 && (
+                  <p className="mt-1 text-sm text-muted">{item.extras.map((e) => e.name).join(' · ')}</p>
+                )}
                 {item.components.length > 0 && (
                   <p className="mt-1 text-sm text-muted">
                     {item.components.map((c) => `${c.label} × ${c.qty}`).join(', ')}

@@ -9,6 +9,13 @@ export interface CartComponent {
   qty: number
 }
 
+export interface CartExtra {
+  id: string
+  name: string
+  /** Solo para mostrar; el Worker cobra el precio de la BD. */
+  priceCents: number
+}
+
 export interface CartItem {
   /** Id de la línea (no del producto): dos picaderas distintas son dos líneas. */
   lineId: string
@@ -26,6 +33,8 @@ export interface CartItem {
   notes: string
   minLeadHours: number
   components: CartComponent[]
+  /** Extras del menú (leche de avena, shot extra…). */
+  extras: CartExtra[]
 }
 
 const KEY = 'atalia.cart.v1'
@@ -36,7 +45,12 @@ function read(): CartItem[] {
     const raw = localStorage.getItem(KEY)
     if (raw === null) return []
     const parsed: unknown = JSON.parse(raw)
-    return Array.isArray(parsed) ? (parsed as CartItem[]) : []
+    if (!Array.isArray(parsed)) return []
+    // Carritos guardados antes de que existieran los extras
+    return (parsed as Array<CartItem & { extras?: CartExtra[] }>).map((i) => ({
+      ...i,
+      extras: Array.isArray(i.extras) ? i.extras : [],
+    }))
   } catch {
     return []
   }
@@ -63,7 +77,9 @@ export function addToCart(item: Omit<CartItem, 'lineId'>): CartItem[] {
       i.productId === item.productId &&
       i.sizeId === item.sizeId &&
       i.notes === item.notes &&
-      JSON.stringify(i.components) === JSON.stringify(item.components),
+      JSON.stringify(i.components) === JSON.stringify(item.components) &&
+      JSON.stringify(i.extras.map((e) => e.id).sort()) ===
+        JSON.stringify(item.extras.map((e) => e.id).sort()),
   )
   if (same) {
     same.quantity += item.quantity

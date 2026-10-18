@@ -1,0 +1,25 @@
+---
+// Menú del café. Datos de la BD (categorías, productos, tamaños, extras, nutrición, tiendas); la interacción
+// vive en la isla MenuBrowser.
+import MenuBrowser from '../islands/MenuBrowser'
+import BaseLayout from '../layouts/BaseLayout.astro'
+import { getMenu, getPickupStores } from '../lib/catalog'
+import { messagesFor, t, type Locale } from '../i18n'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+const [categories, stores] = await Promise.all([getMenu(locale), getPickupStores(locale)])
+---
+
+<BaseLayout locale={locale} title={t(locale, 'menu.title')} description={t(locale, 'menu.subtitle')}>
+  <MenuBrowser
+    client:load
+    locale={locale}
+    messages={messagesFor(locale)}
+    categories={categories}
+    stores={stores}
+  />
+</BaseLayout>
