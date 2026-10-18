@@ -350,6 +350,17 @@ export function ordersRepo(db: SupabaseClient): OrdersRepo {
       return data as ConfirmResult
     },
 
+    async syncRefund(e) {
+      const { data, error } = await db.rpc('sync_refund', {
+        p_event_id: e.eventId,
+        p_event_type: e.eventType,
+        p_payment_intent_id: e.paymentIntentId,
+        p_amount_refunded_cents: e.amountRefundedCents,
+      })
+      if (error) fail('sync_refund', error)
+      return data as string
+    },
+
     async cancelUnpaid(e) {
       const { data, error } = await db.rpc('cancel_unpaid_checkout', {
         p_event_id: e.eventId,
