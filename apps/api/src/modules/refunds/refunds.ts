@@ -1,12 +1,8 @@
 // Reembolsos y cancelaciones desde el panel (REGLAS B6, A4, A11). Solo dueña o admin con 2FA; el equipo no
 // reembolsa (B16). El dinero lo devuelve Stripe; el pedido se marca reembolsado cuando llega el webhook
 // (sync_refund), igual que el pago se marca pagado solo en el webhook.
-import {
-  refundRequestSchema,
-  suggestRefund,
-  type RefundReason,
-  type RefundSuggestion,
-} from '@atalia/shared/refunds'
+import type { refundRequestSchema } from '@atalia/shared/refunds'
+import { suggestRefund, type RefundReason, type RefundSuggestion } from '@atalia/shared/refunds'
 import { getRule } from '@atalia/shared/rules'
 import type { z } from 'zod'
 import type { Caller, TeamRole } from '../team/team'
