@@ -11,11 +11,9 @@ Web de **catering y pedidos online** para Atalia Café, un negocio en EE.UU. El 
 
 **Prioridad de la clienta:** catering (bandejas, mesas y picaderas) con precios por cantidad de personas, pedido y **pago en línea**. El menú normal se mantiene, pero no es prioridad.
 
-**Diseño (decisión de la clienta, 2026-10-18):** lo que la clienta quiere ver es:
-1. **Las 6 pantallas aprobadas** (`docs/design/`): Inicio, Catálogo, Detalle de bandeja, Arma tu picadera, Checkout y Confirmación.
-2. **El estilo del menú de [Delicias Dominicanas](https://deliciasdominicanas.net/menu/)**, como inspiración de layout y UX, sin copiar su marca, textos ni fotos. Capturas en `docs/design/inspiracion/`.
+**Diseño (decisión de la clienta, 2026-10-18):** lo que se ve lo definen **las 6 pantallas aprobadas** (`docs/design/`): Inicio, Catálogo, Detalle de bandeja, Arma tu picadera, Checkout y Confirmación.
 
-La marca de Atalia (colores, fuentes y botones) se mantiene en todo.
+Lo que no tiene pantalla propia (el menú del café, el carrito y el admin) sigue el mismo lenguaje visual. El menú, en particular, se basa en la pantalla 02 (Catálogo): filtros, búsqueda y tarjetas. La marca de Atalia (colores, fuentes y botones) se mantiene en todo.
 
 ### Apps de referencia funcional (OBLIGATORIO revisarlas antes de programar una pantalla)
 
@@ -84,7 +82,7 @@ App móvil nativa, programa de lealtad, integración con un POS, 3D, **pagos en 
 - **RF17** Reembolso total o parcial desde el admin.
 
 ### Menú (existente, se conserva)
-- **RF-M01** El menú conserva **las mismas funciones** que la app publicada (`D:\Dev\cafe`): categorías, búsqueda, modal de producto (tamaños, extras, info nutricional), selector de tienda y carrito, con el **diseño nuevo** (pantallas aprobadas + estilo de Delicias Dominicanas).
+- **RF-M01** El menú conserva **las mismas funciones** que la app publicada (`D:\Dev\cafe`): categorías, búsqueda, modal de producto (tamaños, extras, info nutricional), selector de tienda y carrito, con el **diseño nuevo** (lenguaje visual de las pantallas aprobadas, en especial la 02 · Catálogo).
 - **RF-M02** Todo el contenido del menú se edita desde el admin; nada queda escrito a mano en el código.
 
 ### Admin — editable al 100%
@@ -301,9 +299,7 @@ Cada fase se cierra con un PR revisado, el CI en verde y el deploy a staging.
 ### Fase 1 — Base
 - [x] **Auditar `D:\Dev\atalia-cafe-react`** y generar `docs/REFERENCE.md`.
 - [x] Capturas de la app publicada en `docs/screenshots/netlify/` (escritorio y móvil). Tomadas después de la migración v3, así que muestran el layout pero no los datos de entonces.
-- [ ] **Auditar `D:\Dev\cafe`** (la app publicada, referencia principal) y agregarla a `docs/REFERENCE.md`.
-- [ ] Capturas del menú de Delicias Dominicanas en `docs/design/inspiracion/` (el sitio bloquea los navegadores automáticos; las envía la clienta o el desarrollador).
-- [x] Monorepo con pnpm, TypeScript `strict`, ESLint, Prettier.
+- [ ] **Auditar `D:\Dev\cafe`** (la app publicada, referencia principal) y agregarla a `docs/REFERENCE.md`.- [x] Monorepo con pnpm, TypeScript `strict`, ESLint, Prettier.
 - [ ] `packages/ui`: tokens **extraídos de la referencia** en Tailwind ✅, fuentes ✅ y componentes base (Button, Card, Chip, Stepper, Toast) con el mismo aspecto que los actuales (pendiente: solo hay `.btn-primary` y `.btn-outline`).
 - [x] `apps/web` con Astro: layout, header/footer, i18n EN/ES.
 - [x] `apps/api` con Hono, health check y manejo de errores.
@@ -313,7 +309,7 @@ Cada fase se cierra con un PR revisado, el CI en verde y el deploy a staging.
 - [x] `CLAUDE.md` con las reglas del proyecto.
 
 ### Fase 2 — Menú y catálogo
-- [ ] **Migrar el menú actual** con todas sus funciones (`D:\Dev\cafe/menu.html`) y el diseño nuevo (pantallas aprobadas + estilo de Delicias Dominicanas); validar que no se pierde ninguna función.
+- [ ] **Migrar el menú actual** con todas sus funciones (`D:\Dev\cafe/menu.html`) y el diseño nuevo (lenguaje visual de las pantallas aprobadas, en especial la 02 · Catálogo); validar que no se pierde ninguna función.
 - [ ] Endpoint `/catalog` con caché en el edge.
 - [ ] Páginas: Inicio, Catálogo, Detalle.
 - [ ] Isla del armador de picaderas, con la validación compartida (Zod) en `packages/shared`.

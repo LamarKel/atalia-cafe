@@ -3,9 +3,9 @@
 Lee PLAN.md antes de cualquier tarea.
 
 ## Referencias (decisión de la clienta, 2026-10-18)
-- **Diseño visual (cómo se ve) — manda esto:**
-  1. Las 6 pantallas aprobadas en docs/design/.
-  2. El estilo del menú de https://deliciasdominicanas.net/menu/ (inspiración de UX y layout; nunca copiar su marca, textos ni fotos). Capturas en docs/design/inspiracion/.
+- **Diseño visual (cómo se ve) — manda esto:** las 6 pantallas aprobadas en docs/design/. Nada más.
+  Lo que no tiene pantalla propia (el menú del café, el carrito, el admin) sigue el mismo lenguaje visual
+  de esas pantallas; el menú, en particular, el de la pantalla 02 (Catálogo).
 - **Funciones (qué hace cada pantalla):** las dos apps viejas, SOLO LECTURA, nunca modificarlas:
   1. D:\Dev\cafe, rama v2-supabase: la que está publicada en ataliacafe.netlify.app. Referencia principal.
   2. D:\Dev\atalia-cafe-react: apoyo. Resumen en docs/REFERENCE.md.
