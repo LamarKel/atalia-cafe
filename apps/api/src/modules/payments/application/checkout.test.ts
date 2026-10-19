@@ -1,4 +1,5 @@
 import { checkoutRequestSchema, type CheckoutRequest } from '@atalia/shared/checkout'
+import type { PromoRule } from '@atalia/shared/promos'
 import type { StoredRule } from '@atalia/shared/rules'
 import { describe, expect, it, vi } from 'vitest'
 import type { CatalogProduct } from '../../orders/domain/pricing'
@@ -58,7 +59,31 @@ const slot = (over: Partial<SlotRow> = {}): SlotRow => ({
   ...over,
 })
 
-function setup(opts: { rules?: StoredRule[]; slots?: SlotRow[]; created?: Partial<CreatedOrder> } = {}) {
+const PROMO: PromoRule = {
+  id: 'promo-1',
+  code: 'QATEST10',
+  discountType: 'percentage',
+  discountPpm: 100_000,
+  discountCents: null,
+  minOrderCents: 2000,
+  maxUses: null,
+  maxUsesPerCustomer: 1,
+  usedCount: 0,
+  appliesToCatering: true,
+  startsAt: null,
+  expiresAt: null,
+  active: true,
+}
+
+function setup(
+  opts: {
+    rules?: StoredRule[]
+    slots?: SlotRow[]
+    created?: Partial<CreatedOrder>
+    promo?: PromoRule | null
+    uses?: number
+  } = {},
+) {
   const sessions: CheckoutSessionInput[] = []
   const orders: NewOrder[] = []
   const attach = vi.fn<(orderId: string, sessionId: string) => Promise<void>>(() => Promise.resolve())
@@ -74,6 +99,11 @@ function setup(opts: { rules?: StoredRule[]; slots?: SlotRow[]; created?: Partia
     catalog: {
       products: () => Promise.resolve(new Map([[TRAY, tray]])),
       pieces: () => Promise.resolve(new Map()),
+    },
+    promos: {
+      byCode: (code) =>
+        Promise.resolve(code === PROMO.code ? (opts.promo === undefined ? PROMO : opts.promo) : null),
+      usesByEmail: () => Promise.resolve(opts.uses ?? 0),
     },
     availability: { slots: () => Promise.resolve(opts.slots ?? [slot()]) },
     orders: {
@@ -215,6 +245,78 @@ describe('punto de recogida', () => {
   })
 })
 
+describe('cupones', () => {
+  const withPromo = (code: string) => checkoutRequestSchema.parse({ ...request, promoCode: code })
+
+  it('descuenta en el servidor, guarda el cupón y Stripe cobra exactamente el total', async () => {
+    const { deps, sessions, orders } = setup()
+    await startCheckout(deps, withPromo(' qatest10 '))
+    // 18000 − 10 % = 16200; impuesto 6.625 % = 1073 → 17273
+    expect(orders[0]).toMatchObject({
+      promoCodeId: 'promo-1',
+      subtotalCents: 18000,
+      discountCents: 1800,
+      taxCents: 1073,
+      totalCents: 17273,
+    })
+    const session = sessions[0]
+    const lines = session?.lineItems.reduce((sum, l) => sum + l.unitAmountCents * l.quantity, 0) ?? 0
+    expect(session?.discountCents).toBe(1800)
+    expect(session?.discountLabel).toBe('QATEST10')
+    expect(lines - (session?.discountCents ?? 0)).toBe(17273)
+  })
+
+  it('rechaza el cupón si el cliente ya lo usó (límite por cliente)', async () => {
+    const { deps, orders } = setup({ uses: 1 })
+    await expect(startCheckout(deps, withPromo('QATEST10'))).rejects.toEqual(
+      new CheckoutError('promo_rejected', 'per_customer_limit'),
+    )
+    expect(orders).toHaveLength(0)
+  })
+
+  it('un código que no existe no crea el pedido', async () => {
+    const { deps } = setup()
+    await expect(startCheckout(deps, withPromo('NOPE'))).rejects.toMatchObject({ reason: 'not_found' })
+  })
+
+  it('un descuento que deja el total por debajo del mínimo de Stripe no se aplica', async () => {
+    const { deps } = setup({
+      promo: { ...PROMO, discountType: 'fixed', discountPpm: null, discountCents: 18_000 },
+    })
+    await expect(startCheckout(deps, withPromo('QATEST10'))).rejects.toMatchObject({ reason: 'too_large' })
+  })
+
+  it('el resumen muestra el descuento o por qué no se aplicó, sin bloquear las horas', async () => {
+    const { deps } = setup()
+    const items = checkoutRequestSchema.parse(request).items
+    const ok = await getAvailability(deps, {
+      from: '2026-10-21',
+      to: '2026-10-21',
+      locale: 'es',
+      items,
+      promoCode: 'QATEST10',
+    })
+    expect(ok.quote).toMatchObject({
+      discountCents: 1800,
+      totalCents: 17273,
+      promo: { code: 'QATEST10', applied: true },
+    })
+    const bad = await getAvailability(deps, {
+      from: '2026-10-21',
+      to: '2026-10-21',
+      locale: 'es',
+      items,
+      promoCode: 'NOPE',
+    })
+    expect(bad.quote).toMatchObject({
+      discountCents: 0,
+      totalCents: 19193,
+      promo: { applied: false, reason: 'not_found' },
+    })
+    expect(bad.slots).toHaveLength(1)
+  })
+})
+
 describe('handlePaymentEvent', () => {
   const event = (over: Partial<PaymentEvent>): PaymentEvent => ({
     id: 'evt_1',
@@ -261,6 +363,7 @@ describe('getAvailability', () => {
       to: '2026-10-21',
       locale: 'es',
       items: checkoutRequestSchema.parse(request).items,
+      promoCode: '',
     })
     expect(res.slots).toHaveLength(1)
     expect(res.quote).toMatchObject({
@@ -282,6 +385,7 @@ describe('getAvailability', () => {
       to: '2026-10-21',
       locale: 'es',
       items: checkoutRequestSchema.parse(request).items,
+      promoCode: '',
     })
     expect(res.quote).toBeNull()
     expect(res.slots).toHaveLength(1)
@@ -290,7 +394,7 @@ describe('getAvailability', () => {
   it('rechaza rangos de más de dos meses', async () => {
     const { deps } = setup()
     await expect(
-      getAvailability(deps, { from: '2026-01-01', to: '2026-12-31', locale: 'en', items: [] }),
+      getAvailability(deps, { from: '2026-01-01', to: '2026-12-31', locale: 'en', items: [], promoCode: '' }),
     ).rejects.toEqual(new CheckoutError('range_too_long'))
   })
 })

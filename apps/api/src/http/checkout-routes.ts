@@ -64,6 +64,10 @@ function domainError(err: unknown): never {
         throw new ApiError(422, 'validation_failed', 'Ese punto de recogida no está disponible')
       case 'range_too_long':
         throw new ApiError(422, 'validation_failed', 'Rango de fechas demasiado largo')
+      case 'promo_rejected':
+        throw new ApiError(422, 'promo_rejected', 'Ese cupón no se puede usar con este pedido', {
+          reason: err.reason,
+        })
     }
   }
   throw err

@@ -16,6 +16,8 @@ export class ApiRequestError extends Error {
   constructor(
     readonly status: number,
     readonly code: string,
+    /** details.reason del Worker (p. ej. por qué no se aplicó un cupón). */
+    readonly reason: string | null = null,
   ) {
     super(code)
   }
@@ -33,13 +35,16 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
   }
   if (!res.ok) {
     let code = 'internal_error'
+    let reason: string | null = null
     try {
-      const body = (await res.json()) as { error?: { code?: string } }
+      const body = (await res.json()) as { error?: { code?: string; details?: { reason?: unknown } } }
       code = body.error?.code ?? code
+      const r = body.error?.details?.reason
+      reason = typeof r === 'string' ? r : null
     } catch {
       // Cuerpo vacío o que no es JSON.
     }
-    throw new ApiRequestError(res.status, code)
+    throw new ApiRequestError(res.status, code, reason)
   }
   return (await res.json()) as T
 }

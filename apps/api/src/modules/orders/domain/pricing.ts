@@ -7,6 +7,7 @@ import {
   computeOrderTotals,
   multiplyCents,
   type Cents,
+  type Discount,
   type OrderTotals,
   type Ppm,
 } from '@atalia/shared/money'
@@ -118,6 +119,7 @@ export function priceCart(
   pieces: ReadonlyMap<string, CatalogPiece>,
   rules: PricingRules,
   locale: Locale,
+  discount?: Discount,
 ): PricedCart {
   const qtyByProduct = new Map<string, number>()
   const lines = items.map((item, index): PricedLine => {
@@ -190,6 +192,7 @@ export function priceCart(
   const totals = computeOrderTotals({
     lines: lines.map((l) => ({ unitPriceCents: l.unitPriceCents, quantity: l.quantity })),
     taxRatePpm: rules.taxRatePpm,
+    ...(discount === undefined ? {} : { discount }),
   })
 
   return { lines, totals, needs, leadHours }
@@ -221,6 +224,10 @@ export function lineDetail(line: PricedLine): string | null {
   )
   return parts.length === 0 ? null : parts.join(' · ')
 }
+
+/** ¿Hay catering en el carrito? (bandejas, mesas, picaderas: todo lo que no es menú del café) */
+export const hasCatering = (lines: readonly PricedLine[]): boolean =>
+  lines.some((l) => l.productType !== 'menu')
 
 /** Total de una línea, para mostrar o comparar. */
 export const lineTotal = (line: PricedLine): Cents => multiplyCents(line.unitPriceCents, line.quantity)

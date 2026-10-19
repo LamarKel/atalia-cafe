@@ -1,6 +1,7 @@
 // Puertos del checkout (hexagonal ligera, PLAN.md §6): la aplicación habla con estas interfaces y
 // index.ts las une con los adaptadores de Supabase, Stripe y Resend.
 import type { OrderSummary } from '@atalia/shared/checkout'
+import type { PromoRule } from '@atalia/shared/promos'
 import type { StoredRule } from '@atalia/shared/rules'
 import type { CatalogPiece, CatalogProduct, PricedLine, ProductType } from '../orders/domain/pricing'
 
@@ -21,6 +22,7 @@ export interface NewOrder {
   checkoutToken: string
   storeId: string
   pickupLocationId: string | null
+  promoCodeId: string | null
   customer: { name: string; phone: string; email: string }
   locale: 'en' | 'es'
   note: string
@@ -58,6 +60,13 @@ export interface StoreRepo {
   rules(storeId: string): Promise<StoredRule[]>
   /** Ids de los puntos de recogida activos de la tienda. */
   pickupLocationIds(storeId: string): Promise<string[]>
+}
+
+export interface PromoRepo {
+  /** Cupón por código (ya en mayúsculas); null si no existe. */
+  byCode(code: string): Promise<PromoRule | null>
+  /** Pedidos pagados (o en curso de pago) de este correo con el cupón, para max_uses_per_customer. */
+  usesByEmail(promoId: string, email: string): Promise<number>
 }
 
 export interface CatalogRepo {
@@ -115,6 +124,10 @@ export interface CheckoutSessionInput {
   cancelUrl: string
   expiresAt: number
   paymentMethods: string[]
+  /** Descuento del cupón en centavos (0 = sin cupón); Stripe lo resta del total de las líneas. */
+  discountCents: number
+  /** Nombre del descuento que ve el cliente en Stripe (el código del cupón). */
+  discountLabel: string
 }
 
 export interface PaymentGateway {

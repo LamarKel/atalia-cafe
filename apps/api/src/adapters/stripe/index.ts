@@ -18,6 +18,23 @@ export function paymentGateway(stripe: Stripe): PaymentGateway {
       return { id: refund.id }
     },
     async createCheckoutSession(input) {
+      // El cupón va como monto fijo (no porcentaje): así Stripe descuenta exactamente lo que calculó el Worker
+      // y el total cobrado coincide con orders.total_cents (A12). Un cupón por intento, de un solo uso.
+      let discounts: Stripe.Checkout.SessionCreateParams.Discount[] | undefined
+      if (input.discountCents > 0) {
+        const coupon = await stripe.coupons.create(
+          {
+            amount_off: input.discountCents,
+            currency: 'usd',
+            duration: 'once',
+            max_redemptions: 1,
+            name: input.discountLabel,
+            metadata: { order_id: input.orderId, order_code: input.orderCode },
+          },
+          { idempotencyKey: `${input.idempotencyKey}-coupon` },
+        )
+        discounts = [{ coupon: coupon.id }]
+      }
       const session = await stripe.checkout.sessions.create(
         {
           mode: 'payment',
@@ -36,6 +53,7 @@ export function paymentGateway(stripe: Stripe): PaymentGateway {
           success_url: input.successUrl,
           cancel_url: input.cancelUrl,
           expires_at: input.expiresAt,
+          ...(discounts === undefined ? {} : { discounts }),
         },
         { idempotencyKey: input.idempotencyKey },
       )
