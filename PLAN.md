@@ -306,7 +306,7 @@ Cada fase se cierra con un PR revisado, el CI en verde y el deploy a staging.
 ### Fase 1 — Base
 - [x] **Auditar `D:\Dev\atalia-cafe-react`** y generar `docs/REFERENCE.md`.
 - [x] Capturas de la app publicada en `docs/screenshots/netlify/` (escritorio y móvil). Tomadas después de la migración v3, así que muestran el layout pero no los datos de entonces.
-- [ ] **Auditar `D:\Dev\cafe`** (la app publicada, referencia principal) y agregarla a `docs/REFERENCE.md`.
+- [x] **Auditar `D:\Dev\cafe`** (la app publicada, referencia principal) y agregarla a `docs/REFERENCE.md` (§10, con los faltantes a decidir).
 - [x] Monorepo con pnpm, TypeScript `strict`, ESLint, Prettier.
 - [x] `packages/ui`: tokens en Tailwind, fuentes y componentes base (Button, Card, Chip/OptionGroup/Tag, Stepper/QuantityStepper, Toast) en React, con pruebas de accesibilidad.
 - [x] `apps/web` con Astro: layout, header/footer, i18n EN/ES.
@@ -317,35 +317,35 @@ Cada fase se cierra con un PR revisado, el CI en verde y el deploy a staging.
 - [x] `CLAUDE.md` con las reglas del proyecto.
 
 ### Fase 2 — Menú y catálogo
-- [ ] **Migrar el menú actual** con todas sus funciones (`D:\Dev\cafe/menu.html`) y el diseño nuevo (lenguaje visual de las pantallas aprobadas, en especial la 02 · Catálogo); validar que no se pierde ninguna función.
-- [ ] Endpoint `/catalog` con caché en el edge.
-- [ ] Páginas: Inicio, Catálogo, Detalle.
-- [ ] Isla del armador de picaderas, con la validación compartida (Zod) en `packages/shared`.
-- [ ] Carrito (isla de React, persistido en `localStorage` con try/catch).
-- [ ] Tests unitarios de las reglas de precio y de las combinaciones.
+- [x] **Migrar el menú actual** con todas sus funciones (`D:\Dev\cafe/menu.html`) y el diseño nuevo (lenguaje visual de las pantallas aprobadas, en especial la 02 · Catálogo); validar que no se pierde ninguna función.
+- [ ] Endpoint `/catalog` con caché en el edge. *(Por ahora el sitio es estático y lee la BD al compilar: lo que se cambia en el panel aparece al volver a compilar. Falta decidir: un deploy hook que recompile al guardar en el panel, o este endpoint.)*
+- [x] Páginas: Inicio, Catálogo, Detalle.
+- [x] Isla del armador de picaderas, con la validación compartida (Zod) en `packages/shared`.
+- [x] Carrito (isla de React, persistido en `localStorage` con try/catch).
+- [x] Tests unitarios de las reglas de precio y de las combinaciones.
 
 ### Fase 3 — Pedidos y pagos
-- [ ] Selector de fecha y hora conectado a `capacity_slots`.
-- [ ] `/checkout`: recalcula el precio, `reserve_slot`, crea el pedido con `checkout_token` y la sesión de Stripe con Idempotency-Key.
-- [ ] `/webhook`: firma + `stripe_events` + update condicional + emails con Resend.
-- [ ] Página de confirmación y tracking.
-- [ ] Cron: liberar las reservas vencidas.
-- [ ] Tests: 20 peticiones simultáneas con el mismo token → 1 pedido y 1 sesión.
+- [x] Selector de fecha y hora conectado a `capacity_slots`.
+- [x] `/checkout`: recalcula el precio, `reserve_slot`, crea el pedido con `checkout_token` y la sesión de Stripe con Idempotency-Key.
+- [x] `/webhook`: firma + `stripe_events` + update condicional + emails con Resend.
+- [ ] Página de confirmación ✅ y tracking (falta: seguir los estados después del pago, ver REFERENCE.md §10.3).
+- [x] Cron: liberar las reservas vencidas (Worker, cada 5 min, `release_expired_holds`).
+- [x] Tests: 20 peticiones simultáneas con el mismo token → 1 pedido y 1 sesión (`apps/api/scripts/concurrency.mjs`, probado contra staging).
 
 ### Fase 4 — Admin
-- [ ] **Migrar el admin actual** (`D:\Dev\cafe/admin.html`) con las mismas secciones y funciones.
-- [ ] Agregar las secciones nuevas: Catering, Picaderas, Contenido del sitio, Capacidad y días cerrados, y **Reglas** (formulario generado desde el registro de reglas, RF-A05).
-- [ ] Subida de imágenes a Storage, con optimización.
+- [x] **Migrar el admin actual** (falta imprimir ticket, REFERENCE.md §10.3) (`D:\Dev\cafe/admin.html`) con las mismas secciones y funciones.
+- [x] Agregar las secciones nuevas: Catering, Picaderas, Contenido del sitio, Capacidad y días cerrados, y **Reglas** (formulario generado desde el registro de reglas, RF-A05).
+- [x] Subida de imágenes a Storage, con optimización.
 - [ ] Checklist: cada texto, precio e imagen visible en el sitio debe poder editarse desde el admin.
-- [ ] Login con 2FA obligatorio.
-- [ ] CRUD de catálogo, opciones por personas y piezas de picadera.
-- [ ] Agenda de pedidos por fecha (con Realtime), cambios de estado y reembolsos.
-- [ ] Configuración de horario, anticipación y capacidad.
-- [ ] Auditoría de cada acción.
+- [x] Login con 2FA obligatorio.
+- [x] CRUD de catálogo, opciones por personas y piezas de picadera.
+- [x] Agenda de pedidos por fecha (con Realtime), cambios de estado y reembolsos.
+- [x] Configuración de horario, anticipación y capacidad.
+- [x] Auditoría de cada acción.
 
 ### Fase 5 — Endurecimiento
-- [ ] Headers de seguridad, reglas de WAF y rate limiting, Turnstile.
-- [ ] Revisión de las políticas RLS y de los advisors de Supabase.
+- [ ] Headers de seguridad ✅ (API; sitio y panel con CSP por hashes y `_headers`), rate limiting ✅ (binding de Cloudflare por IP), Turnstile ✅ (cotización). Falta: reglas de WAF (necesita la cuenta de Cloudflare).
+- [x] Revisión de las políticas RLS y de los advisors de Supabase (funciones de rol al esquema `private`; solo queda el aviso de Auth, ver abajo).
 - [ ] Desactivar la cuenta de pruebas `qa-admin@atalia.test` (admin_profiles.active = false y borrar el usuario en Auth) y quitar `http://127.0.0.1:4322/**` de las Redirect URLs de Supabase.
 - [ ] Supabase Auth (se dejó para el final a propósito, mientras dure el desarrollo): desactivar "Allow new users to sign up", activar la protección contra contraseñas filtradas, cambiar la contraseña del usuario owner y exigir 2FA (TOTP).
 - [ ] Auditoría de accesibilidad (axe + teclado) con la checklist de UI UX Pro Max.
