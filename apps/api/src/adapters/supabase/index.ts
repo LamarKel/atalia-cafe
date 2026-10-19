@@ -250,6 +250,11 @@ function toSummary(row: SummaryRow): OrderSummary {
 
 export function ordersRepo(db: SupabaseClient): OrdersRepo {
   return {
+    async releaseExpiredHolds() {
+      const { data, error } = await db.rpc('release_expired_holds')
+      if (error) throw new Error(`release_expired_holds: ${error.message}`)
+      return typeof data === 'number' ? data : 0
+    },
     async createCheckoutOrder(order) {
       const { data, error } = await db.rpc('create_checkout_order', {
         p_order: {

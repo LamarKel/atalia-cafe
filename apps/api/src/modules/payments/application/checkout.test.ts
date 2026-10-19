@@ -8,6 +8,7 @@ import {
   CheckoutError,
   getAvailability,
   handlePaymentEvent,
+  releaseExpired,
   startCheckout,
   type CheckoutDeps,
   type PaymentEvent,
@@ -123,6 +124,7 @@ function setup(
       confirmPaid: () => Promise.resolve('confirmed'),
       cancelUnpaid: () => Promise.resolve('cancelled'),
       syncRefund: () => Promise.resolve('partially_refunded'),
+      releaseExpiredHolds: () => Promise.resolve(2),
       summaryByAccessToken: () => Promise.resolve(null),
       summaryBySession: () =>
         Promise.resolve({
@@ -420,5 +422,14 @@ describe('reembolso por webhook', () => {
       paymentIntentId: 'pi_1',
       amountRefundedCents: 500,
     })
+  })
+})
+
+describe('cron de cupos vencidos', () => {
+  it('libera lo vencido con release_expired_holds', async () => {
+    const { deps } = setup()
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined)
+    expect(await releaseExpired(deps)).toBe(2)
+    log.mockRestore()
   })
 })
