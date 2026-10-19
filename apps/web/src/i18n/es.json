@@ -254,5 +254,6 @@
   "checkout.promo_err_not_for_catering": "Este código no aplica a pedidos de catering.",
   "checkout.promo_err_per_customer_limit": "Ya usaste este código con este correo.",
   "checkout.promo_err_too_large": "Este código no se puede usar con un pedido tan pequeño.",
-  "checkout.promo_err_network": "No pudimos revisar el código. Inténtalo de nuevo."
+  "checkout.promo_err_network": "No pudimos revisar el código. Inténtalo de nuevo.",
+  "order.discount": "Descuento"
 }

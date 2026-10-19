@@ -217,6 +217,12 @@ export default function OrderConfirmation(props: OrderConfirmationProps) {
                 <span className="shrink-0">{usd(item.lineTotalCents)}</span>
               </li>
             ))}
+            {order.discountCents > 0 && (
+              <li className="flex justify-between gap-3 text-primary">
+                <span>{m['order.discount']}</span>
+                <span className="shrink-0">−{usd(order.discountCents)}</span>
+              </li>
+            )}
             <li className="flex justify-between gap-3 text-muted">
               <span>{m['checkout.taxes']}</span>
               <span>{usd(order.taxCents)}</span>
