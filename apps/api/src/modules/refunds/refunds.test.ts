@@ -15,6 +15,9 @@ const order = (over: Partial<RefundableOrder> = {}): RefundableOrder => ({
   totalCents: 10_663,
   refundedCents: 0,
   lines: [{ productType: 'tray', lineTotalCents: 10_000 }],
+  customer: { name: 'Ana Pérez', email: 'ana@example.com' },
+  locale: 'es',
+  timezone: 'America/New_York',
   rulesSnapshot: {
     'refunds.catering_tiers': [
       { hoursBefore: 48, refundPpm: 1_000_000 },
@@ -34,6 +37,7 @@ function ports(over: Partial<RefundPorts> = {}, o = order()) {
     stripeRefund: vi.fn(() => Promise.resolve({ id: 're_1' })),
     cancel: vi.fn(() => Promise.resolve()),
     history: vi.fn(() => Promise.resolve()),
+    notifyCancelled: vi.fn(() => Promise.resolve()),
     ...over,
   }
   return p
@@ -129,6 +133,38 @@ describe('reembolsos desde el panel', () => {
     const log = vi.spyOn(console, 'error').mockImplementation(() => undefined)
     expect(await refundOrder(p, 't', 'o1', req(), NOW)).toEqual({ refunded: 5332, cancelled: true })
     expect(p.stripeRefund).toHaveBeenCalledOnce()
+    log.mockRestore()
+  })
+
+  it('si cancelamos nosotros, se avisa al cliente con el reembolso y el mensaje', async () => {
+    const p = ports()
+    await refundOrder(
+      p,
+      't',
+      'o1',
+      req({ reason: 'business', amountCents: 10_663, customerMessage: 'Se nos dañó el horno' }),
+      NOW,
+    )
+    expect(p.notifyCancelled).toHaveBeenCalledWith(
+      expect.objectContaining({ code: 'AT-K7Q2MX' }),
+      10_663,
+      'Se nos dañó el horno',
+    )
+  })
+
+  it('si cancela el cliente no se manda el correo de "cancelamos nosotros"', async () => {
+    const p = ports()
+    await refundOrder(p, 't', 'o1', req(), NOW)
+    expect(p.notifyCancelled).not.toHaveBeenCalled()
+  })
+
+  it('si el correo falla, la cancelación y el reembolso igual quedan hechos', async () => {
+    const p = ports({ notifyCancelled: vi.fn(() => Promise.reject(new Error('resend'))) })
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    expect(await refundOrder(p, 't', 'o1', req({ reason: 'business' }), NOW)).toEqual({
+      refunded: 5332,
+      cancelled: true,
+    })
     log.mockRestore()
   })
 })

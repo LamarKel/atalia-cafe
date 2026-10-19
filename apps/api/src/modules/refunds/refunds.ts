@@ -20,6 +20,9 @@ export interface RefundableOrder {
   refundedCents: number
   lines: Array<{ productType: 'menu' | 'tray' | 'table' | 'picadera_pack'; lineTotalCents: number }>
   rulesSnapshot: Record<string, unknown>
+  customer: { name: string; email: string }
+  locale: 'en' | 'es'
+  timezone: string
 }
 
 export interface RefundPorts {
@@ -35,6 +38,8 @@ export interface RefundPorts {
   /** Cancela el pedido y devuelve su cupo (release_holds con los cupos ya convertidos). */
   cancel(order: RefundableOrder): Promise<void>
   history(orderId: string, status: string, note: string, actorId: string): Promise<void>
+  /** Correo al cliente cuando el negocio cancela su pedido. */
+  notifyCancelled(order: RefundableOrder, refundCents: number, message: string): Promise<void>
 }
 
 export type RefundErrorCode =
@@ -159,6 +164,15 @@ export async function refundOrder(
     await ports.history(order.id, canCancel ? 'cancelled' : order.status, note, caller.userId)
   } catch (err) {
     console.error('[refunds] no se pudo anotar en el historial', order.code, err)
+  }
+
+  // Si cancelamos nosotros, el cliente se entera por correo (con el reembolso y el mensaje que se escribió).
+  if (canCancel && request.reason === 'business') {
+    try {
+      await ports.notifyCancelled(order, request.amountCents, request.customerMessage)
+    } catch (err) {
+      console.error('[refunds] no se pudo enviar el correo de cancelación', order.code, err)
+    }
   }
 
   return { refunded: request.amountCents, cancelled: canCancel }

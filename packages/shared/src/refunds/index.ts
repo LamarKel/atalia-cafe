@@ -11,6 +11,8 @@ export const refundRequestSchema = z.object({
   amountCents: z.number().int().min(0).max(100_000_000),
   reason: z.enum(REFUND_REASONS),
   note: z.string().trim().max(500).default(''),
+  /** Va en el correo al cliente cuando el negocio cancela (no se guarda como nota interna). */
+  customerMessage: z.string().trim().max(500).default(''),
   cancel: z.boolean(),
   /** Un UUID por intento: un doble clic no reembolsa dos veces (A11). */
   idempotencyKey: z.uuid(),

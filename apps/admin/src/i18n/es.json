@@ -383,7 +383,7 @@
   "p.invalid_code": "Usa de 3 a 30 letras mayúsculas, números, guiones.",
   "p.invalid_value": "Escribe el descuento.",
   "p.invalid_dates": "La fecha de vencimiento tiene que ser después del inicio.",
-  "p.not_applied_yet": "Los cupones se guardan y validan; el campo para usarlos en el checkout llega con la fase de promociones del sitio.",
+  "p.how_it_works": "Los clientes escriben el código en el resumen del checkout. Un uso cuenta solo cuando el pago se confirma; el límite por cliente se revisa con su correo.",
   "r.title": "Reportes",
   "r.range": "Período",
   "r.today": "Hoy",
@@ -460,5 +460,8 @@
   "rf.confirm": "¿Seguro? Esto devuelve dinero al cliente y no se puede deshacer.",
   "rf.hours_left": "Faltan {hours} h para la recogida",
   "rf.catering_part": "catering {pct}",
-  "rf.menu_part": "menú {state}"
+  "rf.menu_part": "menú {state}",
+  "rf.customer_message": "Mensaje para el cliente (va en el correo)",
+  "rf.customer_message_hint": "Por ejemplo: \"Se nos dañó el horno y no podremos tener tu pedido a tiempo.\"",
+  "rf.email_note": "Al cancelar, el cliente recibe un correo con la disculpa, el reembolso y este mensaje."
 }

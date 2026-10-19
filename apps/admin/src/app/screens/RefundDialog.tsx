@@ -35,6 +35,7 @@ export function RefundDialog(props: {
   const [amount, setAmount] = useState<number | null>(null)
   const [cancel, setCancel] = useState(props.status !== 'picked_up')
   const [note, setNote] = useState('')
+  const [customerMessage, setCustomerMessage] = useState('')
   const [sure, setSure] = useState(false)
   const [busy, setBusy] = useState(false)
   // Una clave por intento: si se reintenta o hay doble clic, Stripe no reembolsa dos veces
@@ -61,7 +62,14 @@ export function RefundDialog(props: {
     try {
       await workerApi(`/admin/orders/${props.orderId}/refund`, {
         method: 'POST',
-        body: JSON.stringify({ amountCents, reason, note, cancel: cancel && canCancel, idempotencyKey: key }),
+        body: JSON.stringify({
+          amountCents,
+          reason,
+          note,
+          customerMessage: reason === 'business' ? customerMessage : '',
+          cancel: cancel && canCancel,
+          idempotencyKey: key,
+        }),
       })
       toast(amountCents > 0 ? t('rf.done', { amount: usd(amountCents) }) : t('rf.done_cancel'))
       props.onDone()
@@ -135,6 +143,19 @@ export function RefundDialog(props: {
         />
         {canCancel && (
           <Switch label={t('rf.cancel')} hint={t('rf.cancel_hint')} checked={cancel} onChange={setCancel} />
+        )}
+        {reason === 'business' && cancel && canCancel && (
+          <div className="grid gap-2 rounded-2xl border border-dark/10 p-3">
+            <TextField
+              label={t('rf.customer_message')}
+              value={customerMessage}
+              onChange={setCustomerMessage}
+              maxLength={500}
+              multiline
+              hint={t('rf.customer_message_hint')}
+            />
+            <p className="text-sm text-muted">{t('rf.email_note')}</p>
+          </div>
         )}
         <TextField label={t('rf.note')} value={note} onChange={setNote} maxLength={500} multiline />
       </div>

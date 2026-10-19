@@ -383,7 +383,7 @@
   "p.invalid_code": "Use 3 to 30 uppercase letters, numbers, dashes.",
   "p.invalid_value": "Enter the discount.",
   "p.invalid_dates": "The expiry date must be after the start.",
-  "p.not_applied_yet": "Coupons are saved and validated; the field to use them at checkout comes with the site promotions phase.",
+  "p.how_it_works": "Customers enter the code in the checkout summary. A use counts only once the payment is confirmed; the per-customer limit is checked by email.",
   "r.title": "Reports",
   "r.range": "Period",
   "r.today": "Today",
@@ -460,5 +460,8 @@
   "rf.confirm": "Are you sure? This returns money to the customer and cannot be undone.",
   "rf.hours_left": "{hours} h before pickup",
   "rf.catering_part": "catering {pct}",
-  "rf.menu_part": "menu {state}"
+  "rf.menu_part": "menu {state}",
+  "rf.customer_message": "Message for the customer (goes in the email)",
+  "rf.customer_message_hint": "For example: \"Our oven broke and we cannot have your order ready on time.\"",
+  "rf.email_note": "When cancelling, the customer gets an email with the apology, the refund and this message."
 }
