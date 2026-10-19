@@ -1,5 +1,5 @@
 // Contrato de "Pide una cotización" (PLAN.md RF-Q01–Q05), el mismo en el formulario y en el Worker.
-import { z } from 'zod'
+import { z } from '../zod'
 import { customerSchema, LOCALES } from '../checkout'
 
 /** Tipos de evento del formulario. Los textos visibles están en i18n (quote.event.*). */

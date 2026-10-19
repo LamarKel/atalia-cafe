@@ -1,6 +1,6 @@
 // Dinero en centavos enteros y porcentajes en partes por millón (docs/REGLAS.md A3, A8–A12).
 // Los dólares existen solo al mostrar (formatUSD) y al leer lo que escribe el admin (parseUSD).
-import { z } from 'zod'
+import { z } from '../zod'
 
 declare const centsBrand: unique symbol
 declare const ppmBrand: unique symbol

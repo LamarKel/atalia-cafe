@@ -1,7 +1,7 @@
 // Cuánto se reembolsa al cancelar (REGLAS B6, A4, A11). Se calcula con las reglas guardadas en el pedido
 // (orders.rules_snapshot), nunca con las vigentes: el cliente recibe la política que aceptó al pagar.
 // Todo en centavos y ppm, sin floats.
-import { z } from 'zod'
+import { z } from '../zod'
 
 export const REFUND_REASONS = ['customer', 'business', 'no_show', 'other'] as const
 export type RefundReason = (typeof REFUND_REASONS)[number]

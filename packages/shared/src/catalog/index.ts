@@ -1,6 +1,6 @@
 // Contrato del editor de productos del panel (fase 3). Valida lo que escribe el equipo antes de guardarlo;
 // los CHECKs de la BD son la última barrera. Los montos llegan ya en centavos (el formulario usa parseUSD).
-import { z } from 'zod'
+import { z } from '../zod'
 
 export const PRODUCT_TYPES = ['menu', 'tray', 'table', 'picadera_pack'] as const
 export type ProductTypeName = (typeof PRODUCT_TYPES)[number]

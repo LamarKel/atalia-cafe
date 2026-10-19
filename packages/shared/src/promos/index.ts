@@ -1,6 +1,6 @@
 // Cupones de descuento: el mismo esquema en el panel (al crearlos) y en el Worker (al aplicarlos en el checkout).
 // Montos en centavos y porcentajes en ppm, como el resto del dinero (REGLAS A3).
-import { z } from 'zod'
+import { z } from '../zod'
 import { cents, ppm, type Cents, type Ppm } from '../money'
 
 export const promoDraftSchema = z

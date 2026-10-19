@@ -5,7 +5,7 @@ import { cents, formatUSD } from '@atalia/shared/money'
 import { autoDistribute, fitToUnits, isComplete, toComponents, totalPieces } from '@atalia/shared/picadera'
 import { Button, OptionGroup, QuantityStepper, ToastProvider, useToast, type Option } from '@atalia/ui'
 import { motion, useReducedMotion } from 'motion/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { addToCart } from '../lib/cart'
 import type { PicaderaBuilderData } from '../lib/catalog'
 import type { Locale, MessageKey } from '../i18n'
@@ -34,6 +34,8 @@ function Builder({ locale, title, subtitle, product, sizes, pieces, messages: m 
   const usd = (value: number) => formatUSD(cents(value), locale)
   const toast = useToast()
   const reduceMotion = useReducedMotion()
+  const [hydrated, setHydrated] = useState(false)
+  useEffect(() => setHydrated(true), [])
 
   const [sizeId, setSizeId] = useState<string | null>(sizes[1]?.id ?? sizes[0]?.id ?? null)
   const [counts, setCounts] = useState<Record<string, number>>({})
@@ -186,14 +188,19 @@ function Builder({ locale, title, subtitle, product, sizes, pieces, messages: m 
               aria-label={m['picadera.summary']}
               className="mt-4 h-2 overflow-hidden rounded-full bg-dark/10"
             >
-              <motion.div
-                className="h-full origin-left rounded-full bg-secondary"
-                initial={false}
-                animate={{ scaleX: progress }}
-                transition={
-                  reduceMotion === true ? { duration: 0 } : { type: 'spring', stiffness: 260, damping: 30 }
-                }
-              />
+              {/* Sin style en el HTML del servidor (la CSP no permite estilos en línea): Motion anima ya en el navegador. */}
+              {hydrated ? (
+                <motion.div
+                  className="h-full origin-left rounded-full bg-secondary"
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: progress }}
+                  transition={
+                    reduceMotion === true ? { duration: 0 } : { type: 'spring', stiffness: 260, damping: 30 }
+                  }
+                />
+              ) : (
+                <div className="h-full origin-left scale-x-0 rounded-full bg-secondary" />
+              )}
             </div>
             <p className="mt-2 text-sm font-semibold text-secondary" aria-live="polite">
               {tf('picadera.progress', { count, units })} · {status}
