@@ -8,17 +8,47 @@ import type {
   CheckoutResponse,
   OrderSummary,
 } from '@atalia/shared/checkout'
-import { ppm } from '@atalia/shared/money'
+import { ppm, type Discount } from '@atalia/shared/money'
+import { checkPromo, type PromoRejection } from '@atalia/shared/promos'
 import { getRule, snapshotRules } from '@atalia/shared/rules'
-import { PricingError, cartNeeds, lineDetail, lineTotal, priceCart } from '../../orders/domain/pricing'
-import type { AvailabilityRepo, CatalogRepo, Mailer, OrdersRepo, PaymentGateway, StoreRepo } from '../ports'
+import {
+  PricingError,
+  cartNeeds,
+  hasCatering,
+  lineDetail,
+  lineTotal,
+  priceCart,
+  type CatalogPiece,
+  type CatalogProduct,
+  type Locale,
+  type PricedCart,
+  type PricingRules,
+} from '../../orders/domain/pricing'
+import type {
+  AvailabilityRepo,
+  CatalogRepo,
+  Mailer,
+  OrdersRepo,
+  PaymentGateway,
+  PromoRepo,
+  StoreRepo,
+} from '../ports'
 
 export type CheckoutErrorCode =
-  'payments_disabled' | 'slot_unavailable' | 'checkout_closed' | 'range_too_long' | 'pickup_unavailable'
+  | 'payments_disabled'
+  | 'slot_unavailable'
+  | 'checkout_closed'
+  | 'range_too_long'
+  | 'pickup_unavailable'
+  | 'promo_rejected'
 
 export class CheckoutError extends Error {
   override readonly name = 'CheckoutError'
-  constructor(readonly code: CheckoutErrorCode) {
+  constructor(
+    readonly code: CheckoutErrorCode,
+    /** Con promo_rejected: por qué no se aplicó el cupón. */
+    readonly reason?: PromoRejection,
+  ) {
     super(code)
   }
 }
@@ -28,6 +58,7 @@ export interface CheckoutDeps {
   catalog: CatalogRepo
   availability: AvailabilityRepo
   orders: OrdersRepo
+  promos: PromoRepo
   payments: PaymentGateway
   mailer: Mailer
   /** URL pública del sitio, para volver de Stripe. */
@@ -38,15 +69,61 @@ export interface CheckoutDeps {
 /** Stripe exige que una sesión dure al menos 30 minutos; la retención del cupo dura 35 (reserve_slot). */
 const SESSION_MINUTES = 30
 const MAX_RANGE_DAYS = 62
+/** Stripe no cobra menos de 50 centavos en USD: un cupón no puede dejar el total por debajo. */
+const STRIPE_MIN_CHARGE_CENTS = 50
 
 const productIds = (items: readonly CartLine[]) => [...new Set(items.map((i) => i.productId))]
 const pieceIds = (items: readonly CartLine[]) => [
   ...new Set(items.flatMap((i) => i.components.map((c) => c.optionId))),
 ]
 
+type PromoResult =
+  | { cart: PricedCart; promoId: string | null; rejected: null }
+  | { cart: PricedCart; promoId: null; rejected: PromoRejection }
+
+/**
+ * Precio del carrito con el cupón (si hay). Primero sin descuento, para saber el subtotal y si hay catering;
+ * después con el descuento. email = null en el resumen previo al pago (aún no se sabe quién es).
+ */
+async function priceWithPromo(
+  deps: CheckoutDeps,
+  args: {
+    items: readonly CartLine[]
+    catalog: ReadonlyMap<string, CatalogProduct>
+    pieces: ReadonlyMap<string, CatalogPiece>
+    rules: PricingRules
+    locale: Locale
+    promoCode: string
+    email: string | null
+    now: Date
+  },
+): Promise<PromoResult> {
+  const base = priceCart(args.items, args.catalog, args.pieces, args.rules, args.locale)
+  if (args.promoCode === '') return { cart: base, promoId: null, rejected: null }
+
+  const promo = await deps.promos.byCode(args.promoCode)
+  const uses =
+    promo !== null && promo.maxUsesPerCustomer !== null && args.email !== null
+      ? await deps.promos.usesByEmail(promo.id, args.email)
+      : null
+  const check = checkPromo(promo, {
+    subtotalCents: base.totals.subtotalCents,
+    hasCatering: hasCatering(base.lines),
+    usesByCustomer: uses,
+    now: args.now,
+  })
+  if (!check.ok) return { cart: base, promoId: null, rejected: check.reason }
+
+  const discount: Discount = check.discount
+  const cart = priceCart(args.items, args.catalog, args.pieces, args.rules, args.locale, discount)
+  if (cart.totals.totalCents < STRIPE_MIN_CHARGE_CENTS)
+    return { cart: base, promoId: null, rejected: 'too_large' }
+  return { cart, promoId: check.promo.id, rejected: null }
+}
+
 export async function getAvailability(
   deps: CheckoutDeps,
-  input: { from: string; to: string; items: CartLine[]; locale: 'en' | 'es' },
+  input: { from: string; to: string; items: CartLine[]; locale: 'en' | 'es'; promoCode: string },
 ): Promise<AvailabilityResponse> {
   const days = (Date.parse(input.to) - Date.parse(input.from)) / 86_400_000
   if (days > MAX_RANGE_DAYS) throw new CheckoutError('range_too_long')
@@ -62,16 +139,19 @@ export async function getAvailability(
 
   let quote: CartQuote | null = null
   try {
-    const cart = priceCart(
-      input.items,
+    const { cart, rejected } = await priceWithPromo(deps, {
+      items: input.items,
       catalog,
       pieces,
-      {
+      rules: {
         taxRatePpm: ppm(getRule('tax.rate_ppm', rows, { storeId: store.id, at: now })),
         maxQtyPerProduct: getRule('orders.max_qty_per_product', rows, { storeId: store.id, at: now }),
       },
-      input.locale,
-    )
+      locale: input.locale,
+      promoCode: input.promoCode,
+      email: null,
+      now,
+    })
     quote = {
       lines: cart.lines.map((l) => ({
         name: l.nameSnapshot,
@@ -80,6 +160,13 @@ export async function getAvailability(
         lineTotalCents: lineTotal(l),
       })),
       subtotalCents: cart.totals.subtotalCents,
+      discountCents: cart.totals.discountCents,
+      promo:
+        input.promoCode === ''
+          ? null
+          : rejected === null
+            ? { code: input.promoCode, applied: true }
+            : { code: input.promoCode, applied: false, reason: rejected },
       taxLabel: getRule('tax.label', rows, { storeId: store.id, at: now })[input.locale],
       taxCents: cart.totals.taxCents,
       totalCents: cart.totals.totalCents,
@@ -108,13 +195,18 @@ export async function startCheckout(
     deps.catalog.products(productIds(req.items)),
     deps.catalog.pieces(pieceIds(req.items)),
   ])
-  const cart = priceCart(
-    req.items,
+  // El cupón se vuelve a validar aquí, ya con el correo (límite por cliente): el resumen previo no basta.
+  const { cart, promoId, rejected } = await priceWithPromo(deps, {
+    items: req.items,
     catalog,
     pieces,
-    { taxRatePpm: ppm(rule('tax.rate_ppm')), maxQtyPerProduct: rule('orders.max_qty_per_product') },
-    req.locale,
-  )
+    rules: { taxRatePpm: ppm(rule('tax.rate_ppm')), maxQtyPerProduct: rule('orders.max_qty_per_product') },
+    locale: req.locale,
+    promoCode: req.promoCode,
+    email: req.customer.email.toLowerCase(),
+    now,
+  })
+  if (rejected !== null) throw new CheckoutError('promo_rejected', rejected)
 
   // La hora elegida tiene que seguir libre ahora, con lo que realmente hay en el carrito.
   const slots = await deps.availability.slots(
@@ -138,6 +230,7 @@ export async function startCheckout(
     checkoutToken: req.checkoutToken,
     storeId: store.id,
     pickupLocationId: req.pickupLocationId,
+    promoCodeId: promoId,
     customer: req.customer,
     locale: req.locale,
     note: req.note,
@@ -199,6 +292,8 @@ export async function startCheckout(
     paymentMethods: rule('payments.bnpl_enabled')
       ? ['card', 'klarna', 'afterpay_clearpay', 'affirm']
       : ['card'],
+    discountCents: cart.totals.discountCents,
+    discountLabel: req.promoCode,
   })
   await deps.orders.attachStripeSession(order.orderId, session.id)
 

@@ -1,6 +1,7 @@
 // Cupones de descuento: el mismo esquema en el panel (al crearlos) y en el Worker (al aplicarlos en el checkout).
 // Montos en centavos y porcentajes en ppm, como el resto del dinero (REGLAS A3).
 import { z } from 'zod'
+import { cents, ppm, type Cents, type Ppm } from '../money'
 
 export const promoDraftSchema = z
   .object({
@@ -61,4 +62,72 @@ export function promoState(
   if (p.startsAt !== null && Date.parse(p.startsAt) > now.getTime()) return 'scheduled'
   if (p.maxUses !== null && p.usedCount >= p.maxUses) return 'used_up'
   return 'active'
+}
+
+/** Código que escribe el cliente en el checkout ('' = sin cupón). */
+export const promoCodeInputSchema = z
+  .string()
+  .trim()
+  .max(30)
+  .transform((v) => v.toUpperCase())
+  .default('')
+
+/** Un cupón tal como está en promo_codes, para decidir si se aplica a un carrito. */
+export interface PromoRule {
+  id: string
+  code: string
+  discountType: 'percentage' | 'fixed'
+  discountPpm: number | null
+  discountCents: number | null
+  minOrderCents: number
+  maxUses: number | null
+  maxUsesPerCustomer: number | null
+  usedCount: number
+  appliesToCatering: boolean
+  startsAt: string | null
+  expiresAt: string | null
+  active: boolean
+}
+
+export type PromoRejection =
+  | 'not_found'
+  | 'inactive'
+  | 'scheduled'
+  | 'expired'
+  | 'used_up'
+  | 'min_order'
+  | 'not_for_catering'
+  | 'per_customer_limit'
+  | 'too_large'
+
+export type PromoDiscount = { type: 'fixed'; cents: Cents } | { type: 'percentage'; ppm: Ppm }
+
+export type PromoCheck =
+  { ok: true; promo: PromoRule; discount: PromoDiscount } | { ok: false; reason: PromoRejection }
+
+/**
+ * ¿Se puede usar este cupón con este carrito? usesByCustomer = pedidos pagados del cliente con el cupón
+ * (null si todavía no se sabe el correo: en el resumen previo al pago).
+ */
+export function checkPromo(
+  promo: PromoRule | null,
+  ctx: { subtotalCents: number; hasCatering: boolean; usesByCustomer: number | null; now?: Date },
+): PromoCheck {
+  if (promo === null) return { ok: false, reason: 'not_found' }
+  const state = promoState(promo, ctx.now)
+  if (state !== 'active') return { ok: false, reason: state }
+  if (ctx.subtotalCents < promo.minOrderCents) return { ok: false, reason: 'min_order' }
+  if (ctx.hasCatering && !promo.appliesToCatering) return { ok: false, reason: 'not_for_catering' }
+  if (
+    promo.maxUsesPerCustomer !== null &&
+    ctx.usesByCustomer !== null &&
+    ctx.usesByCustomer >= promo.maxUsesPerCustomer
+  ) {
+    return { ok: false, reason: 'per_customer_limit' }
+  }
+  const discount: PromoDiscount =
+    promo.discountType === 'percentage'
+      ? { type: 'percentage', ppm: ppm(promo.discountPpm ?? 0) }
+      : { type: 'fixed', cents: cents(promo.discountCents ?? 0) }
+  return { ok: true, promo, discount }
 }

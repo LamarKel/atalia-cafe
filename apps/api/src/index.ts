@@ -2,6 +2,8 @@
 // de Supabase, Stripe y Resend. Los secretos llegan por env (wrangler secret / .dev.vars).
 import { getRule } from '@atalia/shared/rules'
 import { resendMailer } from './adapters/resend'
+import { promoRepo } from './adapters/supabase/promos'
+import { sendCancellation } from './adapters/resend/cancellation'
 import { resendQuoteMailer } from './adapters/resend/quotes'
 import { stripeClient, paymentGateway, verifyPaymentEvent } from './adapters/stripe'
 import {
@@ -38,6 +40,7 @@ function deps(env: Bindings): CheckoutDeps {
     catalog: catalogRepo(db),
     availability: availabilityRepo(db),
     orders: ordersRepo(db),
+    promos: promoRepo(db),
     payments: paymentGateway(stripeClient(required(env, 'STRIPE_SECRET_KEY'))),
     mailer: resendMailer({
       apiKey: required(env, 'RESEND_API_KEY'),
@@ -94,6 +97,11 @@ const refunds: RefundWiring = {
     refundPorts(
       supabaseClient(required(env, 'SUPABASE_URL'), required(env, 'SUPABASE_SERVICE_ROLE_KEY')),
       paymentGateway(stripeClient(required(env, 'STRIPE_SECRET_KEY'))),
+      (input) =>
+        sendCancellation(
+          { apiKey: required(env, 'RESEND_API_KEY'), from: required(env, 'EMAIL_FROM') },
+          input,
+        ),
     ),
 }
 

@@ -256,6 +256,7 @@ export function ordersRepo(db: SupabaseClient): OrdersRepo {
           checkout_token: order.checkoutToken,
           store_id: order.storeId,
           pickup_location_id: order.pickupLocationId,
+          promo_code_id: order.promoCodeId,
           customer_name: order.customer.name,
           customer_phone: order.customer.phone,
           customer_email: order.customer.email,

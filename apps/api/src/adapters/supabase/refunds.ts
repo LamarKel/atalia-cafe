@@ -3,9 +3,14 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { RefundableOrder, RefundPorts } from '../../modules/refunds/refunds'
 import type { PaymentGateway } from '../../modules/payments/ports'
+import type { CancellationInput } from '../resend/cancellation'
 import { teamPorts } from './team'
 
-export function refundPorts(db: SupabaseClient, payments: PaymentGateway): RefundPorts {
+export function refundPorts(
+  db: SupabaseClient,
+  payments: PaymentGateway,
+  mail: (input: CancellationInput) => Promise<void>,
+): RefundPorts {
   const team = teamPorts(db)
   return {
     verify: team.verify,
@@ -15,7 +20,8 @@ export function refundPorts(db: SupabaseClient, payments: PaymentGateway): Refun
         .from('orders')
         .select(
           `id, code, status, payment_status, stripe_payment_intent_id, checkout_token, scheduled_for,
-           subtotal_cents, total_cents, refunded_cents, rules_snapshot,
+           subtotal_cents, total_cents, refunded_cents, rules_snapshot, customer_name, customer_email, language,
+           store:stores(timezone),
            items:order_items(product_type, line_total_cents)`,
         )
         .eq('id', orderId)
@@ -44,6 +50,9 @@ export function refundPorts(db: SupabaseClient, payments: PaymentGateway): Refun
           lineTotalCents: i.line_total_cents,
         })),
         rulesSnapshot: (o.rules_snapshot as Record<string, unknown> | null) ?? {},
+        customer: { name: o.customer_name as string, email: o.customer_email as string },
+        locale: o.language === 'es' ? 'es' : 'en',
+        timezone: (o.store as { timezone: string } | null)?.timezone ?? 'America/New_York',
       }
       return order
     },
@@ -58,6 +67,17 @@ export function refundPorts(db: SupabaseClient, payments: PaymentGateway): Refun
       })
       if (holdError) throw new Error(`release_holds: ${holdError.message}`)
     },
+    notifyCancelled: (order, refundCents, message) =>
+      mail({
+        code: order.code,
+        customerName: order.customer.name,
+        customerEmail: order.customer.email,
+        locale: order.locale,
+        scheduledFor: order.scheduledFor,
+        timezone: order.timezone,
+        refundCents,
+        message,
+      }),
     async history(orderId, status, note, actorId) {
       // El historial guarda también el estado del pago en ese momento
       const { data } = await db

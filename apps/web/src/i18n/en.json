@@ -237,5 +237,22 @@
   "pickup.change": "Change",
   "pickup.choose": "Choose where to pick up",
   "pickup.save": "Save",
-  "pickup.required": "Choose where you will pick up your order first."
+  "pickup.required": "Choose where you will pick up your order first.",
+  "checkout.promo_toggle": "Have a discount code?",
+  "checkout.promo_label": "Discount code",
+  "checkout.promo_apply": "Apply",
+  "checkout.promo_applying": "Applying…",
+  "checkout.promo_line": "Discount ({code})",
+  "checkout.promo_remove": "Remove",
+  "checkout.err_promo": "We could not apply your discount code. Check the summary and try again.",
+  "checkout.promo_err_not_found": "That code does not exist. Check the spelling.",
+  "checkout.promo_err_inactive": "That code is not active.",
+  "checkout.promo_err_scheduled": "That code cannot be used yet.",
+  "checkout.promo_err_expired": "That code has expired.",
+  "checkout.promo_err_used_up": "That code has been used up.",
+  "checkout.promo_err_min_order": "Your order does not reach the minimum for this code.",
+  "checkout.promo_err_not_for_catering": "This code does not apply to catering orders.",
+  "checkout.promo_err_per_customer_limit": "You already used this code with this email.",
+  "checkout.promo_err_too_large": "This code cannot be used on such a small order.",
+  "checkout.promo_err_network": "We could not check the code. Please try again."
 }

@@ -7,6 +7,7 @@ import {
   type CheckoutRequest,
 } from '@atalia/shared/checkout'
 import { cents, formatUSD } from '@atalia/shared/money'
+import type { PromoRejection } from '@atalia/shared/promos'
 import { Button, ButtonLink, OptionGroup, Stepper } from '@atalia/ui'
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { api, ApiRequestError, toApiItems } from '../lib/api'
@@ -92,6 +93,12 @@ export default function CheckoutFlow({ locale, messages: m, cartHref, stores }: 
   const [errors, setErrors] = useState<FieldErrors>({})
   const [banner, setBanner] = useState<MessageKey | null>(null)
   const [paying, setPaying] = useState(false)
+  // Cupón: lo que escribe, el que quedó aplicado y por qué no se aplicó (lo decide el Worker).
+  const [promoOpen, setPromoOpen] = useState(false)
+  const [promoInput, setPromoInput] = useState('')
+  const [promoError, setPromoError] = useState<PromoRejection | 'network' | null>(null)
+  const [promoBusy, setPromoBusy] = useState(false)
+  const promoCode = useRef('')
   const headingRef = useRef<HTMLHeadingElement>(null)
   const autoPicked = useRef(false)
 
@@ -107,7 +114,7 @@ export default function CheckoutFlow({ locale, messages: m, cartHref, stores }: 
     if (items.length === 0) return
     setLoadState('loading')
     api
-      .availability({ ...monthRange(month), locale, items })
+      .availability({ ...monthRange(month), locale, items, promoCode: promoCode.current })
       .then((res) => {
         setData(res)
         setLoadState('ready')
@@ -137,6 +144,36 @@ export default function CheckoutFlow({ locale, messages: m, cartHref, stores }: 
   const times = date === null ? [] : visibleTimes(slots, date)
   const chosen = slots.find((s) => s.date === date && s.time === time && s.available) ?? null
   const quote = data?.quote ?? null
+  const appliedPromo = quote?.promo?.applied === true ? quote.promo.code : null
+
+  const applyPromo = async (code: string) => {
+    const clean = code.trim().toUpperCase()
+    if (clean === '' || items.length === 0) return
+    setPromoBusy(true)
+    setPromoError(null)
+    try {
+      const res = await api.availability({ ...monthRange(month), locale, items, promoCode: clean })
+      setData(res)
+      const promo = res.quote?.promo ?? null
+      if (promo?.applied === true) {
+        promoCode.current = clean
+        setPromoInput('')
+      } else {
+        promoCode.current = ''
+        setPromoError(promo === null ? 'not_found' : promo.reason)
+      }
+    } catch {
+      setPromoError('network')
+    } finally {
+      setPromoBusy(false)
+    }
+  }
+
+  const removePromo = () => {
+    promoCode.current = ''
+    setPromoError(null)
+    load()
+  }
 
   const dateLabel = (iso: string, withTime: string | null) => {
     const d = new Date(`${iso}T12:00:00Z`)
@@ -193,6 +230,7 @@ export default function CheckoutFlow({ locale, messages: m, cartHref, stores }: 
       customer,
       note,
       items,
+      promoCode: appliedPromo ?? '',
     }
     try {
       const res = await api.checkout({ ...body, checkoutToken: tokenFor(JSON.stringify(body)) })
@@ -207,7 +245,14 @@ export default function CheckoutFlow({ locale, messages: m, cartHref, stores }: 
         setBanner('checkout.err_slot')
       } else if (code === 'cart_invalid') setBanner('checkout.err_cart')
       else if (code === 'payments_disabled') setBanner('checkout.err_disabled')
-      else setBanner('checkout.err_generic')
+      else if (code === 'promo_rejected') {
+        // P. ej. ya lo usó con este correo: se quita el cupón y se le dice por qué, sin perder lo demás.
+        promoCode.current = ''
+        setPromoOpen(true)
+        setPromoError((err instanceof ApiRequestError ? err.reason : null) as PromoRejection | null)
+        load()
+        setBanner('checkout.err_promo')
+      } else setBanner('checkout.err_generic')
     }
   }
 
@@ -440,11 +485,41 @@ export default function CheckoutFlow({ locale, messages: m, cartHref, stores }: 
                 </span>
               </li>
             ))}
+            {quote !== null && quote.discountCents > 0 && (
+              <li className="flex items-center justify-between gap-3 text-primary">
+                <span>
+                  {tf('checkout.promo_line', { code: appliedPromo ?? '' })}
+                  <button
+                    type="button"
+                    onClick={removePromo}
+                    className="ml-2 inline-flex min-h-11 cursor-pointer items-center text-dark underline underline-offset-2"
+                  >
+                    {m['checkout.promo_remove']}
+                  </button>
+                </span>
+                <span className="shrink-0">−{usd(quote.discountCents)}</span>
+              </li>
+            )}
             <li className="flex justify-between gap-3 text-muted">
               <span>{quote?.taxLabel ?? m['checkout.taxes']}</span>
               <span>{quote === null ? m['checkout.price_tbd'] : usd(quote.taxCents)}</span>
             </li>
           </ul>
+          {quote !== null && appliedPromo === null && (
+            <PromoForm
+              m={m}
+              open={promoOpen}
+              onOpen={() => setPromoOpen(true)}
+              value={promoInput}
+              onChange={(v) => {
+                setPromoInput(v)
+                setPromoError(null)
+              }}
+              busy={promoBusy}
+              error={promoError === null ? null : (`checkout.promo_err_${promoError}` as MessageKey)}
+              onApply={() => void applyPromo(promoInput)}
+            />
+          )}
           <div className="mt-4 flex items-center justify-between border-t border-dark/10 pt-4">
             <span className="font-semibold">{m['checkout.total']}</span>
             <span className="text-xl font-semibold text-secondary">
@@ -462,6 +537,74 @@ export default function CheckoutFlow({ locale, messages: m, cartHref, stores }: 
         </section>
       </aside>
     </div>
+  )
+}
+
+/** "¿Tienes un código de descuento?": se abre a pedido para no distraer a quien no tiene uno. */
+function PromoForm(props: {
+  m: Record<MessageKey, string>
+  open: boolean
+  onOpen: () => void
+  value: string
+  onChange: (v: string) => void
+  busy: boolean
+  error: MessageKey | null
+  onApply: () => void
+}) {
+  const { m } = props
+  const id = useId()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const opened = useRef(false)
+  useEffect(() => {
+    // Solo al abrirlo con el botón, no en cada render.
+    if (props.open && !opened.current) inputRef.current?.focus()
+    opened.current = props.open
+  }, [props.open])
+
+  if (!props.open) {
+    return (
+      <button
+        type="button"
+        onClick={props.onOpen}
+        className="mt-3 inline-flex min-h-11 cursor-pointer items-center text-sm font-medium text-secondary underline underline-offset-2"
+      >
+        {m['checkout.promo_toggle']}
+      </button>
+    )
+  }
+  return (
+    <form
+      className="mt-3"
+      onSubmit={(e) => {
+        e.preventDefault()
+        props.onApply()
+      }}
+    >
+      <label htmlFor={`${id}-code`} className="text-sm font-medium">
+        {m['checkout.promo_label']}
+      </label>
+      <div className="mt-1 flex gap-2">
+        <input
+          ref={inputRef}
+          id={`${id}-code`}
+          value={props.value}
+          onChange={(e) => props.onChange(e.target.value)}
+          maxLength={30}
+          autoComplete="off"
+          autoCapitalize="characters"
+          spellCheck={false}
+          aria-invalid={props.error !== null}
+          aria-describedby={`${id}-err`}
+          className={`min-h-11 min-w-0 flex-1 rounded-xl border bg-white px-3 uppercase ${props.error === null ? 'border-dark/15' : 'border-toast-error'}`}
+        />
+        <Button type="submit" variant="outline" disabled={props.busy || props.value.trim() === ''}>
+          {props.busy ? m['checkout.promo_applying'] : m['checkout.promo_apply']}
+        </Button>
+      </div>
+      <p id={`${id}-err`} role="status" className="mt-1 min-h-5 text-sm text-toast-error">
+        {props.error === null ? '' : m[props.error]}
+      </p>
+    </form>
   )
 }
 

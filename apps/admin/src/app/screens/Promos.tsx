@@ -145,7 +145,7 @@ export function Promos() {
         </h1>
         <Button onClick={() => setEdit(empty)}>+ {t('p.new')}</Button>
       </div>
-      <p className="mt-3 rounded-2xl bg-sand px-4 py-3 text-sm">{t('p.not_applied_yet')}</p>
+      <p className="mt-3 rounded-2xl bg-sand px-4 py-3 text-sm">{t('p.how_it_works')}</p>
 
       {rows === null ? (
         <p role="status" className="mt-10 text-center text-muted">

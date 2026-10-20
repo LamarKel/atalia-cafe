@@ -2,6 +2,7 @@
 // (productos, opción, cantidad, piezas, hora y datos de contacto); los precios los calcula el Worker (A8).
 import { z } from 'zod'
 import { picaderaComponentSchema } from '../picadera'
+import { promoCodeInputSchema, type PromoRejection } from '../promos'
 
 export const LOCALES = ['en', 'es'] as const
 
@@ -30,6 +31,8 @@ export const availabilityRequestSchema = z
     to: isoDate,
     locale: z.enum(LOCALES).default('en'),
     items: cartSchema,
+    /** Cupón que escribió el cliente; el descuento lo calcula el Worker. */
+    promoCode: promoCodeInputSchema,
   })
   .refine((v) => v.from <= v.to, { message: 'invalid_range', path: ['to'] })
 
@@ -51,6 +54,9 @@ export interface AvailabilitySlot {
 export interface CartQuote {
   lines: Array<{ name: string; detail: string | null; quantity: number; lineTotalCents: number }>
   subtotalCents: number
+  discountCents: number
+  /** Resultado del cupón que se mandó (null si no se mandó ninguno). */
+  promo: { code: string; applied: true } | { code: string; applied: false; reason: PromoRejection } | null
   taxLabel: string
   taxCents: number
   totalCents: number
@@ -84,6 +90,7 @@ export const checkoutRequestSchema = z.object({
   customer: customerSchema,
   note: z.string().trim().max(500).default(''),
   items: cartSchema,
+  promoCode: promoCodeInputSchema,
 })
 
 export type CheckoutRequest = z.input<typeof checkoutRequestSchema>

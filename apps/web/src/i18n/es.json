@@ -237,5 +237,22 @@
   "pickup.change": "Cambiar",
   "pickup.choose": "Elige dónde recoger",
   "pickup.save": "Guardar",
-  "pickup.required": "Primero elige dónde vas a recoger tu pedido."
+  "pickup.required": "Primero elige dónde vas a recoger tu pedido.",
+  "checkout.promo_toggle": "¿Tienes un código de descuento?",
+  "checkout.promo_label": "Código de descuento",
+  "checkout.promo_apply": "Aplicar",
+  "checkout.promo_applying": "Aplicando…",
+  "checkout.promo_line": "Descuento ({code})",
+  "checkout.promo_remove": "Quitar",
+  "checkout.err_promo": "No pudimos aplicar tu código de descuento. Revisa el resumen y vuelve a intentar.",
+  "checkout.promo_err_not_found": "Ese código no existe. Revisa que esté bien escrito.",
+  "checkout.promo_err_inactive": "Ese código no está activo.",
+  "checkout.promo_err_scheduled": "Ese código todavía no se puede usar.",
+  "checkout.promo_err_expired": "Ese código ya venció.",
+  "checkout.promo_err_used_up": "Ese código ya se agotó.",
+  "checkout.promo_err_min_order": "Tu pedido no alcanza el mínimo para este código.",
+  "checkout.promo_err_not_for_catering": "Este código no aplica a pedidos de catering.",
+  "checkout.promo_err_per_customer_limit": "Ya usaste este código con este correo.",
+  "checkout.promo_err_too_large": "Este código no se puede usar con un pedido tan pequeño.",
+  "checkout.promo_err_network": "No pudimos revisar el código. Inténtalo de nuevo."
 }
