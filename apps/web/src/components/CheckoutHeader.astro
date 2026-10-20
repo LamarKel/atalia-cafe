@@ -1,7 +1,8 @@
 ---
 // Encabezado del checkout (diseños 05 y 06): solo el logo y "Pago seguro con Stripe", sin distracciones.
 import { Image } from 'astro:assets'
-import logo from '../assets/logo.png'
+// Solo la taza del logo: el nombre ya va escrito al lado (el logo ancho no cabe en un cuadrado)
+import logo from '../assets/logo-cup.png'
 import { localizedPath, t, type Locale } from '../i18n'
 
 interface Props {
