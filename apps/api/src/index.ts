@@ -2,7 +2,9 @@
 // de Supabase, Stripe y Resend. Los secretos llegan por env (wrangler secret / .dev.vars).
 import { getRule } from '@atalia/shared/rules'
 import { resendMailer } from './adapters/resend'
+import { deployHook } from './adapters/deploy'
 import { promoRepo } from './adapters/supabase/promos'
+import { publishPorts } from './adapters/supabase/publish'
 import { sendCancellation } from './adapters/resend/cancellation'
 import { resendQuoteMailer } from './adapters/resend/quotes'
 import { stripeClient, paymentGateway, verifyPaymentEvent } from './adapters/stripe'
@@ -19,6 +21,8 @@ import { teamPorts } from './adapters/supabase/team'
 import { turnstileVerifier } from './adapters/turnstile'
 import { required } from './config'
 import { createApp, type Bindings } from './http/app'
+import type { PublishWiring } from './http/publish-routes'
+import { publishIfDirty } from './modules/publish/publish'
 import type { CheckoutWiring } from './http/checkout-routes'
 import type { QuoteWiring } from './http/quote-routes'
 import type { RefundWiring } from './http/refund-routes'
@@ -100,18 +104,26 @@ const refunds: RefundWiring = {
     ),
 }
 
-const app = createApp(wiring, quotes, team, refunds)
+const publish: PublishWiring = {
+  ports: (env) =>
+    env.DEPLOY_HOOK_URL === undefined || env.DEPLOY_HOOK_URL === ''
+      ? null
+      : publishPorts(
+          supabaseClient(required(env, 'SUPABASE_URL'), required(env, 'SUPABASE_SERVICE_ROLE_KEY')),
+          deployHook(required(env, 'DEPLOY_HOOK_URL')),
+        ),
+}
+
+const app = createApp(wiring, quotes, team, refunds, publish)
 
 export default {
   fetch: app.fetch,
-  // triggers.crons en wrangler.jsonc
+  // triggers.crons en wrangler.jsonc (cada minuto)
   scheduled(_controller, env, ctx) {
-    ctx.waitUntil(
-      releaseExpired({
-        orders: ordersRepo(
-          supabaseClient(required(env, 'SUPABASE_URL'), required(env, 'SUPABASE_SERVICE_ROLE_KEY')),
-        ),
-      }),
-    )
+    const db = supabaseClient(required(env, 'SUPABASE_URL'), required(env, 'SUPABASE_SERVICE_ROLE_KEY'))
+    ctx.waitUntil(releaseExpired({ orders: ordersRepo(db) }))
+    // Publica el sitio si el panel cambió algo (sin deploy hook en desarrollo, no hace nada)
+    const ports = publish.ports(env)
+    if (ports !== null) ctx.waitUntil(publishIfDirty(ports))
   },
 } satisfies ExportedHandler<Bindings>

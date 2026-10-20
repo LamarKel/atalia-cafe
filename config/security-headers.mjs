@@ -19,9 +19,11 @@ export function publicEnv(configUrl, loadEnv) {
   return loadEnv('production', fileURLToPath(new URL('.', configUrl)), 'PUBLIC_')
 }
 
+// Solo orígenes http(s); una ruta relativa ("/api", el mismo dominio) ya la cubre 'self'.
 const origin = (url) => {
   try {
-    return new URL(url).origin
+    const u = new URL(url)
+    return u.protocol === 'https:' || u.protocol === 'http:' ? u.origin : null
   } catch {
     return null
   }

@@ -513,6 +513,20 @@ function StoreTab({ store, onSaved }: { store: Store; onSaved: (s: Store) => voi
               onChange={(v) => setSettings({ ...settings, x: nul(v) })}
               maxLength={200}
             />
+            <TextField
+              label={t('biz.uber_eats')}
+              value={settings.uberEats ?? ''}
+              onChange={(v) => setSettings({ ...settings, uberEats: nul(v) })}
+              maxLength={300}
+              hint={t('biz.delivery_hint')}
+            />
+            <TextField
+              label={t('biz.doordash')}
+              value={settings.doorDash ?? ''}
+              onChange={(v) => setSettings({ ...settings, doorDash: nul(v) })}
+              maxLength={300}
+              hint={t('biz.delivery_hint')}
+            />
           </div>
           <div className="mt-4 flex justify-end">
             <Button

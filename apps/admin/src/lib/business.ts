@@ -287,6 +287,8 @@ export interface Settings {
   facebook: string | null
   tiktok: string | null
   x: string | null
+  uberEats: string | null
+  doorDash: string | null
 }
 
 export async function getSettings(): Promise<Settings> {
@@ -305,6 +307,8 @@ export async function getSettings(): Promise<Settings> {
     facebook: (s.facebook_url as string | null | undefined) ?? null,
     tiktok: (s.tiktok_url as string | null | undefined) ?? null,
     x: (s.twitter_url as string | null | undefined) ?? null,
+    uberEats: (s.uber_eats_url as string | null | undefined) ?? null,
+    doorDash: (s.doordash_url as string | null | undefined) ?? null,
   }
 }
 
@@ -320,6 +324,8 @@ export async function saveSettings(s: Settings): Promise<void> {
     facebook_url: s.facebook,
     tiktok_url: s.tiktok,
     twitter_url: s.x,
+    uber_eats_url: s.uberEats,
+    doordash_url: s.doorDash,
   })
   check('save_settings', error)
 }

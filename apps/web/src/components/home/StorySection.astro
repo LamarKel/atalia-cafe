@@ -1,0 +1,92 @@
+---
+// "Prueba la diferencia" (inicio v2 y Nosotros): tres puntos y un mosaico de fotos. Textos y fotos de site_content.
+import { contentImage } from '../../lib/home'
+import RichTitle from './RichTitle.astro'
+
+interface Props {
+  c: Record<string, string>
+  id?: string
+  /** En Nosotros es la sección principal y su título va como h2 bajo el h1 de la página. */
+  headingId?: string
+}
+
+const { c, id, headingId = 'story-title' } = Astro.props
+const items = [1, 2, 3]
+  .map((n) => ({ n, title: c[`home.story.item${n}.title`], body: c[`home.story.item${n}.body`] }))
+  .filter((i) => i.title !== undefined)
+const images = [1, 2, 3].map((n) => contentImage(c[`home.story.image${n}`]))
+const year = c['home.story.since_year']
+const sinceLabel =
+  year === undefined ? null : (c['home.story.since_label'] ?? '{year}').replace('{year}', year)
+---
+
+{
+  c['home.story.title'] && (
+    <section id={id} class="scroll-mt-24 py-20 md:py-28" aria-labelledby={headingId} data-reveal>
+      <div class="mx-auto grid max-w-7xl items-center gap-12 px-4 md:px-8 lg:grid-cols-2 lg:gap-16">
+        <div class="grid gap-6">
+          {c['home.story.eyebrow'] && (
+            <p
+              class="w-fit rounded-full bg-sage-soft px-4 py-2 text-xs font-semibold uppercase tracking-wider text-sage-ink"
+              data-reveal-item
+            >
+              {c['home.story.eyebrow']}
+            </p>
+          )}
+          <h2
+            id={headingId}
+            class="font-heading text-4xl font-bold leading-[1.05] tracking-tight md:text-6xl"
+            data-reveal-item
+          >
+            <RichTitle text={c['home.story.title']} />
+          </h2>
+          {c['home.story.subtitle'] && (
+            <p class="max-w-lg text-lg leading-relaxed text-muted" data-reveal-item>
+              {c['home.story.subtitle']}
+            </p>
+          )}
+          <ul class="mt-2 grid">
+            {items.map((item) => (
+              <li class="flex items-center gap-5 border-t border-dark/10 py-5" data-reveal-item>
+                <span class="w-10 font-heading text-2xl text-primary-ink" aria-hidden="true">
+                  {String(item.n).padStart(2, '0')}
+                </span>
+                <div>
+                  <p class="text-lg font-semibold">{item.title}</p>
+                  {item.body && <p class="text-sm text-muted">{item.body}</p>}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          {images[0] && (
+            <div class="h-56 overflow-hidden rounded-[28px] md:h-72" data-reveal-item>
+              <img src={images[0]} alt="" loading="lazy" class="size-full object-cover" />
+            </div>
+          )}
+          {images[1] && (
+            <div class="mt-12 h-56 overflow-hidden rounded-[28px] md:mt-16 md:h-72" data-reveal-item>
+              <img src={images[1]} alt="" loading="lazy" class="size-full object-cover" />
+            </div>
+          )}
+          {images[2] && (
+            <div class="-mt-12 h-48 overflow-hidden rounded-[28px] md:-mt-16 md:h-60" data-reveal-item>
+              <img src={images[2]} alt="" loading="lazy" class="size-full object-cover" />
+            </div>
+          )}
+          {sinceLabel && year && (
+            <div
+              class="flex h-48 flex-col justify-between rounded-[28px] bg-secondary p-6 text-white md:h-60 md:p-7"
+              data-reveal-item
+            >
+              <span class="font-heading text-5xl font-bold">{year}</span>
+              <span class="text-[15px]">{sinceLabel}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}

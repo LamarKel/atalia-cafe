@@ -16,6 +16,16 @@
   --color-blush: #efe4e0; /* días agotados */
   --color-muted: #6b6560; /* texto secundario sobre crema, contraste AA */
 
+  /* Inicio v2 (docs/design/01-inicio-v2.html): secciones oscuras y etiquetas */
+  --color-espresso: #2b211c; /* fondo de las secciones oscuras */
+  --color-espresso-soft: #3d3029; /* tarjetas sobre espresso */
+  --color-latte: #cdbfb2; /* texto secundario sobre espresso (9.6:1) */
+  --color-sage-ink: #4f5f41; /* texto verde sobre sage-soft (5.9:1) */
+  --color-linen: #efe6dc; /* fondo de la sección de reseñas */
+  --color-sage-light: #c9d6bc; /* etiquetas verdes sobre espresso (10:1) */
+  --color-sage-bright: #9db088; /* barra de progreso (decorativa) */
+  --color-star: #a9741f; /* estrellas de las reseñas */
+
   /*
    * Verde para elementos con TEXTO encima o texto verde (chips, botón "Add" del menú).
    * El verde de la marca (#6b7f5a) da 4.37:1 con texto blanco y 3.89:1 sobre crema: no llega al

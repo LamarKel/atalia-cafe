@@ -589,4 +589,43 @@ begin
 end $$;
 rollback;
 
+-- ════ 11. Publicación automática del sitio ════
+begin;
+do $$
+begin
+  update public.site_publish set dirty_at = null, requested_at = null;
+  update public.categories set sort_order = sort_order where true;
+  if (select dirty_at from public.site_publish) is null then
+    raise exception 'FAIL: editar el catálogo no marcó el sitio como pendiente';
+  end if;
+  if public.claim_site_publish(60) then
+    raise exception 'FAIL: publicó sin esperar el minuto de calma';
+  end if;
+  update public.site_publish set dirty_at = now() - interval '2 minutes';
+  if not public.claim_site_publish(60) then
+    raise exception 'FAIL: no publicó después del minuto de calma';
+  end if;
+  if public.claim_site_publish(60) then
+    raise exception 'FAIL: la misma tanda de cambios se publicó dos veces';
+  end if;
+  perform public.finish_site_publish(false, 'hook caído');
+  if not public.claim_site_publish(60) then
+    raise exception 'FAIL: tras un error no se reintenta';
+  end if;
+  raise notice 'PASS: un cambio marca el sitio pendiente; se publica una vez tras 1 min de calma y se reintenta si falla';
+end $$;
+rollback;
+
+begin;
+set local role anon;
+select public.t_expect_error($q$ select public.claim_site_publish(0) $q$, 'permission denied', 'anon no puede publicar el sitio');
+do $$
+begin
+  if exists (select 1 from public.site_publish) then
+    raise exception 'FAIL: anon ve el estado de publicación';
+  end if;
+  raise notice 'PASS: anon no ve el estado de publicación';
+end $$;
+rollback;
+
 \echo '=== TODAS LAS PRUEBAS PASARON ==='

@@ -465,5 +465,15 @@
   "rf.customer_message_hint": "Por ejemplo: \"Se nos dañó el horno y no podremos tener tu pedido a tiempo.\"",
   "rf.email_note": "Al cancelar, el cliente recibe un correo con la disculpa, el reembolso y este mensaje.",
   "orders.terms_accepted": "Aceptó los términos y políticas el {when} (versión {version}).",
-  "biz.x": "X / Twitter (enlace)"
+  "biz.x": "X / Twitter (enlace)",
+  "biz.uber_eats": "Uber Eats (enlace)",
+  "biz.doordash": "DoorDash (enlace)",
+  "biz.delivery_hint": "Si lo dejas vacío, el botón no aparece en el inicio.",
+  "pub.up_to_date": "Sitio al día",
+  "pub.pending": "Cambios sin publicar",
+  "pub.pending_hint": "Se publican solos en 1 minuto, cuando dejas de editar.",
+  "pub.publishing": "Publicando…",
+  "pub.publishing_hint": "El sitio se está actualizando; tarda 1 o 2 minutos.",
+  "pub.error": "No se pudo publicar",
+  "pub.now": "Publicar ahora"
 }

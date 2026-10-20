@@ -286,5 +286,15 @@
   "order.track_picked_up": "Recogido",
   "order.track_now": "Estado del pedido: {status}",
   "order.track_auto": "Esta página se actualiza sola mientras preparamos tu pedido.",
-  "order.track_no_show": "Este pedido no se recogió el día programado. Si crees que es un error, contáctanos."
+  "order.track_no_show": "Este pedido no se recogió el día programado. Si crees que es un error, contáctanos.",
+  "home.open_now": "Abierto hoy · {from} – {to}",
+  "home.open_later": "Hoy abrimos · {from} – {to}",
+  "home.closed_today": "Hoy cerrado",
+  "home.order_card.label": "Tu pedido",
+  "home.order_card.status": "Listo para recoger · 11:00 AM",
+  "home.reviews.stars": "5 de 5 estrellas",
+  "contact.whatsapp_cta": "Escríbenos por WhatsApp",
+  "contact.email": "Correo",
+  "a11y.new_tab": "se abre en otra pestaña",
+  "nav.delivery": "Delivery"
 }

@@ -1,0 +1,57 @@
+---
+// Nosotros: presentación (site_content about.*), "Prueba la diferencia" y la llamada final.
+import BaseLayout from '../layouts/BaseLayout.astro'
+import CtaSection from './home/CtaSection.astro'
+import StorySection from './home/StorySection.astro'
+import { getSiteContent, getStoreInfo } from '../lib/catalog'
+import { parseLegal } from '../lib/legal'
+import { t, type Locale } from '../i18n'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+const [c, store] = await Promise.all([getSiteContent(locale), getStoreInfo()])
+const title = c['about.title'] ?? t(locale, 'nav.about')
+// El texto largo (opcional) usa el mismo formato sencillo que las páginas legales: párrafos y "## " títulos.
+const body = parseLegal(c['about.body'] ?? '')
+---
+
+<BaseLayout locale={locale} title={title} description={c['about.lead']}>
+  <div class="mx-auto max-w-7xl px-4 pt-12 md:px-8 md:pt-16" data-reveal>
+    <h1 class="font-heading text-5xl font-bold tracking-tight md:text-7xl" data-reveal-item>{title}</h1>
+    {
+      c['about.lead'] && (
+        <p class="mt-5 max-w-2xl text-xl leading-relaxed text-muted" data-reveal-item>
+          {c['about.lead']}
+        </p>
+      )
+    }
+    {
+      body.length > 0 && (
+        <div class="mt-8 grid max-w-3xl gap-4 text-lg leading-relaxed" data-reveal-item>
+          {body.map((b) =>
+            b.kind === 'h2' ? (
+              <h2 class="mt-4 font-heading text-2xl font-bold">{b.text}</h2>
+            ) : b.kind === 'ul' ? (
+              <ul class="grid list-disc gap-2 pl-6">
+                {b.items.map((i) => (
+                  <li>{i}</li>
+                ))}
+              </ul>
+            ) : b.kind === 'p' ? (
+              <p>{b.text}</p>
+            ) : null,
+          )}
+        </div>
+      )
+    }
+  </div>
+  <StorySection c={c} headingId="about-story" />
+  <CtaSection locale={locale} c={c} store={store} />
+</BaseLayout>
+
+<script>
+  import '../scripts/home-motion'
+</script>

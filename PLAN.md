@@ -318,7 +318,7 @@ Cada fase se cierra con un PR revisado, el CI en verde y el deploy a staging.
 
 ### Fase 2 — Menú y catálogo
 - [x] **Migrar el menú actual** con todas sus funciones (`D:\Dev\cafe/menu.html`) y el diseño nuevo (lenguaje visual de las pantallas aprobadas, en especial la 02 · Catálogo); validar que no se pierde ninguna función.
-- [ ] Endpoint `/catalog` con caché en el edge. *(Por ahora el sitio es estático y lee la BD al compilar: lo que se cambia en el panel aparece al volver a compilar. Falta decidir: un deploy hook que recompile al guardar en el panel, o este endpoint.)*
+- [x] ~~Endpoint `/catalog` con caché en el edge~~ → **publicación automática**: el sitio sigue estático; lo que se guarda en el panel marca `site_publish` y el Worker llama al deploy hook 1 min después del último cambio (o con "Publicar ahora" en el panel).
 - [x] Páginas: Inicio, Catálogo, Detalle.
 - [x] Isla del armador de picaderas, con la validación compartida (Zod) en `packages/shared`.
 - [x] Carrito (isla de React, persistido en `localStorage` con try/catch).
@@ -358,6 +358,7 @@ Cada fase se cierra con un PR revisado, el CI en verde y el deploy a staging.
 - [ ] Stripe en vivo (Radar activo): cambiar las claves de prueba del desarrollador por las de la cuenta de la clienta.
 - [ ] Correos: verificar el dominio de la clienta en Resend y cambiar el remitente (en desarrollo se usa kemenu.app, dominio de prueba del desarrollador).
 - [ ] Dominio y DNS en Cloudflare.
+- [ ] Publicación automática: crear el deploy hook en Cloudflare Pages (Settings → Builds → Deploy hooks) y guardarlo con `wrangler secret put DEPLOY_HOOK_URL`. Sin él, el panel guarda pero el sitio no se actualiza.
 - [ ] Prueba con un pago real pequeño y su reembolso.
 - [ ] Textos legales (Términos, Privacidad, Cancelaciones, Accesibilidad, aviso de alérgenos): **que un abogado de Nueva Jersey los revise** antes de publicar, y cargar en el panel el correo, la dirección y el teléfono del negocio (si faltan, las páginas muestran "(dato pendiente)"). Al cambiar un texto legal, actualizar `legal.updated` (es la versión que queda guardada en cada pedido).
 - [ ] Capacitación de la clienta en el admin.

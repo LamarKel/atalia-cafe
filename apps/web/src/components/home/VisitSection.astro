@@ -1,0 +1,125 @@
+---
+// "Visítanos" (inicio y Contacto): dirección, horario, teléfono y el mapa de la tienda (pedido de la clienta).
+import type { StoreInfo } from '../../lib/catalog'
+import { directionsUrl, groupHours } from '../../lib/catalog-format'
+import { t, type Locale, type MessageKey } from '../../i18n'
+
+interface Props {
+  locale: Locale
+  c: Record<string, string>
+  store: StoreInfo
+  id?: string
+  /** En Contacto se muestran también WhatsApp y el correo. */
+  full?: boolean
+}
+
+const { locale, c, store, id, full = false } = Astro.props
+const hours = groupHours(store.hours)
+const directions = directionsUrl(store.lat, store.lng)
+const mapSrc =
+  store.lat !== null && store.lng !== null
+    ? `https://maps.google.com/maps?q=${store.lat},${store.lng}&z=16&hl=${locale}&output=embed`
+    : null
+const dayName = (d: number) => t(locale, `day.${d}` as MessageKey)
+const dayRange = (days: number[]) =>
+  days.length > 1 ? `${dayName(days[0] ?? 0)}–${dayName(days.at(-1) ?? 0)}` : dayName(days[0] ?? 0)
+const whatsappUrl = store.whatsapp ? `https://wa.me/${store.whatsapp}` : null
+---
+
+<section id={id} class="scroll-mt-24 pb-20 md:pb-28" aria-labelledby="visit-title" data-reveal>
+  <div class="mx-auto grid max-w-7xl items-stretch gap-6 px-4 md:px-8 lg:grid-cols-[1fr_1.3fr]">
+    <div class="rounded-[28px] bg-white p-7 shadow-sm md:p-10" data-reveal-item>
+      <h2 id="visit-title" class="font-heading text-3xl font-bold md:text-4xl">{c['home.visit.title']}</h2>
+      {c['home.visit.subtitle'] && <p class="mt-2 text-muted">{c['home.visit.subtitle']}</p>}
+      <dl class="mt-8 space-y-6">
+        {
+          store.address && (
+            <div>
+              <dt class="font-semibold">{t(locale, 'home.visit.address')}</dt>
+              <dd class="mt-1 text-muted">{store.address}</dd>
+            </div>
+          )
+        }
+        <div>
+          <dt class="font-semibold">{t(locale, 'home.visit.hours')}</dt>
+          <dd class="mt-1">
+            <ul class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-muted">
+              {
+                hours.map((g) => (
+                  <li class="contents">
+                    <span>{dayRange(g.days)}</span>
+                    <span>{g.text ?? t(locale, 'footer.closed')}</span>
+                  </li>
+                ))
+              }
+            </ul>
+          </dd>
+        </div>
+        {
+          store.phone && (
+            <div>
+              <dt class="font-semibold">{t(locale, 'home.visit.phone')}</dt>
+              <dd class="mt-1">
+                <a href={`tel:${store.phone}`} class="inline-flex min-h-11 items-center text-muted">
+                  {store.phone}
+                </a>
+              </dd>
+            </div>
+          )
+        }
+        {
+          full && whatsappUrl && (
+            <div>
+              <dt class="font-semibold">WhatsApp</dt>
+              <dd class="mt-1">
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener"
+                  class="inline-flex min-h-11 items-center text-muted underline-offset-4 hover:underline"
+                >
+                  {t(locale, 'contact.whatsapp_cta')}
+                </a>
+              </dd>
+            </div>
+          )
+        }
+        {
+          full && store.email && (
+            <div>
+              <dt class="font-semibold">{t(locale, 'contact.email')}</dt>
+              <dd class="mt-1">
+                <a
+                  href={`mailto:${store.email}`}
+                  class="inline-flex min-h-11 items-center text-muted underline-offset-4 hover:underline"
+                >
+                  {store.email}
+                </a>
+              </dd>
+            </div>
+          )
+        }
+      </dl>
+      {
+        directions && (
+          <a href={directions} target="_blank" rel="noopener" class="btn-primary mt-8">
+            {t(locale, 'footer.directions')}
+          </a>
+        )
+      }
+    </div>
+    {
+      mapSrc && (
+        <div class="min-h-80 overflow-hidden rounded-[28px] bg-sage-soft shadow-sm" data-reveal-item>
+          <iframe
+            src={mapSrc}
+            title={t(locale, 'home.visit.map_title')}
+            class="size-full min-h-80 border-0"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+          />
+        </div>
+      )
+    }
+  </div>
+</section>
