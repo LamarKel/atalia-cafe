@@ -1,0 +1,112 @@
+---
+// Páginas legales (términos, privacidad, cancelaciones, accesibilidad). El texto viene de site_content y se
+// edita en el panel; la tabla de reembolsos y la regla del menú salen de business_rules (refunds.*), así la
+// política publicada nunca contradice lo que calcula el sistema.
+import { getRule } from '@atalia/shared/rules'
+import BaseLayout from '../layouts/BaseLayout.astro'
+import { getPublicRuleRows, getSiteContent, getStoreInfo } from '../lib/catalog'
+import {
+  LEGAL_PAGES,
+  LEGAL_PATHS,
+  fillVars,
+  menuRule,
+  parseLegal,
+  refundRows,
+  type LegalPage,
+} from '../lib/legal'
+import { localizedPath, t, type Locale } from '../i18n'
+
+interface Props {
+  locale: Locale
+  page: LegalPage
+}
+
+const { locale, page } = Astro.props
+const [content, store, rules] = await Promise.all([
+  getSiteContent(locale),
+  getStoreInfo(),
+  getPublicRuleRows(),
+])
+const vars = {
+  business_name: store.businessName,
+  email: store.email,
+  phone: store.phone,
+  address: store.address,
+  site: Astro.site?.host ?? null,
+  menu_rule: menuRule(getRule('refunds.menu_until_status', rules), locale),
+}
+const missing = t(locale, 'legal.missing')
+const title = content[`legal.${page}.title`] ?? page
+const blocks = parseLegal(fillVars(content[`legal.${page}.body`] ?? '', vars, missing))
+const tiers = refundRows(getRule('refunds.catering_tiers', rules), locale)
+const updated = content['legal.updated']
+const updatedLabel =
+  updated === undefined
+    ? null
+    : new Intl.DateTimeFormat(locale === 'es' ? 'es-US' : 'en-US', {
+        dateStyle: 'long',
+        timeZone: 'UTC',
+      }).format(new Date(`${updated}T12:00:00Z`))
+const others = LEGAL_PAGES.filter((p) => p !== page)
+---
+
+<BaseLayout locale={locale} title={title}>
+  <article class="mx-auto max-w-3xl px-4 pb-24 pt-10 md:px-8 md:pt-14">
+    <h1 class="font-heading text-4xl font-bold text-dark md:text-5xl">{title}</h1>
+    {updatedLabel && <p class="mt-3 text-muted">{t(locale, 'legal.updated', { date: updatedLabel })}</p>}
+
+    <div class="mt-8 grid gap-4 rounded-3xl bg-white p-6 leading-relaxed md:p-10">
+      {
+        blocks.map((b) => {
+          if (b.kind === 'h2')
+            return <h2 class="mt-4 font-heading text-2xl font-bold first:mt-0">{b.text}</h2>
+          if (b.kind === 'p') return <p>{b.text}</p>
+          if (b.kind === 'ul')
+            return (
+              <ul class="grid list-disc gap-2 pl-6">
+                {b.items.map((item) => (
+                  <li>{item}</li>
+                ))}
+              </ul>
+            )
+          return (
+            <table class="w-full border-collapse text-left">
+              <caption class="sr-only">{t(locale, 'legal.table_caption')}</caption>
+              <thead>
+                <tr class="border-b border-dark/15">
+                  <th scope="col" class="py-2 pr-4 font-semibold">
+                    {t(locale, 'legal.table_when')}
+                  </th>
+                  <th scope="col" class="py-2 font-semibold">
+                    {t(locale, 'legal.table_refund')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {tiers.map((row) => (
+                  <tr class="border-b border-dark/10">
+                    <td class="py-2 pr-4">{row.when}</td>
+                    <td class="py-2 font-semibold tabular-nums">{row.refund}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )
+        })
+      }
+    </div>
+
+    <nav aria-label={t(locale, 'legal.nav_label')} class="mt-8 flex flex-wrap gap-x-6">
+      {
+        others.map((p) => (
+          <a
+            href={localizedPath(LEGAL_PATHS[p], locale)}
+            class="inline-flex min-h-11 items-center font-semibold text-secondary underline underline-offset-4"
+          >
+            {content[`legal.${p}.title`] ?? p}
+          </a>
+        ))
+      }
+    </nav>
+  </article>
+</BaseLayout>

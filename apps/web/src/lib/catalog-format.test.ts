@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   directionsUrl,
+  safeUrl,
   perPersonCents,
   formatTime,
   fromPrice,
@@ -118,5 +119,17 @@ describe('perPersonCents', () => {
   it('sin precio o sin personas no muestra nada', () => {
     expect(perPersonCents(null, 10)).toBeNull()
     expect(perPersonCents(9000, null)).toBeNull()
+  })
+})
+
+describe('enlaces de redes sociales', () => {
+  it('solo acepta https; lo demás no se muestra', () => {
+    expect(safeUrl('https://www.instagram.com/ataliacafe')).toBe('https://www.instagram.com/ataliacafe')
+    expect(safeUrl(' https://tiktok.com/@atalia ')).toBe('https://tiktok.com/@atalia')
+    expect(safeUrl('javascript:alert(1)')).toBeNull()
+    expect(safeUrl('http://facebook.com/x')).toBeNull()
+    expect(safeUrl('instagram.com/x')).toBeNull()
+    expect(safeUrl('')).toBeNull()
+    expect(safeUrl(null)).toBeNull()
   })
 })

@@ -1,5 +1,6 @@
 ---
 // Arma tu picadera (docs/design/04-arma-tu-picadera.png). Datos de la BD; la interacción en la isla.
+import AllergenNotice from './AllergenNotice.astro'
 import PicaderaBuilder from '../islands/PicaderaBuilder'
 import BaseLayout from '../layouts/BaseLayout.astro'
 import { getPicaderaBuilder, getSiteContent } from '../lib/catalog'
@@ -31,4 +32,5 @@ const title = c['picadera.title'] ?? data?.product.name ?? t(locale, 'type.picad
       />
     )
   }
+  <AllergenNotice locale={locale} class="pb-16" />
 </BaseLayout>

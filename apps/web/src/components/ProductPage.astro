@@ -2,6 +2,7 @@
 // Página de detalle de catering (docs/design/03-detalle-bandeja.png). Ruta de navegación + isla ProductDetail.
 import { getRule } from '@atalia/shared/rules'
 import ProductDetail from '../islands/ProductDetail'
+import AllergenNotice from './AllergenNotice.astro'
 import QuoteCta from './QuoteCta.astro'
 import BaseLayout from '../layouts/BaseLayout.astro'
 import { getPublicRuleRows, type ProductDetail as Product } from '../lib/catalog'
@@ -52,4 +53,5 @@ const quoteThreshold = getRule('orders.quote_threshold_guests', await getPublicR
       )
     }
   </div>
+  <AllergenNotice locale={locale} class="pb-16" />
 </BaseLayout>
