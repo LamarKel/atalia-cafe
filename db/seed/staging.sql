@@ -165,3 +165,64 @@ select u.id, 'owner', 'Owner'
 from auth.users u
 where u.id = '09b5dce9-55d8-4859-844e-47bae15d71fd'
 on conflict (user_id) do update set role = 'owner', active = true;
+
+-- ─────────────────────────────────────────────────────────────
+-- Productos de catering: PROVISIONAL (los 5 del diseño, pantalla 02). SIN PRECIOS: los da la clienta.
+-- Sin precio, el sitio muestra "Precio por confirmar".
+-- ─────────────────────────────────────────────────────────────
+
+insert into public.products (id, category_id, type, slug, name_en, name_es, min_lead_hours, sort_order)
+values
+  ('a7a10000-0000-4000-8000-000000000001', 'c47e0000-0000-4000-8000-000000000001', 'tray', 'breakfast-tray',
+   'Breakfast tray', 'Bandeja de desayuno', 24, 1),
+  ('a7a10000-0000-4000-8000-000000000002', 'c47e0000-0000-4000-8000-000000000001', 'tray', 'charcuterie-board',
+   'Charcuterie board', 'Tabla de charcutería', 24, 2),
+  ('a7a10000-0000-4000-8000-000000000003', 'c47e0000-0000-4000-8000-000000000001', 'tray', 'cheese-board',
+   'Cheese board', 'Tabla de quesos', 24, 3),
+  ('a7a10000-0000-4000-8000-000000000004', 'c47e0000-0000-4000-8000-000000000002', 'table', 'event-table',
+   'Event table', 'Mesa para eventos', 48, 4),
+  ('a7a10000-0000-4000-8000-000000000005', 'c47e0000-0000-4000-8000-000000000003', 'picadera_pack', 'picadera',
+   'Build your picadera', 'Arma tu picadera', 1, 5)
+on conflict (id) do update
+  set name_en = excluded.name_en, name_es = excluded.name_es, min_lead_hours = excluded.min_lead_hours,
+      sort_order = excluded.sort_order;
+
+insert into public.product_sizes (id, product_id, name_en, name_es, serves, units, sort_order)
+select ('b5b5' || lpad(to_hex(row_number() over ()), 4, '0') || '-0000-4000-8000-000000000000')::uuid,
+       p.product_id::uuid, p.name_en, p.name_es, p.serves, p.units, p.sort_order
+from (values
+  ('a7a10000-0000-4000-8000-000000000001', '5 people',  '5 personas',  5,  null::int, 1),
+  ('a7a10000-0000-4000-8000-000000000001', '10 people', '10 personas', 10, null, 2),
+  ('a7a10000-0000-4000-8000-000000000001', '15 people', '15 personas', 15, null, 3),
+  ('a7a10000-0000-4000-8000-000000000001', '20 people', '20 personas', 20, null, 4),
+  ('a7a10000-0000-4000-8000-000000000002', '5 people',  '5 personas',  5,  null, 1),
+  ('a7a10000-0000-4000-8000-000000000002', '10 people', '10 personas', 10, null, 2),
+  ('a7a10000-0000-4000-8000-000000000002', '15 people', '15 personas', 15, null, 3),
+  ('a7a10000-0000-4000-8000-000000000002', '20 people', '20 personas', 20, null, 4),
+  ('a7a10000-0000-4000-8000-000000000003', '5 people',  '5 personas',  5,  null, 1),
+  ('a7a10000-0000-4000-8000-000000000003', '10 people', '10 personas', 10, null, 2),
+  ('a7a10000-0000-4000-8000-000000000003', '15 people', '15 personas', 15, null, 3),
+  ('a7a10000-0000-4000-8000-000000000004', '20 people', '20 personas', 20, null, 1),
+  ('a7a10000-0000-4000-8000-000000000004', '30 people', '30 personas', 30, null, 2),
+  ('a7a10000-0000-4000-8000-000000000004', '50 people', '50 personas', 50, null, 3),
+  ('a7a10000-0000-4000-8000-000000000005', '5 pieces',  '5 piezas',    null, 5,  1),
+  ('a7a10000-0000-4000-8000-000000000005', '10 pieces', '10 piezas',   null, 10, 2),
+  ('a7a10000-0000-4000-8000-000000000005', '15 pieces', '15 piezas',   null, 15, 3),
+  ('a7a10000-0000-4000-8000-000000000005', '20 pieces', '20 piezas',   null, 20, 4)
+) as p(product_id, name_en, name_es, serves, units, sort_order)
+on conflict (id) do update
+  set name_en = excluded.name_en, name_es = excluded.name_es, serves = excluded.serves, units = excluded.units;
+
+-- Imagen del hero (archivo en apps/web/public; luego se sube a Storage desde el admin)
+insert into public.site_content (key, locale, value)
+values ('home.hero.image_url', 'en', '/images/hero.png'), ('home.hero.image_url', 'es', '/images/hero.png'),
+       ('footer.tagline', 'en', 'Catering and café in Passaic, NJ'),
+       ('footer.tagline', 'es', 'Catering y café en Passaic, NJ')
+on conflict (key, locale) do update set value = excluded.value;
+
+-- Sección "Visítanos" del inicio, con el mapa (pedido de la clienta, 2026-10-18)
+insert into public.site_content (key, locale, value)
+values ('home.visit.title', 'en', 'Visit us'), ('home.visit.title', 'es', 'Visítanos'),
+       ('home.visit.subtitle', 'en', 'Pick up your order at our café in Passaic, NJ.'),
+       ('home.visit.subtitle', 'es', 'Recoge tu pedido en nuestro café en Passaic, NJ.')
+on conflict (key, locale) do update set value = excluded.value;

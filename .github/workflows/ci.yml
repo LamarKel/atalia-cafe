@@ -46,6 +46,10 @@ jobs:
 
       - name: Build del sitio
         run: pnpm --filter @atalia/web build
+        env:
+          # Clave "publishable" de staging: es pública por diseño (va en el navegador) y la RLS la limita.
+          PUBLIC_SUPABASE_URL: https://cvmdrixxsnwcgzrndhcy.supabase.co
+          PUBLIC_SUPABASE_KEY: sb_publishable_2T6pU6mE2oawVYc-SSVogw_fcczgGsj
 
       - name: Empaquetado del Worker (sin publicar)
         run: pnpm --filter @atalia/api exec wrangler deploy --dry-run --outdir dist

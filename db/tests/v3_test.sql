@@ -64,9 +64,9 @@ select public.t_expect_error(
   'products_check', 'un producto del menú sin precio no se guarda');
 
 insert into public.products (id, category_id, type, slug, name_en, name_es, price_cents, min_lead_hours, active)
-values ('11111111-0000-4000-8000-000000000001', 'c47e0000-0000-4000-8000-000000000001', 'tray', 'breakfast-tray',
+values ('11111111-0000-4000-8000-000000000001', 'c47e0000-0000-4000-8000-000000000001', 'tray', 'test-breakfast-tray',
         'Breakfast tray', 'Bandeja de desayuno', null, 24, true),
-       ('11111111-0000-4000-8000-000000000002', 'c47e0000-0000-4000-8000-000000000003', 'picadera_pack', 'picadera',
+       ('11111111-0000-4000-8000-000000000002', 'c47e0000-0000-4000-8000-000000000003', 'picadera_pack', 'test-picadera',
         'Picadera', 'Picadera', null, 1, true),
        ('11111111-0000-4000-8000-000000000003', '41d2e519-e5f3-4940-91ef-4afe27ad92c9', 'menu', null,
         'Latte', 'Latte', 550, 0, true),

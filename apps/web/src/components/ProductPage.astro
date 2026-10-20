@@ -1,0 +1,38 @@
+---
+// Página de detalle de catering (docs/design/03-detalle-bandeja.png). Ruta de navegación + isla ProductDetail.
+import ProductDetail from '../islands/ProductDetail'
+import BaseLayout from '../layouts/BaseLayout.astro'
+import type { ProductDetail as Product } from '../lib/catalog'
+import { localizedPath, messagesFor, t, type Locale } from '../i18n'
+
+interface Props {
+  locale: Locale
+  product: Product
+}
+
+const { locale, product } = Astro.props
+const catalogHref = localizedPath('/catering', locale)
+---
+
+<BaseLayout locale={locale} title={product.name} description={product.shortDescription ?? undefined}>
+  <div class="mx-auto max-w-7xl px-4 pb-24 pt-6 md:px-8 md:pt-8">
+    <nav aria-label={t(locale, 'a11y.breadcrumb')} class="mb-6 text-sm">
+      <ol class="flex flex-wrap items-center gap-2 text-muted">
+        <li>
+          <a href={catalogHref} class="underline underline-offset-2 hover:text-secondary"
+            >{t(locale, 'nav.catering')}</a
+          >
+        </li>
+        <li aria-hidden="true">/</li>
+        <li>
+          <a href={`${catalogHref}?category=${product.categorySlug}`} class="hover:text-secondary"
+            >{product.categoryName}</a
+          >
+        </li>
+        <li aria-hidden="true">/</li>
+        <li aria-current="page" class="text-dark">{product.name}</li>
+      </ol>
+    </nav>
+    <ProductDetail client:load locale={locale} product={product} messages={messagesFor(locale)} />
+  </div>
+</BaseLayout>
