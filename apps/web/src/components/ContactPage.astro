@@ -17,18 +17,16 @@ const SOCIAL_NAMES = { instagram: 'Instagram', facebook: 'Facebook', tiktok: 'Ti
 ---
 
 <BaseLayout locale={locale} title={title} description={c['contact.lead']}>
-  <div class="mx-auto max-w-7xl px-4 pb-10 pt-12 md:px-8 md:pt-16" data-reveal>
-    <h1 class="font-heading text-5xl font-bold tracking-tight md:text-7xl" data-reveal-item>{title}</h1>
+  <div class="mx-auto max-w-7xl px-4 pb-10 pt-12 md:px-8 md:pt-16">
+    <h1 class="font-heading text-5xl font-bold tracking-tight md:text-7xl">{title}</h1>
     {
       c['contact.lead'] && (
-        <p class="mt-5 max-w-2xl text-xl leading-relaxed text-muted" data-reveal-item>
-          {c['contact.lead']}
-        </p>
+        <p class="mt-5 max-w-2xl text-xl leading-relaxed text-muted">{c['contact.lead']}</p>
       )
     }
     {
       store.socials.length > 0 && (
-        <ul class="mt-6 flex flex-wrap gap-3" data-reveal-item>
+        <ul class="mt-6 flex flex-wrap gap-3">
           {store.socials.map((s) => (
             <li>
               <a

@@ -1,0 +1,12 @@
+/*
+ * Fuentes de la marca servidas desde el propio sitio (Fontsource), no desde Google Fonts:
+ * sin una ida a otro dominio que bloquee el primer pintado (Lighthouse: −1.1 a −1.9 s) y la CSP queda en 'self'.
+ * Solo los pesos que se usan. font-display: swap (el texto se ve mientras la fuente carga).
+ */
+@import '@fontsource/playfair-display/600.css';
+@import '@fontsource/playfair-display/700.css';
+@import '@fontsource/playfair-display/700-italic.css';
+@import '@fontsource/poppins/400.css';
+@import '@fontsource/poppins/500.css';
+@import '@fontsource/poppins/600.css';
+@import '@fontsource/poppins/700.css';

@@ -53,6 +53,11 @@ jobs:
           PUBLIC_API_URL: http://127.0.0.1:8787
           PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
 
+      - name: Accesibilidad del sitio (axe, WCAG 2.1 AA)
+        run: |
+          pnpm --filter @atalia/web exec playwright install --with-deps chromium
+          pnpm --filter @atalia/web test:a11y
+
       - name: Empaquetado del Worker (sin publicar)
         run: pnpm --filter @atalia/api exec wrangler deploy --dry-run --outdir dist
 

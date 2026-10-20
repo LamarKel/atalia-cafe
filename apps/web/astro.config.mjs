@@ -16,6 +16,8 @@ export default defineConfig({
     locales: ['en', 'es'],
     routing: { prefixDefaultLocale: false },
   },
+  // Fotos remotas (Storage de Supabase u otra URL https del panel) optimizadas al compilar (src/lib/images.ts)
+  image: { remotePatterns: [{ protocol: 'https' }] },
   // Sin bloques de código en Markdown: Shiki pondría estilos en línea que la CSP bloquea.
   markdown: { syntaxHighlight: false },
   security: {

@@ -34,12 +34,33 @@ export function Dialog({
   const titleId = useId()
   const reduceMotion = useReducedMotion()
 
+  // Quién abrió el diálogo: al cerrarlo, el foco vuelve ahí (si no, el teclado empieza otra vez desde arriba)
+  const opener = useRef<HTMLElement | null>(null)
+
   useEffect(() => {
     const dialog = ref.current
     if (dialog === null) return
-    if (open && !dialog.open) dialog.showModal()
-    if (!open && dialog.open) dialog.close()
+    if (open && !dialog.open) {
+      opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+      dialog.showModal()
+    }
+    if (!open && dialog.open) {
+      dialog.close()
+      const target = opener.current
+      opener.current = null
+      if (target?.isConnected === true) target.focus()
+    }
   }, [open])
+
+  // Si quien lo usa desmonta el diálogo al cerrarlo (en vez de pasar open=false), igual se devuelve el foco
+  useEffect(
+    () => () => {
+      const target = opener.current
+      opener.current = null
+      if (target?.isConnected === true) target.focus()
+    },
+    [],
+  )
 
   return (
     <dialog

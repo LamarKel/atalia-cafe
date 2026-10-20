@@ -47,7 +47,9 @@ openToday()
 if (!reduce) {
   root.dataset.motion = 'on'
 
-  // Hero: entrada en cascada (pastilla, título, texto, botones, cifras) y la foto desde la derecha.
+  // Hero: entrada en cascada (pastilla, texto, botones, cifras) y la foto desde la derecha. El título es el
+  // elemento principal de la página (LCP): se ve desde el primer pintado y solo se desliza, sin aparecer.
+  animate('[data-hero-title]', { y: [18, 0] }, { duration: 0.9, ease: EASE })
   animate(
     '[data-hero-item]',
     { opacity: [0, 1], y: [28, 0] },

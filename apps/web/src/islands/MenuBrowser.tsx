@@ -16,7 +16,15 @@ import {
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { addToCart } from '../lib/cart'
 import type { MenuCategory, MenuItem, PickupStore } from '../lib/catalog'
-import { cardPrice, groupCategories, needsOptions, searchMenu, unitPrice } from '../lib/menu'
+import {
+  activeSection,
+  cardPrice,
+  centeredScroll,
+  groupCategories,
+  needsOptions,
+  searchMenu,
+  unitPrice,
+} from '../lib/menu'
 import { getPickup, onPickupChange, setPickup, type PickupChoice } from '../lib/pickup'
 import type { Locale, MessageKey } from '../i18n'
 
@@ -74,22 +82,64 @@ function Menu({ locale, messages: m, categories, stores }: MenuBrowserProps) {
   const store = stores.find((s) => s.id === pickup?.storeId) ?? null
   const location = store?.locations.find((l) => l.id === pickup?.locationId) ?? null
 
-  // Categoría activa según el scroll (scroll spy de la app anterior)
+  // Categoría activa según el scroll (scroll spy de la app anterior): la última cuyo título ya pasó las
+  // barras fijas. Mientras se salta a una categoría con un clic, se respeta esa elección.
+  const lockUntil = useRef(0)
   useEffect(() => {
-    const sections = visible.map((c) => document.getElementById(`cat-${c.slug}`)).filter((s) => s !== null)
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const top = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0]
-        const id = top?.target.getAttribute('data-category')
-        if (id) setActive(id)
-      },
-      { rootMargin: '-140px 0px -60% 0px' },
-    )
-    sections.forEach((s) => observer.observe(s))
-    return () => observer.disconnect()
+    let frame = 0
+    const update = () => {
+      frame = 0
+      if (performance.now() < lockUntil.current) return
+      // Encabezado + fila de categorías (teléfono) o encabezado (escritorio), con un margen
+      const offset = window.innerWidth >= 1024 ? 180 : 170
+      const sections = visible.flatMap((c) => {
+        const el = document.getElementById(`cat-${c.slug}`)
+        return el === null ? [] : [{ id: c.id, top: el.getBoundingClientRect().top }]
+      })
+      const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4
+      const id = activeSection(sections, offset, atBottom)
+      if (id !== null) setActive(id)
+    }
+    const onScroll = () => {
+      if (frame === 0) frame = requestAnimationFrame(update)
+    }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      if (frame !== 0) cancelAnimationFrame(frame)
+    }
   }, [visible])
+
+  // La categoría activa siempre a la vista: centrada en la fila del teléfono y en la barra lateral.
+  const pillRow = useRef<HTMLUListElement>(null)
+  const sidebar = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (active === null) return
+    const behavior: ScrollBehavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      ? 'auto'
+      : 'smooth'
+    const pill = pillRow.current?.querySelector<HTMLElement>(`[data-cat="${active}"]`)
+    if (pillRow.current && pill) {
+      pillRow.current.scrollTo({
+        left: centeredScroll(pill.offsetLeft, pill.offsetWidth, pillRow.current.clientWidth),
+        behavior,
+      })
+    }
+    const link = sidebar.current?.querySelector<HTMLElement>(`[data-cat="${active}"]`)
+    if (sidebar.current && link) {
+      const box = sidebar.current.getBoundingClientRect()
+      const r = link.getBoundingClientRect()
+      if (r.top < box.top || r.bottom > box.bottom) {
+        sidebar.current.scrollTo({
+          top: centeredScroll(r.top - box.top + sidebar.current.scrollTop, r.height, box.height),
+          behavior,
+        })
+      }
+    }
+  }, [active])
 
   const withPickup = (action: () => void) => {
     if (pickup !== null && store !== null) {
@@ -130,6 +180,8 @@ function Menu({ locale, messages: m, categories, stores }: MenuBrowserProps) {
   }
 
   const jump = (category: MenuCategory) => {
+    // Durante el desplazamiento suave no se recalcula (si no, la marca pasa por todas las categorías del medio)
+    lockUntil.current = performance.now() + 900
     setActive(category.id)
     document.getElementById(`cat-${category.slug}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
@@ -202,11 +254,12 @@ function Menu({ locale, messages: m, categories, stores }: MenuBrowserProps) {
         aria-label={m['menu.jump_to']}
         className="sticky top-16 z-30 -mx-4 mt-4 border-b border-dark/5 bg-accent/95 px-4 py-2 backdrop-blur lg:hidden"
       >
-        <ul className="flex gap-2 overflow-x-auto pb-1">
+        <ul ref={pillRow} className="flex gap-2 overflow-x-auto pb-1">
           {visible.map((c) => (
             <li key={c.id} className="shrink-0">
               <button
                 type="button"
+                data-cat={c.id}
                 onClick={() => jump(c)}
                 aria-current={active === c.id ? 'true' : undefined}
                 className={`min-h-11 rounded-full border px-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary ${
@@ -225,7 +278,10 @@ function Menu({ locale, messages: m, categories, stores }: MenuBrowserProps) {
       <div className="mt-6 grid gap-8 lg:mt-10 lg:grid-cols-[16rem_1fr] lg:gap-10">
         {/* Escritorio: barra lateral como el filtro de la pantalla 02 */}
         <nav aria-label={m['menu.categories']} className="hidden lg:block">
-          <div className="sticky top-28 max-h-[calc(100dvh-8rem)] overflow-y-auto rounded-3xl bg-white p-5">
+          <div
+            ref={sidebar}
+            className="sticky top-28 max-h-[calc(100dvh-8rem)] overflow-y-auto rounded-3xl bg-white p-5"
+          >
             {groups.map((g) => (
               <div key={g.group} className="mb-4 last:mb-0">
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
@@ -235,6 +291,7 @@ function Menu({ locale, messages: m, categories, stores }: MenuBrowserProps) {
                   {g.categories.map((c) => (
                     <li key={c.id}>
                       <a
+                        data-cat={c.id}
                         href={`#cat-${c.slug}`}
                         onClick={(e) => {
                           e.preventDefault()
@@ -361,6 +418,8 @@ function MenuCard(props: {
           {item.imageUrl !== null ? (
             <img
               src={item.imageUrl}
+              srcSet={item.imageSrcset ?? undefined}
+              sizes="(min-width: 1280px) 300px, (min-width: 1024px) 34vw, 50vw"
               alt=""
               loading="lazy"
               className={`size-full object-cover transition-transform duration-300 motion-safe:group-hover:scale-105 ${item.soldOut ? 'opacity-50 grayscale' : ''}`}

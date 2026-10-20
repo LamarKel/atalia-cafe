@@ -1,3 +1,5 @@
+@import './fonts.css';
+
 /*
  * Tokens de la marca Atalia Café para Tailwind CSS v4 (@theme).
  * Extraídos de la referencia (docs/REFERENCE.md §2): tailwind.config.js, styles/variables.css y globals.css.
@@ -27,12 +29,12 @@
   --color-star: #a9741f; /* estrellas de las reseñas */
 
   /*
-   * Verde para elementos con TEXTO encima o texto verde (chips, botón "Add" del menú).
-   * El verde de la marca (#6b7f5a) da 4.37:1 con texto blanco y 3.89:1 sobre crema: no llega al
-   * 4.5:1 de WCAG AA para texto normal. Pendiente de decisión de la clienta (PLAN.md §13):
-   * cambiar este valor a #5f7250 (5.24:1 y 4.66:1) lo arregla en todos los componentes a la vez.
+   * Verde para elementos con TEXTO encima o texto verde (chips, botones, la llamada final del inicio).
+   * El verde de la marca (#6b7f5a) da 4.37:1 con texto blanco y 3.89:1 sobre crema: no llega al 4.5:1 de
+   * WCAG AA (riesgo ADA). Este tono, apenas más oscuro, da 5.24:1 y 4.66:1 (auditoría axe, 2026-10-20).
+   * El verde de la marca se sigue usando en todo lo que no lleva texto. Volver atrás = cambiar este valor.
    */
-  --color-primary-ink: #6b7f5a;
+  --color-primary-ink: #5f7250;
 
   /* Botón deshabilitado del diseño (pantalla 04). WCAG no exige contraste en controles inactivos. */
   --color-disabled: #c9bfb8;
@@ -87,6 +89,31 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    /* El encabezado fijo (y la barra inferior del teléfono) nunca tapan lo que tiene el foco (WCAG 2.4.11) */
+    scroll-padding-top: 6rem;
+    scroll-padding-bottom: 5rem;
+  }
+
+  /*
+   * Red de seguridad: todo lo que recibe foco con teclado muestra el anillo de la marca, aunque el
+   * componente no defina el suyo (radios, el iframe del mapa…). Los estilos propios lo reemplazan.
+   */
+  :where(a, button, input, select, textarea, summary, iframe, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-secondary);
+    outline-offset: 2px;
+  }
+
+  /* Fecha y hora: el ícono del calendario interno no activa :focus-visible; con :focus el anillo siempre se ve */
+  :where(input[type='date'], input[type='time'], input[type='datetime-local']):focus {
+    outline: 2px solid var(--color-secondary);
+    outline-offset: 2px;
+  }
+
+  /* El ícono del calendario es una parada de Tab aparte (Chrome/Edge) */
+  input::-webkit-calendar-picker-indicator:focus-visible {
+    outline: 2px solid var(--color-secondary);
+    outline-offset: 2px;
+    border-radius: 4px;
   }
 
   body {

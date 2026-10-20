@@ -8,12 +8,15 @@
     "build": "astro build",
     "preview": "astro preview",
     "typecheck": "astro check",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:a11y": "node e2e/a11y.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^7.1.0",
     "@atalia/shared": "workspace:*",
     "@atalia/ui": "workspace:*",
+    "@fontsource/playfair-display": "^5.3.0",
+    "@fontsource/poppins": "^5.3.0",
     "@supabase/supabase-js": "^2.118.0",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.4.0",
@@ -25,8 +28,10 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@axe-core/playwright": "^4.14.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "playwright": "^1.64.1",
     "typescript": "^5.9.3",
     "vite": "^8.3.4"
   }

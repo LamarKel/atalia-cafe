@@ -741,10 +741,10 @@ function OrderDetail(props: {
           <dt>{t('orders.total')}</dt>
           <dd className="tabular-nums text-secondary">{usd(o.total_cents)}</dd>
         </div>
-        <p className="text-muted">
-          {o.payment_status === 'paid' ? t('orders.paid_with', { method: payLabel }) : t('orders.unpaid')}
-        </p>
       </dl>
+      <p className="mt-1 text-sm text-muted">
+        {o.payment_status === 'paid' ? t('orders.paid_with', { method: payLabel }) : t('orders.unpaid')}
+      </p>
 
       <h3 className="mt-6 font-semibold">{t('orders.timeline')}</h3>
       <ol className="mt-2 grid gap-2 border-l-2 border-sage-soft pl-4 text-sm">

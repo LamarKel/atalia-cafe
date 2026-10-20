@@ -22,17 +22,18 @@ export default function CartLink({ href, label, countLabel, variant }: Props) {
 
   if (variant === 'bar') {
     return (
-      <a
-        href={href}
-        aria-label={a11y}
-        className="flex min-h-14 items-center justify-center gap-1 text-sm font-medium"
-      >
-        {label}
+      <a href={href} className="flex min-h-14 items-center justify-center gap-1 text-sm font-medium">
+        {/* Sin aria-label: el nombre sale del contenido e incluye la palabra visible (WCAG 2.5.3) */}
+        <span aria-hidden="true">{label}</span>
         {count > 0 && (
-          <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-secondary px-1.5 text-xs text-white">
+          <span
+            aria-hidden="true"
+            className="inline-flex min-w-5 items-center justify-center rounded-full bg-secondary px-1.5 text-xs text-white"
+          >
             {count}
           </span>
         )}
+        <span className="sr-only">{a11y}</span>
       </a>
     )
   }
@@ -40,7 +41,6 @@ export default function CartLink({ href, label, countLabel, variant }: Props) {
   return (
     <a
       href={href}
-      aria-label={a11y}
       className="inline-flex min-h-11 items-center gap-2 rounded-full border border-dark/15 px-4 text-sm font-medium hover:border-secondary"
     >
       <svg
@@ -59,8 +59,9 @@ export default function CartLink({ href, label, countLabel, variant }: Props) {
         <circle cx="10" cy="20" r="1.3" />
         <circle cx="17" cy="20" r="1.3" />
       </svg>
-      {label}
+      <span aria-hidden="true">{label}</span>
       {count > 0 && <span aria-hidden="true">({count})</span>}
+      <span className="sr-only">{a11y}</span>
     </a>
   )
 }

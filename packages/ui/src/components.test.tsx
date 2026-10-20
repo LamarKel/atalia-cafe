@@ -288,6 +288,34 @@ describe('Dialog', () => {
     expect(onClose).toHaveBeenCalledTimes(2)
   })
 
+  it('al cerrarse devuelve el foco a quien lo abrió (con open=false o desmontándolo)', async () => {
+    function Harness({ unmount }: { unmount: boolean }) {
+      const [open, setOpen] = useState(false)
+      const dialog = (
+        <Dialog open={open} onClose={() => setOpen(false)} title="Latte" closeLabel="Cerrar">
+          <p>Espresso</p>
+        </Dialog>
+      )
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(true)}>
+            Agregar Latte
+          </button>
+          {unmount ? open && dialog : dialog}
+        </>
+      )
+    }
+    for (const unmount of [false, true]) {
+      const { unmount: cleanup } = render(<Harness unmount={unmount} />)
+      const trigger = screen.getByRole('button', { name: 'Agregar Latte' })
+      trigger.focus()
+      await userEvent.click(trigger)
+      await userEvent.click(screen.getByRole('button', { name: 'Cerrar' }))
+      expect(document.activeElement).toBe(trigger)
+      cleanup()
+    }
+  })
+
   it('cerrado no muestra el contenido', () => {
     render(
       <Dialog open={false} onClose={() => undefined} title="Latte" closeLabel="Cerrar">

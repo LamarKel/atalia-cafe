@@ -103,7 +103,7 @@ export default function CatalogBrowser(props: CatalogBrowserProps) {
             onChange={(e) => setQuery(e.target.value)}
             placeholder={m['catalog.search_placeholder']}
             aria-controls={resultsId}
-            className="min-h-12 w-full rounded-full border border-dark/15 bg-white py-3 pl-12 pr-5 text-[15px] placeholder:text-muted focus:border-secondary focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary"
+            className="min-h-12 w-full rounded-full border border-dark/15 bg-white py-3 pl-12 pr-5 text-[15px] placeholder:text-muted focus:border-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary"
           />
         </div>
       </div>
@@ -186,6 +186,8 @@ export default function CatalogBrowser(props: CatalogBrowserProps) {
                       {p.imageUrl !== null ? (
                         <img
                           src={p.imageUrl}
+                          srcSet={p.imageSrcset ?? undefined}
+                          sizes="(min-width: 1280px) 300px, (min-width: 1024px) 34vw, 50vw"
                           alt={p.imageAlt ?? ''}
                           loading="lazy"
                           className="aspect-[4/3] w-full object-cover sm:aspect-auto sm:h-44"

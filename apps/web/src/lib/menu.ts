@@ -55,3 +55,27 @@ export function groupCategories(
   }
   return groups
 }
+
+/**
+ * Categoría activa según el scroll: la última cuyo título ya pasó la línea de las barras fijas
+ * (offset, en px desde arriba). Al llegar al final de la página, la última (las cortas nunca llegan arriba).
+ */
+export function activeSection(
+  sections: ReadonlyArray<{ id: string; top: number }>,
+  offset: number,
+  atBottom: boolean,
+): string | null {
+  if (sections.length === 0) return null
+  if (atBottom) return sections.at(-1)?.id ?? null
+  let current = sections[0]?.id ?? null
+  for (const s of sections) {
+    if (s.top <= offset) current = s.id
+    else break
+  }
+  return current
+}
+
+/** Posición de scroll que deja un elemento centrado en su contenedor (fila de categorías o barra lateral). */
+export function centeredScroll(itemStart: number, itemSize: number, containerSize: number): number {
+  return Math.max(0, itemStart - (containerSize - itemSize) / 2)
+}
