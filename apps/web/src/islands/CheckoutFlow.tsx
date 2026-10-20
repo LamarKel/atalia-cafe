@@ -545,7 +545,7 @@ export default function CheckoutFlow({
               </li>
             ))}
             {quote !== null && quote.discountCents > 0 && (
-              <li className="flex items-center justify-between gap-3 text-primary">
+              <li className="flex items-center justify-between gap-3 text-primary-ink">
                 <span>
                   {tf('checkout.promo_line', { code: appliedPromo ?? '' })}
                   <button

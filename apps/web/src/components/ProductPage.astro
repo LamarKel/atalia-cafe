@@ -23,14 +23,17 @@ const quoteThreshold = getRule('orders.quote_threshold_guests', await getPublicR
     <nav aria-label={t(locale, 'a11y.breadcrumb')} class="mb-6 text-sm">
       <ol class="flex flex-wrap items-center gap-2 text-muted">
         <li>
-          <a href={catalogHref} class="underline underline-offset-2 hover:text-secondary"
+          <a
+            href={catalogHref}
+            class="inline-flex min-h-11 items-center underline underline-offset-2 hover:text-secondary"
             >{t(locale, 'nav.catering')}</a
           >
         </li>
         <li aria-hidden="true">/</li>
         <li>
-          <a href={`${catalogHref}?category=${product.categorySlug}`} class="hover:text-secondary"
-            >{product.categoryName}</a
+          <a
+            href={`${catalogHref}?category=${product.categorySlug}`}
+            class="inline-flex min-h-11 items-center hover:text-secondary">{product.categoryName}</a
           >
         </li>
         <li aria-hidden="true">/</li>

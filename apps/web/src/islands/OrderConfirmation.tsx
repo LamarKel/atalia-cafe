@@ -258,7 +258,7 @@ export default function OrderConfirmation(props: OrderConfirmationProps) {
               </li>
             ))}
             {order.discountCents > 0 && (
-              <li className="flex justify-between gap-3 text-primary">
+              <li className="flex justify-between gap-3 text-primary-ink">
                 <span>{m['order.discount']}</span>
                 <span className="shrink-0">−{usd(order.discountCents)}</span>
               </li>
