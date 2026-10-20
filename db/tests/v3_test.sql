@@ -562,4 +562,31 @@ begin
 end $$;
 rollback;
 
+-- ════ 10. Consentimiento legal en el pedido y textos legales ════
+begin;
+do $$
+declare
+  r jsonb;
+  o public.orders;
+begin
+  r := public.create_checkout_order(
+    jsonb_build_object('checkout_token', 'aaaa0000-0000-4000-8000-0000000000c1', 'store_id', '69de0e2e-c905-4d36-93f6-446572005410',
+      'customer_name', 'Terms Test', 'customer_phone', '9735550101', 'customer_email', 'terms@example.com',
+      'scheduled_for', (public.t_sat() + time '10:00') at time zone 'America/New_York',
+      'subtotal_cents', 550, 'tax_rate_ppm', 66250, 'tax_cents', 36, 'total_cents', 586,
+      'terms_accepted_at', '2026-10-19T15:00:00Z', 'terms_version', '2026-10-19'),
+    '[{"product_id": "11111111-0000-4000-8000-000000000003", "product_type": "menu", "product_name_snapshot": "Latte",
+       "unit_price_cents": 550, "quantity": 1}]',
+    '[]');
+  select * into o from public.orders where id = (r ->> 'order_id')::uuid;
+  if o.terms_version is distinct from '2026-10-19' or o.terms_accepted_at is distinct from '2026-10-19T15:00:00Z'::timestamptz then
+    raise exception 'FAIL: el pedido no guardó la aceptación de los términos';
+  end if;
+  if (select count(*) from public.site_content where key like 'legal.%.body') <> 8 then
+    raise exception 'FAIL: faltan textos legales (4 páginas × 2 idiomas)';
+  end if;
+  raise notice 'PASS: el pedido guarda cuándo y qué versión de los términos aceptó; textos legales en EN/ES';
+end $$;
+rollback;
+
 \echo '=== TODAS LAS PRUEBAS PASARON ==='
