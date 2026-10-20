@@ -35,6 +35,7 @@ export type RuleUnit =
   | 'refund_tiers'
   | 'product_types'
   | 'order_status'
+  | 'locale'
 
 export type RuleEditor = 'owner' | 'admin'
 

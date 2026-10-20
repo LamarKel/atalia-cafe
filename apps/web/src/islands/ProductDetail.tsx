@@ -12,6 +12,9 @@ export interface ProductDetailProps {
   locale: Locale
   product: Product
   messages: Record<MessageKey, string>
+  /** Regla orders.quote_threshold_guests: por encima, se sugiere pedir cotización (RF-Q02). */
+  quoteThreshold: number
+  quoteHref: string
 }
 
 const MAX_QUANTITY = 20
@@ -27,7 +30,7 @@ export default function ProductDetail(props: ProductDetailProps) {
   )
 }
 
-function Detail({ locale, product, messages: m }: ProductDetailProps) {
+function Detail({ locale, product, messages: m, quoteThreshold, quoteHref }: ProductDetailProps) {
   const tf = (key: MessageKey, params: Record<string, string | number>) =>
     m[key].replace(/\{(\w+)\}/g, (match, name: string) => (name in params ? String(params[name]) : match))
   const usd = (value: number) => formatUSD(cents(value), locale)
@@ -131,6 +134,15 @@ function Detail({ locale, product, messages: m }: ProductDetailProps) {
               <p className="mt-3 text-sm text-muted">{tf('detail.per_person', { price: usd(perPerson) })}</p>
             )}
           </div>
+        )}
+
+        {size?.serves != null && size.serves > quoteThreshold && (
+          <p className="mt-4 rounded-xl bg-sand px-4 py-3 text-sm">
+            {tf('quote.cta_threshold', { n: quoteThreshold })}{' '}
+            <a href={quoteHref} className="font-semibold text-secondary underline underline-offset-2">
+              {m['quote.cta']}
+            </a>
+          </p>
         )}
 
         {unitPrice === null && (

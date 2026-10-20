@@ -14,6 +14,7 @@ export type ErrorCode =
   | 'slot_unavailable'
   | 'checkout_closed'
   | 'payments_disabled'
+  | 'captcha_failed'
   | 'internal_error'
 
 export class ApiError extends Error {

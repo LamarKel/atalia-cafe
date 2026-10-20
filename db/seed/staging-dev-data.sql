@@ -92,4 +92,9 @@ from (values
 ) as v(id, url)
 where c.id = v.id;
 
+-- Avisos de pedidos y cotizaciones al correo del desarrollador mientras se prueba (la clienta pone el suyo en el admin)
+insert into public.business_rules (key, store_id, value, effective_from)
+values ('notifications.order_recipients', null, '["el.nini.kl@gmail.com"]'::jsonb, '2026-01-01T00:00:00Z')
+on conflict (key, store_id, effective_from) do update set value = excluded.value;
+
 commit;

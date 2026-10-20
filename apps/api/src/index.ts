@@ -2,10 +2,20 @@
 // de Supabase, Stripe y Resend. Los secretos llegan por env (wrangler secret / .dev.vars).
 import { getRule } from '@atalia/shared/rules'
 import { resendMailer } from './adapters/resend'
+import { resendQuoteMailer } from './adapters/resend/quotes'
 import { stripeClient, paymentGateway, verifyPaymentEvent } from './adapters/stripe'
-import { availabilityRepo, catalogRepo, ordersRepo, storeRepo, supabaseClient } from './adapters/supabase'
+import {
+  availabilityRepo,
+  catalogRepo,
+  ordersRepo,
+  quotesRepo,
+  storeRepo,
+  supabaseClient,
+} from './adapters/supabase'
+import { turnstileVerifier } from './adapters/turnstile'
 import { createApp, type Bindings } from './http/app'
 import type { CheckoutWiring } from './http/checkout-routes'
+import type { QuoteWiring } from './http/quote-routes'
 import type { CheckoutDeps } from './modules/payments/application/checkout'
 
 function required(env: Bindings, key: keyof Bindings): string {
@@ -48,4 +58,25 @@ const wiring: CheckoutWiring = {
     ),
 }
 
-export default createApp(wiring)
+const quotes: QuoteWiring = {
+  deps(env) {
+    const db = supabaseClient(required(env, 'SUPABASE_URL'), required(env, 'SUPABASE_SERVICE_ROLE_KEY'))
+    const stores = storeRepo(db)
+    return {
+      stores,
+      catalog: catalogRepo(db),
+      quotes: quotesRepo(db),
+      captcha: turnstileVerifier(required(env, 'TURNSTILE_SECRET')),
+      mailer: resendQuoteMailer({
+        apiKey: required(env, 'RESEND_API_KEY'),
+        from: required(env, 'EMAIL_FROM'),
+        businessLocale: async () => {
+          const store = await stores.defaultStore()
+          return getRule('notifications.staff_locale', await stores.rules(store.id), { storeId: store.id })
+        },
+      }),
+    }
+  },
+}
+
+export default createApp(wiring, quotes)

@@ -13,7 +13,7 @@ export interface ResendConfig {
   staffRecipients: () => Promise<string[]>
 }
 
-const escape = (s: string) =>
+export const escape = (s: string) =>
   s.replace(
     /[&<>"']/g,
     (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c,
@@ -79,7 +79,11 @@ ${[...rows, ...totals].map((r) => `<tr><td style="${td}">${escape(r.name)}</td><
   return { subject, html, text }
 }
 
-async function send(apiKey: string, body: Record<string, unknown>, idempotencyKey: string): Promise<void> {
+export async function send(
+  apiKey: string,
+  body: Record<string, unknown>,
+  idempotencyKey: string,
+): Promise<void> {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {

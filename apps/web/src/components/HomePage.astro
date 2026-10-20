@@ -5,6 +5,7 @@
 import { Image } from 'astro:assets'
 import heroFallback from '../assets/hero.png'
 import BaseLayout from '../layouts/BaseLayout.astro'
+import QuoteCta from './QuoteCta.astro'
 import { getCateringCategories, getSiteContent, getStoreInfo } from '../lib/catalog'
 import { directionsUrl, groupHours } from '../lib/catalog-format'
 import { localizedPath, t, type Locale, type MessageKey } from '../i18n'
@@ -175,6 +176,10 @@ const steps = [1, 2, 3].map((n) => ({
           ))
         }
       </ol>
+      <!-- Evento grande o a la medida → cotización (RF-Q02) -->
+      <div class="mt-10 md:mt-12">
+        <QuoteCta locale={locale} />
+      </div>
     </div>
   </section>
   <!-- Visítanos: datos a la izquierda, mapa con el punto de la tienda en la esquina derecha -->

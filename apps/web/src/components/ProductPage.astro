@@ -1,8 +1,10 @@
 ---
 // Página de detalle de catering (docs/design/03-detalle-bandeja.png). Ruta de navegación + isla ProductDetail.
+import { getRule } from '@atalia/shared/rules'
 import ProductDetail from '../islands/ProductDetail'
+import QuoteCta from './QuoteCta.astro'
 import BaseLayout from '../layouts/BaseLayout.astro'
-import type { ProductDetail as Product } from '../lib/catalog'
+import { getPublicRuleRows, type ProductDetail as Product } from '../lib/catalog'
 import { localizedPath, messagesFor, t, type Locale } from '../i18n'
 
 interface Props {
@@ -12,6 +14,7 @@ interface Props {
 
 const { locale, product } = Astro.props
 const catalogHref = localizedPath('/catering', locale)
+const quoteThreshold = getRule('orders.quote_threshold_guests', await getPublicRuleRows())
 ---
 
 <BaseLayout locale={locale} title={product.name} description={product.shortDescription ?? undefined}>
@@ -33,6 +36,20 @@ const catalogHref = localizedPath('/catering', locale)
         <li aria-current="page" class="text-dark">{product.name}</li>
       </ol>
     </nav>
-    <ProductDetail client:load locale={locale} product={product} messages={messagesFor(locale)} />
+    <ProductDetail
+      client:load
+      locale={locale}
+      product={product}
+      messages={messagesFor(locale)}
+      quoteThreshold={quoteThreshold}
+      quoteHref={`${localizedPath('/quote', locale)}?product=${product.id}`}
+    />
+    {
+      product.type === 'table' && (
+        <div class="mt-12">
+          <QuoteCta locale={locale} productId={product.id} />
+        </div>
+      )
+    }
   </div>
 </BaseLayout>

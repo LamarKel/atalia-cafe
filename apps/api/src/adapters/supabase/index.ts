@@ -13,6 +13,7 @@ import type {
   SlotRow,
   StoreRepo,
 } from '../../modules/payments/ports'
+import type { QuotesRepo } from '../../modules/quotes/ports'
 
 export function supabaseClient(url: string, serviceRoleKey: string): SupabaseClient {
   return createClient(url, serviceRoleKey, {
@@ -359,6 +360,41 @@ export function ordersRepo(db: SupabaseClient): OrdersRepo {
       return data === null
         ? null
         : { ...toSummary(data), email: data.customer_email, accessToken: data.access_token }
+    },
+  }
+}
+
+export function quotesRepo(db: SupabaseClient): QuotesRepo {
+  return {
+    async create(q) {
+      const { data, error } = await db
+        .from('quote_requests')
+        .insert({
+          store_id: q.storeId,
+          customer_name: q.customer.name,
+          // En minúsculas: así el límite por correo no se salta cambiando mayúsculas.
+          customer_email: q.customer.email.trim().toLowerCase(),
+          customer_phone: q.customer.phone,
+          language: q.locale,
+          event_date: q.eventDate,
+          event_type: q.eventType,
+          guests: q.guests,
+          products: q.products.map((p) => ({ product_id: p.productId, name: p.name })),
+          notes: q.notes === '' ? null : q.notes,
+        })
+        .select('code')
+        .single<{ code: string }>()
+      if (error) fail('quote_requests', error)
+      return data
+    },
+    async countRecentByEmail(email, sinceIso) {
+      const { count, error } = await db
+        .from('quote_requests')
+        .select('id', { count: 'exact', head: true })
+        .eq('customer_email', email.trim().toLowerCase())
+        .gte('created_at', sinceIso)
+      if (error) fail('quote_requests_count', error)
+      return count ?? 0
     },
   }
 }

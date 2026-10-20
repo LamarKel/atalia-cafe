@@ -340,6 +340,22 @@ export const RULES = {
     public: false,
   }),
 
+  'notifications.staff_locale': defineRule({
+    key: 'notifications.staff_locale',
+    group: 'notifications',
+    label: { en: 'Language of team emails', es: 'Idioma de los correos al equipo' },
+    help: {
+      en: 'New orders and quote requests sent to the business.',
+      es: 'Pedidos nuevos y cotizaciones que recibe el negocio.',
+    },
+    schema: z.enum(['en', 'es']),
+    default: 'es',
+    unit: 'locale',
+    editableBy: 'admin',
+    storeScoped: false,
+    public: false,
+  }),
+
   // ── Legal (admin, B17) ──────────────────────────────────────
   'legal.data_retention_months': defineRule({
     key: 'legal.data_retention_months',
