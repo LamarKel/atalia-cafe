@@ -230,7 +230,7 @@ export function Switch(props: {
           className={`relative h-7 w-12 rounded-full transition-colors ${props.checked ? 'bg-primary-ink' : 'bg-dark/20'}`}
         >
           <span
-            className={`absolute top-1 size-5 rounded-full bg-white shadow transition-transform ${props.checked ? 'translate-x-6' : 'translate-x-1'}`}
+            className={`absolute left-0 top-1 size-5 rounded-full bg-white shadow transition-transform ${props.checked ? 'translate-x-6' : 'translate-x-1'}`}
           />
         </span>
       </button>

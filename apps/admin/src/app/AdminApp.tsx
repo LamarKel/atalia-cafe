@@ -3,6 +3,7 @@ import { ToastProvider } from '@atalia/ui'
 import { useAdminAuth, type Role } from './auth'
 import { I18nProvider, useI18n } from './i18n-context'
 import { Dashboard } from './screens/Dashboard'
+import { Business } from './screens/Business'
 import { Catalog } from './screens/Catalog'
 import { Orders } from './screens/Orders'
 import {
@@ -54,7 +55,6 @@ function Root() {
 
 /** Fase del plan en la que llega cada sección (las que todavía no están hechas). */
 const PHASE: Partial<Record<Route, number>> = {
-  business: 4,
   quotes: 5,
   promos: 5,
   team: 5,
@@ -74,6 +74,8 @@ function Panel({ role, email, onSignOut }: { role: Role; email: string; onSignOu
         <Catalog section="menu" />
       ) : route === 'catering' ? (
         <Catalog section="catering" />
+      ) : route === 'business' ? (
+        <Business role={role} />
       ) : (
         <div className="mx-auto max-w-3xl rounded-3xl bg-white p-8 text-center">
           <h1 tabIndex={-1} className="font-heading text-3xl font-bold">
