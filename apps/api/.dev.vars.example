@@ -15,3 +15,6 @@ RESEND_API_KEY=
 
 # Remitente de los correos (no es secreto). En desarrollo, un dominio verificado en tu cuenta de Resend.
 EMAIL_FROM=Atalia Café <pedidos@tu-dominio-verificado>
+
+# Deploy hook del sitio (Cloudflare Pages). Opcional en desarrollo: sin él no hay publicación automática.
+DEPLOY_HOOK_URL=

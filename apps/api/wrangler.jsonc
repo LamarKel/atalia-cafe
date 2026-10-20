@@ -6,8 +6,9 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-09-01",
   "observability": { "enabled": true },
-  // Cron: libera cupos retenidos vencidos (respaldo de checkout.session.expired).
-  "triggers": { "crons": ["*/5 * * * *"] },
+  // Cron cada minuto: libera cupos vencidos (respaldo de checkout.session.expired) y publica el sitio si el
+  // panel cambió algo (DEPLOY_HOOK_URL, secreto).
+  "triggers": { "crons": ["* * * * *"] },
   // Límites por IP (RNF-S06). period solo admite 10 o 60 s. Estricto: pagar, cotizar y el panel.
   "ratelimits": [
     { "name": "RL_STRICT", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },

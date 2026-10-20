@@ -468,5 +468,12 @@
   "biz.x": "X / Twitter (link)",
   "biz.uber_eats": "Uber Eats (link)",
   "biz.doordash": "DoorDash (link)",
-  "biz.delivery_hint": "Leave it empty to hide the button on the home page."
+  "biz.delivery_hint": "Leave it empty to hide the button on the home page.",
+  "pub.up_to_date": "Site up to date",
+  "pub.pending": "Unpublished changes",
+  "pub.pending_hint": "They publish by themselves 1 minute after you stop editing.",
+  "pub.publishing": "Publishing…",
+  "pub.publishing_hint": "The site is updating; it takes 1 or 2 minutes.",
+  "pub.error": "Could not publish",
+  "pub.now": "Publish now"
 }

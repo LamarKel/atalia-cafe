@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { AdminKey } from '../i18n'
 import type { Role } from './auth'
 import { useI18n } from './i18n-context'
+import { PublishStatus } from './components/PublishStatus'
 
 export type Route =
   'dashboard' | 'orders' | 'catalog' | 'catering' | 'business' | 'quotes' | 'promos' | 'team' | 'reports'
@@ -149,7 +150,10 @@ export function Shell(props: {
           )
         })}
       </ul>
-      <div className="mt-auto grid gap-1 border-t border-dark/10 px-3 py-4 text-sm">
+      <div className="mt-auto pt-6">
+        <PublishStatus canPublish={props.role === 'owner' || props.role === 'admin'} />
+      </div>
+      <div className="grid gap-1 border-t border-dark/10 px-3 py-4 text-sm">
         <p className="truncate px-3 text-muted" title={props.email}>
           {props.email}
         </p>
