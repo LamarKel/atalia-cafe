@@ -16,7 +16,9 @@ export default defineConfig({
     locales: ['en', 'es'],
     routing: { prefixDefaultLocale: false },
   },
-  experimental: {
+  // Sin bloques de código en Markdown: Shiki pondría estilos en línea que la CSP bloquea.
+  markdown: { syntaxHighlight: false },
+  security: {
     // RNF-S02: CSP con hashes de los scripts y estilos en línea (sin 'unsafe-inline').
     csp: cspConfig({
       apiUrl: env.PUBLIC_API_URL,

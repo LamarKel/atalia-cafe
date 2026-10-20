@@ -11,7 +11,9 @@ const env = publicEnv(import.meta.url, loadEnv)
 // sesión del usuario (RLS + 2FA); lo que mueve dinero (reembolsos, cancelaciones) va por el Worker.
 export default defineConfig({
   integrations: [react(), securityHeaders({ noindex: true })],
-  experimental: {
+  // Sin bloques de código en Markdown: Shiki pondría estilos en línea que la CSP bloquea.
+  markdown: { syntaxHighlight: false },
+  security: {
     // RNF-S02: CSP con hashes; el panel solo habla con Supabase (también Realtime por wss) y el Worker.
     csp: cspConfig({ apiUrl: env.PUBLIC_API_URL, supabaseUrl: env.PUBLIC_SUPABASE_URL }),
   },

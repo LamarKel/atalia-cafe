@@ -1,6 +1,6 @@
 // Encabezados de seguridad del sitio y del panel (RNF-S02), compartidos por los dos astro.config.
 //
-// - CSP de scripts y estilos: la genera Astro (experimental.csp) con hashes de cada script/estilo en línea,
+// - CSP de scripts y estilos: la genera Astro (security.csp) con hashes de cada script/estilo en línea,
 //   como <meta> en cada página. Así no hace falta 'unsafe-inline'.
 // - Lo que un <meta> no puede poner (frame-ancestors, HSTS, etc.) va en dist/_headers, que Cloudflare
 //   aplica al servir los archivos estáticos.
@@ -29,7 +29,7 @@ const origin = (url) => {
 
 /**
  * @param {{ apiUrl?: string | undefined, supabaseUrl?: string | undefined, frames?: string[], scripts?: string[] }} opts
- * @returns {import('astro').AstroUserConfig['experimental']['csp']}
+ * @returns {NonNullable<import('astro').AstroUserConfig['security']>['csp']}
  */
 export function cspConfig(opts) {
   const api = origin(opts.apiUrl ?? '')
