@@ -52,6 +52,7 @@ export function toApiItems(items: readonly CartItem[]): CheckoutRequest['items']
     quantity: i.quantity,
     notes: i.notes,
     components: i.components.map((c) => ({ optionId: c.optionId, qty: c.qty })),
+    extraIds: i.extras.map((e) => e.id),
   }))
 }
 

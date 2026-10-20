@@ -50,6 +50,7 @@ Lee PLAN.md antes de cualquier tarea.
 - Islas de React solo donde haya interactividad; el resto en .astro.
 - Animaciones con Motion, solo transform/opacity, y respetar prefers-reduced-motion.
 - i18n: EN por defecto, ES disponible. Ningún texto hardcodeado fuera de i18n.
+- Nunca se ven barras de scroll (pedido del cliente): están ocultas en packages/ui/src/tokens.css para todo el proyecto. No volver a mostrarlas ni agregar estilos de scrollbar visibles.
 
 ## Flujo
 - Una rama por tarea (feat/…, fix/…), commits pequeños, PR con descripción.

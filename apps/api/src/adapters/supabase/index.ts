@@ -51,6 +51,15 @@ export function storeRepo(db: SupabaseClient): StoreRepo {
       if (error) fail('business_rules', error)
       return data as Array<{ key: string; store_id: string | null; value: unknown; effective_from: string }>
     },
+    async pickupLocationIds(storeId) {
+      const { data, error } = await db
+        .from('pickup_locations')
+        .select('id')
+        .eq('store_id', storeId)
+        .eq('active', true)
+      if (error) fail('pickup_locations', error)
+      return (data as Array<{ id: string }>).map((r) => r.id)
+    },
   }
 }
 
@@ -74,6 +83,7 @@ interface ProductRow {
     price_modifier_cents: number
     active: boolean
   }>
+  extras: Array<{ id: string; name_en: string; name_es: string | null; price_cents: number; active: boolean }>
 }
 
 export function catalogRepo(db: SupabaseClient): CatalogRepo {
@@ -84,7 +94,8 @@ export function catalogRepo(db: SupabaseClient): CatalogRepo {
         .from('products')
         .select(
           `id, type, name_en, name_es, price_cents, min_lead_hours, active, stock_enabled, in_stock,
-           sizes:product_sizes(id, name_en, name_es, serves, units, price_cents, price_modifier_cents, active)`,
+           sizes:product_sizes(id, name_en, name_es, serves, units, price_cents, price_modifier_cents, active),
+           extras:product_extras(id, name_en, name_es, price_cents, active)`,
         )
         .in('id', [...ids])
         .returns<ProductRow[]>()
@@ -109,6 +120,13 @@ export function catalogRepo(db: SupabaseClient): CatalogRepo {
               priceCents: s.price_cents,
               priceModifierCents: s.price_modifier_cents,
               active: s.active,
+            })),
+            extras: p.extras.map((e) => ({
+              id: e.id,
+              nameEn: e.name_en,
+              nameEs: e.name_es,
+              priceCents: e.price_cents,
+              active: e.active,
             })),
           },
         ]),
@@ -237,6 +255,7 @@ export function ordersRepo(db: SupabaseClient): OrdersRepo {
         p_order: {
           checkout_token: order.checkoutToken,
           store_id: order.storeId,
+          pickup_location_id: order.pickupLocationId,
           customer_name: order.customer.name,
           customer_phone: order.customer.phone,
           customer_email: order.customer.email,
@@ -262,6 +281,8 @@ export function ordersRepo(db: SupabaseClient): OrdersRepo {
           notes: l.notes === '' ? null : l.notes,
           unit_price_cents: l.unitPriceCents,
           quantity: l.quantity,
+          // Copia de los extras con su precio de ese momento (order_items.extras)
+          extras: l.extras.map((e) => ({ extra_id: e.id, name: e.nameSnapshot, price_cents: e.priceCents })),
           components: l.components.map((c) => ({
             picadera_option_id: c.optionId,
             piece_label_snapshot: c.labelSnapshot,

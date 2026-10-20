@@ -16,6 +16,7 @@ const line = (over: Partial<CartItem>): CartItem => ({
   notes: '',
   minLeadHours: 24,
   components: [],
+  extras: [],
   ...over,
 })
 

@@ -87,6 +87,7 @@ function Builder({ locale, title, subtitle, product, sizes, pieces, messages: m 
       notes: '',
       minLeadHours: product.minLeadHours,
       components: toComponents(counts).map((c) => ({ ...c, label: label(c.optionId) })),
+      extras: [],
     })
     toast(tf('picadera.added', { units }))
     setCounts({})

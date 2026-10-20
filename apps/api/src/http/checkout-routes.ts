@@ -60,6 +60,8 @@ function domainError(err: unknown): never {
         throw new ApiError(409, 'slot_unavailable', 'Esa hora ya no está disponible')
       case 'checkout_closed':
         throw new ApiError(409, 'checkout_closed', 'Este intento de pago ya terminó. Vuelve a intentarlo.')
+      case 'pickup_unavailable':
+        throw new ApiError(422, 'validation_failed', 'Ese punto de recogida no está disponible')
       case 'range_too_long':
         throw new ApiError(422, 'validation_failed', 'Rango de fechas demasiado largo')
     }

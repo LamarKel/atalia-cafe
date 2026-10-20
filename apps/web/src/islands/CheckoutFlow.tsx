@@ -7,7 +7,7 @@ import {
   type CheckoutRequest,
 } from '@atalia/shared/checkout'
 import { cents, formatUSD } from '@atalia/shared/money'
-import { Button, ButtonLink, Stepper } from '@atalia/ui'
+import { Button, ButtonLink, OptionGroup, Stepper } from '@atalia/ui'
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { api, ApiRequestError, toApiItems } from '../lib/api'
 import {
@@ -22,13 +22,17 @@ import {
   type YearMonth,
 } from '../lib/calendar'
 import { getCart, onCartChange, type CartItem } from '../lib/cart'
+import type { PickupStore } from '../lib/catalog'
 import { formatTime } from '../lib/catalog-format'
+import { getPickup, setPickup } from '../lib/pickup'
 import type { Locale, MessageKey } from '../i18n'
 
 export interface CheckoutFlowProps {
   locale: Locale
   messages: Record<MessageKey, string>
   cartHref: string
+  /** Tiendas con sus puntos de recogida (en la tienda, en el carro…). */
+  stores: PickupStore[]
 }
 
 type Step = 0 | 1 | 2
@@ -57,7 +61,7 @@ function tokenFor(fingerprint: string): string {
   return token
 }
 
-export default function CheckoutFlow({ locale, messages: m, cartHref }: CheckoutFlowProps) {
+export default function CheckoutFlow({ locale, messages: m, cartHref, stores }: CheckoutFlowProps) {
   const tf = (key: MessageKey, params: Record<string, string | number>) =>
     m[key].replace(/\{(\w+)\}/g, (match, name: string) => (name in params ? String(params[name]) : match))
   const usd = (value: number) => formatUSD(cents(value), locale)
@@ -74,6 +78,15 @@ export default function CheckoutFlow({ locale, messages: m, cartHref }: Checkout
   const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading')
   const [date, setDate] = useState<string | null>(null)
   const [time, setTime] = useState<string | null>(null)
+  // Punto de recogida: el que eligió en el menú o el primero de la tienda.
+  const store = stores[0] ?? null
+  const [locationId, setLocationId] = useState<string | null>(null)
+  useEffect(() => {
+    const saved = getPickup()?.locationId ?? null
+    const valid = store?.locations.some((l) => l.id === saved) === true
+    setLocationId(valid ? saved : (store?.locations[0]?.id ?? null))
+  }, [store])
+  const location = store?.locations.find((l) => l.id === locationId) ?? null
   const [customer, setCustomer] = useState<Customer>({ name: '', phone: '', email: '' })
   const [note, setNote] = useState('')
   const [errors, setErrors] = useState<FieldErrors>({})
@@ -176,6 +189,7 @@ export default function CheckoutFlow({ locale, messages: m, cartHref }: Checkout
     const body: Omit<CheckoutRequest, 'checkoutToken'> = {
       locale,
       pickup: { date, time },
+      pickupLocationId: locationId,
       customer,
       note,
       items,
@@ -297,6 +311,19 @@ export default function CheckoutFlow({ locale, messages: m, cartHref }: Checkout
               onRetry={load}
               hasDate={date !== null && monthOf(date).month === month.month}
             />
+            {store !== null && store.locations.length > 1 && (
+              <div className="rounded-3xl bg-white p-4 md:col-span-2 md:p-6">
+                <OptionGroup
+                  label={m['pickup.location']}
+                  options={store.locations.map((l) => ({ value: l.id, label: l.name }))}
+                  value={locationId}
+                  onChange={(id) => {
+                    setLocationId(id)
+                    setPickup({ storeId: store.id, locationId: id })
+                  }}
+                />
+              </div>
+            )}
           </div>
         )}
 
@@ -427,6 +454,7 @@ export default function CheckoutFlow({ locale, messages: m, cartHref }: Checkout
           {chosen !== null && date !== null && (
             <p className="mt-4 rounded-xl bg-accent px-4 py-3 text-sm">
               {m['checkout.pickup']} <strong>{dateLabel(date, chosen.time)}</strong>
+              {location !== null && ` · ${location.name}`}
             </p>
           )}
           <div className="mt-4">{primary}</div>

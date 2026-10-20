@@ -69,6 +69,7 @@ function Detail({ locale, product, messages: m, quoteThreshold, quoteHref }: Pro
       notes: notes.trim(),
       minLeadHours: product.minLeadHours,
       components: [],
+      extras: [],
     })
     toast(tf('detail.added', { name: product.name }))
     setQuantity(1)

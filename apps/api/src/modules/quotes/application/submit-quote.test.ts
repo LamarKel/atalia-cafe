@@ -7,6 +7,7 @@ import { QuoteError, submitQuote, type QuoteDeps } from './submit-quote'
 
 const TABLE = '00000000-0000-4000-8000-000000000004'
 const STORE = '69de0e2e-c905-4d36-93f6-446572005410'
+const PICKUP = '5b0f2a51-7c3e-4e0f-9a51-0c1d6a3e0002'
 
 const table: CatalogProduct = {
   id: TABLE,
@@ -17,6 +18,7 @@ const table: CatalogProduct = {
   minLeadHours: 48,
   active: true,
   sizes: [],
+  extras: [],
 }
 
 const request: QuoteRequest = {
@@ -45,6 +47,7 @@ function setup(opts: { captcha?: boolean; recent?: number; rules?: StoredRule[] 
     now: () => new Date('2026-10-18T16:00:00Z'),
     stores: {
       defaultStore: () => Promise.resolve({ id: STORE, timezone: 'America/New_York' }),
+      pickupLocationIds: () => Promise.resolve([PICKUP]),
       rules: () => Promise.resolve(opts.rules ?? [recipientsRule]),
     },
     catalog: {

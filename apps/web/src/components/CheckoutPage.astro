@@ -2,6 +2,7 @@
 // Checkout (docs/design/05-checkout-cuando.png). Todo lo interactivo vive en CheckoutFlow (lee el carrito local).
 import CheckoutFlow from '../islands/CheckoutFlow'
 import BaseLayout from '../layouts/BaseLayout.astro'
+import { getPickupStores } from '../lib/catalog'
 import { localizedPath, messagesFor, t, type Locale } from '../i18n'
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
 }
 
 const { locale } = Astro.props
+const stores = await getPickupStores(locale)
 ---
 
 <BaseLayout locale={locale} title={t(locale, 'checkout.title')} checkout>
@@ -18,6 +20,7 @@ const { locale } = Astro.props
       locale={locale}
       messages={messagesFor(locale)}
       cartHref={localizedPath('/catering', locale)}
+      stores={stores}
     />
   </div>
 </BaseLayout>

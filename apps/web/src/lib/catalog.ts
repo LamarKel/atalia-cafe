@@ -327,3 +327,175 @@ export async function getPublicRuleRows(): Promise<StoredRule[]> {
   }
   return data as StoredRule[]
 }
+
+export interface MenuItem {
+  id: string
+  categoryId: string
+  name: string
+  description: string | null
+  priceCents: number | null
+  featured: boolean
+  soldOut: boolean
+  imageUrl: string | null
+  sizes: Array<{ id: string; name: string; priceCents: number | null }>
+  extras: Array<{ id: string; name: string; priceCents: number }>
+  nutrition: Array<{ label: string; value: string }>
+}
+
+export interface MenuCategory {
+  id: string
+  slug: string
+  name: string
+  description: string | null
+  icon: string
+  group: string
+  items: MenuItem[]
+}
+
+export interface PickupStore {
+  id: string
+  name: string
+  address: string | null
+  locations: Array<{ id: string; name: string; description: string | null; icon: string }>
+}
+
+interface MenuRow extends Localized {
+  id: string
+  category_id: string
+  description_en: string | null
+  description_es: string | null
+  short_description_en: string | null
+  short_description_es: string | null
+  price_cents: number | null
+  featured: boolean
+  stock_enabled: boolean
+  in_stock: boolean
+  sizes: Array<SizeRow & { id: string; name_en: string; name_es: string | null; sort_order: number }>
+  extras: Array<{
+    id: string
+    name_en: string
+    name_es: string | null
+    price_cents: number
+    active: boolean
+    sort_order: number
+  }>
+  nutrition: Array<{ label_en: string; label_es: string | null; value: string; sort_order: number }>
+  images: Array<{ image_url: string; is_primary: boolean; sort_order: number }>
+}
+
+/** Menú del café (pantalla con el lenguaje de la 02): categorías con sus productos, tamaños, extras y nutrición. */
+export async function getMenu(locale: Locale): Promise<MenuCategory[]> {
+  const [cats, prods] = await Promise.all([
+    supabase
+      .from('categories')
+      .select('id, slug, name_en, name_es, description_en, description_es, icon, group_name')
+      .eq('section', 'menu')
+      .eq('active', true)
+      .order('sort_order'),
+    supabase
+      .from('products')
+      .select(
+        `id, category_id, name_en, name_es, description_en, description_es, short_description_en, short_description_es,
+         price_cents, featured, stock_enabled, in_stock,
+         sizes:product_sizes(id, name_en, name_es, serves, units, price_cents, price_modifier_cents, active, sort_order),
+         extras:product_extras(id, name_en, name_es, price_cents, active, sort_order),
+         nutrition:product_nutritional_info(label_en, label_es, value, sort_order),
+         images:product_images(image_url, is_primary, sort_order)`,
+      )
+      .eq('type', 'menu')
+      .eq('active', true)
+      .order('sort_order')
+      .returns<MenuRow[]>(),
+  ])
+  if (cats.error || prods.error) {
+    console.error('[catalog] menu', cats.error?.message ?? prods.error?.message)
+    return []
+  }
+  const bySort = <T extends { sort_order: number }>(a: T, b: T) => a.sort_order - b.sort_order
+  const items = prods.data.map((p): MenuItem => {
+    const image = [...p.images].sort((a, b) => Number(b.is_primary) - Number(a.is_primary) || bySort(a, b))[0]
+    const description = p.description_en ?? p.short_description_en
+    return {
+      id: p.id,
+      categoryId: p.category_id,
+      name: pick(locale, p.name_en, p.name_es),
+      description:
+        description === null ? null : pick(locale, description, p.description_es ?? p.short_description_es),
+      priceCents: p.price_cents,
+      featured: p.featured,
+      soldOut: p.stock_enabled && !p.in_stock,
+      imageUrl: image?.image_url ?? null,
+      sizes: [...p.sizes]
+        .filter((s) => s.active)
+        .sort(bySort)
+        .map((s) => ({
+          id: s.id,
+          name: pick(locale, s.name_en, s.name_es),
+          priceCents: sizePrice(p.price_cents, s),
+        })),
+      extras: [...p.extras]
+        .filter((e) => e.active)
+        .sort(bySort)
+        .map((e) => ({ id: e.id, name: pick(locale, e.name_en, e.name_es), priceCents: e.price_cents })),
+      nutrition: [...p.nutrition]
+        .sort(bySort)
+        .map((n) => ({ label: pick(locale, n.label_en, n.label_es), value: n.value })),
+    }
+  })
+  return cats.data.map((c) => ({
+    id: c.id,
+    slug: c.slug,
+    name: pick(locale, c.name_en, c.name_es),
+    description: c.description_en === null ? null : pick(locale, c.description_en, c.description_es),
+    icon: c.icon,
+    group: c.group_name,
+    items: items.filter((i) => i.categoryId === c.id),
+  }))
+}
+
+/** Tiendas activas con sus puntos de recogida (selector "¿Dónde lo recoges?"). */
+export async function getPickupStores(locale: Locale): Promise<PickupStore[]> {
+  const { data, error } = await supabase
+    .from('stores')
+    .select(
+      `id, name, address, city, state,
+       locations:pickup_locations(id, name_en, name_es, description_en, description_es, icon, sort_order, active)`,
+    )
+    .eq('active', true)
+    .order('sort_order')
+  if (error) {
+    console.error('[catalog] pickup stores', error.message)
+    return []
+  }
+  type Row = {
+    id: string
+    name: string
+    address: string | null
+    city: string | null
+    state: string | null
+    locations: Array<{
+      id: string
+      name_en: string
+      name_es: string | null
+      description_en: string | null
+      description_es: string | null
+      icon: string
+      sort_order: number
+      active: boolean
+    }>
+  }
+  return (data as Row[]).map((s) => ({
+    id: s.id,
+    name: s.name,
+    address: [s.address, [s.city, s.state].filter(Boolean).join(', ')].filter(Boolean).join(' · ') || null,
+    locations: s.locations
+      .filter((l) => l.active)
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((l) => ({
+        id: l.id,
+        name: pick(locale, l.name_en, l.name_es),
+        description: l.description_en === null ? null : pick(locale, l.description_en, l.description_es),
+        icon: l.icon,
+      })),
+  }))
+}
