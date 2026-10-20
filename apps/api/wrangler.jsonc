@@ -8,7 +8,8 @@
   "observability": { "enabled": true },
   "vars": {
     "ENVIRONMENT": "development",
-    "ALLOWED_ORIGINS": "http://localhost:4321,http://127.0.0.1:4321",
+    "ALLOWED_ORIGINS": "http://localhost:4321,http://127.0.0.1:4321,http://127.0.0.1:4322",
+    "ADMIN_URL": "http://127.0.0.1:4322/",
     "SITE_URL": "http://127.0.0.1:4321",
     // Clave de PRUEBA pública de Cloudflare Turnstile (siempre pasa). En staging/producción va como secreto.
     "TURNSTILE_SECRET": "1x0000000000000000000000000000000AA",

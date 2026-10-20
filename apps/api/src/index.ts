@@ -12,10 +12,12 @@ import {
   storeRepo,
   supabaseClient,
 } from './adapters/supabase'
+import { teamPorts } from './adapters/supabase/team'
 import { turnstileVerifier } from './adapters/turnstile'
 import { createApp, type Bindings } from './http/app'
 import type { CheckoutWiring } from './http/checkout-routes'
 import type { QuoteWiring } from './http/quote-routes'
+import type { TeamWiring } from './http/team-routes'
 import type { CheckoutDeps } from './modules/payments/application/checkout'
 
 function required(env: Bindings, key: keyof Bindings): string {
@@ -79,4 +81,10 @@ const quotes: QuoteWiring = {
   },
 }
 
-export default createApp(wiring, quotes)
+const team: TeamWiring = {
+  ports: (env) =>
+    teamPorts(supabaseClient(required(env, 'SUPABASE_URL'), required(env, 'SUPABASE_SERVICE_ROLE_KEY'))),
+  adminUrl: (env) => required(env, 'ADMIN_URL'),
+}
+
+export default createApp(wiring, quotes, team)

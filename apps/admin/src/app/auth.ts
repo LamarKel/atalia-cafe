@@ -44,8 +44,10 @@ export function useAdminAuth(): {
   signOut: () => Promise<void>
 } {
   const [state, setState] = useState<AuthState>({ kind: 'loading' })
-  // Llegó con el enlace de recuperación (#...type=recovery): primero crea la contraseña nueva.
-  const recovering = useRef(typeof window !== 'undefined' && window.location.hash.includes('type=recovery'))
+  // Llegó con el enlace de recuperación o de invitación al equipo: primero crea su contraseña.
+  const recovering = useRef(
+    typeof window !== 'undefined' && /type=(recovery|invite)/.test(window.location.hash),
+  )
 
   const refresh = useCallback(async () => {
     const { data } = await supabase.auth.getSession()
