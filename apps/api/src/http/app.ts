@@ -5,6 +5,7 @@ import { bodyLimit } from 'hono/body-limit'
 import { secureHeaders } from 'hono/secure-headers'
 import { checkoutRoutes, type CheckoutWiring } from './checkout-routes'
 import { quoteRoutes, type QuoteWiring } from './quote-routes'
+import { publishRoutes, type PublishWiring } from './publish-routes'
 import { refundRoutes, type RefundWiring } from './refund-routes'
 import { teamRoutes, type TeamWiring } from './team-routes'
 import { ApiError, errorBody } from './errors'
@@ -28,6 +29,8 @@ export interface Bindings {
   /** URL del panel (correo de invitación al equipo). */
   ADMIN_URL?: string
   /** Límites por IP (ratelimits en wrangler.jsonc): estricto para pagar/cotizar/admin, normal para leer. */
+  /** Deploy hook del sitio (secreto). Sin él no hay publicación automática (desarrollo). */
+  DEPLOY_HOOK_URL?: string
   RL_STRICT?: RateLimit
   RL_NORMAL?: RateLimit
 }
@@ -41,6 +44,7 @@ export function createApp(
   quotes?: QuoteWiring,
   team?: TeamWiring,
   refunds?: RefundWiring,
+  publish?: PublishWiring,
 ): Hono<AppEnv> {
   const app = new Hono<AppEnv>()
 
@@ -96,6 +100,7 @@ export function createApp(
   if (quotes !== undefined) quoteRoutes(app, quotes)
   if (team !== undefined) teamRoutes(app, team)
   if (refunds !== undefined) refundRoutes(app, refunds)
+  if (publish !== undefined) publishRoutes(app, publish)
 
   app.notFound((c) => c.json(errorBody('not_found', 'Ruta no encontrada'), 404))
 
