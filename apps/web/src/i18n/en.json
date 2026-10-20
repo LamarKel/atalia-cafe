@@ -254,5 +254,6 @@
   "checkout.promo_err_not_for_catering": "This code does not apply to catering orders.",
   "checkout.promo_err_per_customer_limit": "You already used this code with this email.",
   "checkout.promo_err_too_large": "This code cannot be used on such a small order.",
-  "checkout.promo_err_network": "We could not check the code. Please try again."
+  "checkout.promo_err_network": "We could not check the code. Please try again.",
+  "order.discount": "Discount"
 }
