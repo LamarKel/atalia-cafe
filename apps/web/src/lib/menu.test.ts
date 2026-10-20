@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import type { MenuCategory, MenuItem } from './catalog'
-import { cardPrice, groupCategories, needsOptions, searchMenu, unitPrice } from './menu'
+import {
+  activeSection,
+  cardPrice,
+  centeredScroll,
+  groupCategories,
+  needsOptions,
+  searchMenu,
+  unitPrice,
+} from './menu'
 
 const item = (over: Partial<MenuItem>): MenuItem => ({
   id: 'i',
@@ -78,5 +86,42 @@ describe('menú', () => {
       ['Drinks', 2],
       ['Food', 1],
     ])
+  })
+})
+
+describe('categoría activa al hacer scroll', () => {
+  const sections = [
+    { id: 'cafe', top: -900 },
+    { id: 'frias', top: -200 },
+    { id: 'postres', top: 400 },
+    { id: 'bebidas', top: 1300 },
+  ]
+  it('la última cuyo título ya pasó la barra fija', () => {
+    expect(activeSection(sections, 150, false)).toBe('frias')
+    expect(
+      activeSection(
+        sections.map((s) => ({ ...s, top: s.top + 1000 })),
+        150,
+        false,
+      ),
+    ).toBe('cafe')
+  })
+  it('al principio, la primera; al final de la página, la última', () => {
+    expect(
+      activeSection(
+        [
+          { id: 'cafe', top: 600 },
+          { id: 'te', top: 900 },
+        ],
+        150,
+        false,
+      ),
+    ).toBe('cafe')
+    expect(activeSection(sections, 150, true)).toBe('bebidas')
+    expect(activeSection([], 150, false)).toBeNull()
+  })
+  it('centra la categoría activa en la fila', () => {
+    expect(centeredScroll(500, 100, 300)).toBe(400)
+    expect(centeredScroll(20, 100, 300)).toBe(0)
   })
 })
