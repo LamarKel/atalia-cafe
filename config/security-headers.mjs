@@ -44,14 +44,14 @@ export function cspConfig(opts) {
       `connect-src ${connect.join(' ')}`,
       // Las imágenes las sube o pega el admin (Storage de Supabase u otra URL https).
       "img-src 'self' data: blob: https:",
-      "font-src 'self' https://fonts.gstatic.com",
+      "font-src 'self'",
       `frame-src ${(opts.frames ?? []).join(' ') || "'none'"}`,
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
     ],
     scriptDirective: { resources: ["'self'", ...(opts.scripts ?? [])] },
-    styleDirective: { resources: ["'self'", 'https://fonts.googleapis.com'] },
+    styleDirective: { resources: ["'self'"] },
   }
 }
 

@@ -418,6 +418,8 @@ function MenuCard(props: {
           {item.imageUrl !== null ? (
             <img
               src={item.imageUrl}
+              srcSet={item.imageSrcset ?? undefined}
+              sizes="(min-width: 1280px) 300px, (min-width: 1024px) 34vw, 50vw"
               alt=""
               loading="lazy"
               className={`size-full object-cover transition-transform duration-300 motion-safe:group-hover:scale-105 ${item.soldOut ? 'opacity-50 grayscale' : ''}`}

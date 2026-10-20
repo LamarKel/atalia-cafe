@@ -96,7 +96,7 @@ const openLabels = {
         </p>
         <h1
           class="font-heading text-5xl font-bold leading-[1.02] tracking-tight text-dark sm:text-6xl xl:text-[84px]"
-          data-hero-item
+          data-hero-title
         >
           <RichTitle text={c['home.hero.title'] ?? t(locale, 'brand.name')} />
         </h1>
@@ -162,6 +162,8 @@ const openLabels = {
                 {featured.imageUrl && (
                   <img
                     src={featured.imageUrl}
+                    srcset={featured.imageSrcset ?? undefined}
+                    sizes="64px"
                     alt=""
                     loading="lazy"
                     class="size-16 shrink-0 rounded-2xl object-cover"
@@ -265,6 +267,8 @@ const openLabels = {
               {big.imageUrl && (
                 <img
                   src={big.imageUrl}
+                  srcset={big.imageSrcset ?? undefined}
+                  sizes="(min-width: 768px) 40vw, 100vw"
                   alt=""
                   loading="lazy"
                   class="absolute inset-0 size-full object-cover transition-transform duration-700 motion-safe:group-hover:scale-105"
@@ -318,6 +322,8 @@ const openLabels = {
               {small.imageUrl && (
                 <img
                   src={small.imageUrl}
+                  srcset={small.imageSrcset ?? undefined}
+                  sizes="(min-width: 768px) 30vw, 100vw"
                   alt=""
                   loading="lazy"
                   class="absolute inset-0 size-full object-cover transition-transform duration-700 motion-safe:group-hover:scale-105"

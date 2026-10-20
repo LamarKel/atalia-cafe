@@ -3,6 +3,7 @@
 import type { StoredRule } from '@atalia/shared/rules'
 import type { Locale } from '../i18n'
 import { fromPrice, safeUrl, sizeAmounts, sizePrice, type ProductType, type SizeRow } from './catalog-format'
+import { IMAGE_WIDTH, IMAGE_WIDTHS, optimizedImage, optimizedImageSet } from './images'
 import { supabase } from './supabase'
 
 type Localized = { name_en: string; name_es: string | null }
@@ -30,6 +31,8 @@ export interface CateringCategory {
   description: string | null
   ctaLabel: string | null
   imageUrl: string | null
+  /** srcset WebP (null si la foto no se pudo optimizar o no es remota) */
+  imageSrcset: string | null
 }
 
 export async function getCateringCategories(locale: Locale): Promise<CateringCategory[]> {
@@ -44,14 +47,20 @@ export async function getCateringCategories(locale: Locale): Promise<CateringCat
     console.error('[catalog] categories', error.message)
     return []
   }
-  return data.map((c) => ({
-    id: c.id,
-    slug: c.slug,
-    name: pick(locale, c.name_en, c.name_es),
-    description: c.description_en === null ? null : pick(locale, c.description_en, c.description_es),
-    ctaLabel: c.cta_label_en === null ? null : pick(locale, c.cta_label_en, c.cta_label_es),
-    imageUrl: c.image_url,
-  }))
+  return Promise.all(
+    data.map(async (c) => {
+      const img = await optimizedImageSet(c.image_url, IMAGE_WIDTHS.tile)
+      return {
+        id: c.id,
+        slug: c.slug,
+        name: pick(locale, c.name_en, c.name_es),
+        description: c.description_en === null ? null : pick(locale, c.description_en, c.description_es),
+        ctaLabel: c.cta_label_en === null ? null : pick(locale, c.cta_label_en, c.cta_label_es),
+        imageUrl: img?.src ?? null,
+        imageSrcset: img?.srcset ?? null,
+      }
+    }),
+  )
 }
 
 export interface CateringProduct {
@@ -62,6 +71,7 @@ export interface CateringProduct {
   name: string
   shortDescription: string | null
   imageUrl: string | null
+  imageSrcset: string | null
   imageAlt: string | null
   minLeadHours: number
   fromPriceCents: number | null
@@ -98,10 +108,11 @@ export async function getCateringProducts(locale: Locale): Promise<CateringProdu
     console.error('[catalog] products', error.message)
     return []
   }
-  return data
-    .filter((p) => p.slug !== null && p.category !== null)
-    .map((p) => {
+  const rows = data.filter((p) => p.slug !== null && p.category !== null)
+  return Promise.all(
+    rows.map(async (p) => {
       const image = p.images.find((i) => i.is_primary) ?? p.images[0]
+      const img = await optimizedImageSet(image?.image_url ?? null, IMAGE_WIDTHS.card)
       return {
         id: p.id,
         slug: p.slug as string,
@@ -112,14 +123,16 @@ export async function getCateringProducts(locale: Locale): Promise<CateringProdu
           p.short_description_en === null
             ? null
             : pick(locale, p.short_description_en, p.short_description_es),
-        imageUrl: image?.image_url ?? null,
+        imageUrl: img?.src ?? null,
+        imageSrcset: img?.srcset ?? null,
         imageAlt: image === undefined ? null : pick(locale, image.alt_en ?? '', image.alt_es) || null,
         minLeadHours: p.min_lead_hours,
         fromPriceCents: fromPrice(p.price_cents, p.sizes),
         amounts: sizeAmounts(p.sizes),
         sizes: p.sizes,
       }
-    })
+    }),
+  )
 }
 
 export interface StoreInfo {
@@ -132,6 +145,8 @@ export interface StoreInfo {
   delivery: Array<{ name: 'Uber Eats' | 'DoorDash'; url: string }>
   /** Zona horaria de la tienda, para "Abierto hoy" calculado en el navegador. */
   timezone: string
+  /** Ícono de la pestaña cargado en el panel (https); si no hay, el del sitio. */
+  faviconUrl: string | null
   /** Redes sociales cargadas en el panel (solo las que tienen URL). */
   socials: Array<{ network: 'instagram' | 'facebook' | 'tiktok' | 'x'; url: string }>
   lat: number | null
@@ -144,7 +159,7 @@ export async function getStoreInfo(): Promise<StoreInfo> {
     supabase
       .from('business_settings')
       .select(
-        'business_name, phone, whatsapp_number, email, instagram_url, facebook_url, tiktok_url, twitter_url, uber_eats_url, doordash_url',
+        'business_name, phone, whatsapp_number, email, instagram_url, facebook_url, tiktok_url, twitter_url, uber_eats_url, doordash_url, favicon_url',
       )
       .maybeSingle(),
     supabase
@@ -178,6 +193,7 @@ export async function getStoreInfo(): Promise<StoreInfo> {
       return safe === null ? [] : [{ name, url: safe }]
     }),
     timezone: s?.timezone ?? 'America/New_York',
+    faviconUrl: safeUrl(settings.data?.favicon_url),
     socials: (
       [
         ['instagram', settings.data?.instagram_url],
@@ -204,7 +220,7 @@ export interface DetailSize extends SizeRow {
 export interface ProductDetail extends CateringProduct {
   categoryName: string
   description: string | null
-  images: Array<{ url: string; alt: string }>
+  images: Array<{ url: string; alt: string; srcset: string | null }>
   inclusions: string[]
   options: DetailSize[]
 }
@@ -244,14 +260,23 @@ export async function getProductDetails(locale: Locale): Promise<ProductDetail[]
     return []
   }
   const bySort = <T extends { sort_order: number }>(a: T, b: T) => a.sort_order - b.sort_order
-  return data
-    .filter((p) => p.slug !== null && p.category !== null)
-    .map((p) => {
+  const rows = data.filter((p) => p.slug !== null && p.category !== null)
+  return Promise.all(
+    rows.map(async (p) => {
       const category = p.category as NonNullable<DetailRow['category']>
       const sizes = [...p.sizes].filter((s) => s.active).sort(bySort)
-      const images = [...p.images]
-        .sort((a, b) => Number(b.is_primary) - Number(a.is_primary) || a.sort_order - b.sort_order)
-        .map((i) => ({ url: i.image_url, alt: pick(locale, i.alt_en ?? '', i.alt_es) }))
+      const images = await Promise.all(
+        [...p.images]
+          .sort((a, b) => Number(b.is_primary) - Number(a.is_primary) || a.sort_order - b.sort_order)
+          .map(async (i) => {
+            const img = await optimizedImageSet(i.image_url, IMAGE_WIDTHS.detail)
+            return {
+              url: img?.src ?? i.image_url,
+              srcset: img?.srcset ?? null,
+              alt: pick(locale, i.alt_en ?? '', i.alt_es),
+            }
+          }),
+      )
       return {
         id: p.id,
         slug: p.slug as string,
@@ -265,6 +290,7 @@ export async function getProductDetails(locale: Locale): Promise<ProductDetail[]
             : pick(locale, p.short_description_en, p.short_description_es),
         description: p.description_en === null ? null : pick(locale, p.description_en, p.description_es),
         imageUrl: images[0]?.url ?? null,
+        imageSrcset: null,
         imageAlt: images[0]?.alt ?? null,
         images,
         minLeadHours: p.min_lead_hours,
@@ -278,7 +304,8 @@ export async function getProductDetails(locale: Locale): Promise<ProductDetail[]
           priceCents: sizePrice(p.price_cents, s),
         })),
       }
-    })
+    }),
+  )
 }
 
 export interface PicaderaPiece {
@@ -342,12 +369,14 @@ export async function getPicaderaBuilder(locale: Locale): Promise<PicaderaBuilde
       minLeadHours: p.min_lead_hours,
     },
     sizes,
-    pieces: options.data.map((o) => ({
-      id: o.id,
-      pieceType: pick(locale, o.piece_type_en, o.piece_type_es),
-      filling: pick(locale, o.filling_en, o.filling_es),
-      imageUrl: o.image_url,
-    })),
+    pieces: await Promise.all(
+      options.data.map(async (o) => ({
+        id: o.id,
+        pieceType: pick(locale, o.piece_type_en, o.piece_type_es),
+        filling: pick(locale, o.filling_en, o.filling_es),
+        imageUrl: await optimizedImage(o.image_url, IMAGE_WIDTH.thumb),
+      })),
+    ),
   }
 }
 
@@ -373,6 +402,7 @@ export interface MenuItem {
   featured: boolean
   soldOut: boolean
   imageUrl: string | null
+  imageSrcset: string | null
   sizes: Array<{ id: string; name: string; priceCents: number | null }>
   extras: Array<{ id: string; name: string; priceCents: number }>
   nutrition: Array<{ label: string; value: string }>
@@ -448,7 +478,7 @@ export async function getMenu(locale: Locale): Promise<MenuCategory[]> {
     return []
   }
   const bySort = <T extends { sort_order: number }>(a: T, b: T) => a.sort_order - b.sort_order
-  const items = prods.data.map((p): MenuItem => {
+  const items = prods.data.map((p): MenuItem & { rawImage: string | null } => {
     const image = [...p.images].sort((a, b) => Number(b.is_primary) - Number(a.is_primary) || bySort(a, b))[0]
     const description = p.description_en ?? p.short_description_en
     return {
@@ -460,7 +490,8 @@ export async function getMenu(locale: Locale): Promise<MenuCategory[]> {
       priceCents: p.price_cents,
       featured: p.featured,
       soldOut: p.stock_enabled && !p.in_stock,
-      imageUrl: image?.image_url ?? null,
+      imageUrl: null,
+      imageSrcset: null,
       sizes: [...p.sizes]
         .filter((s) => s.active)
         .sort(bySort)
@@ -476,8 +507,16 @@ export async function getMenu(locale: Locale): Promise<MenuCategory[]> {
       nutrition: [...p.nutrition]
         .sort(bySort)
         .map((n) => ({ label: pick(locale, n.label_en, n.label_es), value: n.value })),
+      rawImage: image?.image_url ?? null,
     }
   })
+  // Fotos optimizadas al ancho de la tarjeta del menú
+  const optimized = await Promise.all(
+    items.map(async ({ rawImage, ...item }) => {
+      const img = await optimizedImageSet(rawImage, IMAGE_WIDTHS.card)
+      return { ...item, imageUrl: img?.src ?? null, imageSrcset: img?.srcset ?? null }
+    }),
+  )
   return cats.data.map((c) => ({
     id: c.id,
     slug: c.slug,
@@ -485,7 +524,7 @@ export async function getMenu(locale: Locale): Promise<MenuCategory[]> {
     description: c.description_en === null ? null : pick(locale, c.description_en, c.description_es),
     icon: c.icon,
     group: c.group_name,
-    items: items.filter((i) => i.categoryId === c.id),
+    items: optimized.filter((i) => i.categoryId === c.id),
   }))
 }
 

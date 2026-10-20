@@ -19,6 +19,7 @@ const item = (over: Partial<MenuItem>): MenuItem => ({
   featured: false,
   soldOut: false,
   imageUrl: null,
+  imageSrcset: null,
   sizes: [],
   extras: [],
   nutrition: [],

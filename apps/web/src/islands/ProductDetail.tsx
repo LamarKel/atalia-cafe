@@ -85,7 +85,15 @@ function Detail({ locale, product, messages: m, quoteThreshold, quoteHref }: Pro
               {m['catalog.photo_placeholder']}
             </div>
           ) : (
-            <img src={image.url} alt={image.alt} className="size-full object-cover" />
+            // Foto principal = elemento más grande al cargar (LCP): prioridad alta y tamaño según la pantalla
+            <img
+              src={image.url}
+              srcSet={image.srcset ?? undefined}
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              alt={image.alt}
+              fetchPriority="high"
+              className="size-full object-cover"
+            />
           )}
         </div>
         {product.images.length > 1 && (
@@ -101,7 +109,14 @@ function Detail({ locale, product, messages: m, quoteThreshold, quoteHref }: Pro
                     i === photo ? 'border-secondary' : 'border-transparent'
                   }`}
                 >
-                  <img src={img.url} alt="" className="size-full object-cover" loading="lazy" />
+                  <img
+                    src={img.url}
+                    srcSet={img.srcset ?? undefined}
+                    sizes="120px"
+                    alt=""
+                    className="size-full object-cover"
+                    loading="lazy"
+                  />
                 </button>
               </li>
             ))}

@@ -6,6 +6,9 @@ import Header from '../components/Header.astro'
 import MobileNav from '../components/MobileNav.astro'
 import { getSiteContent, getStoreInfo } from '../lib/catalog'
 import { localizedPath, t, type Locale } from '../i18n'
+// Las dos fuentes que se ven primero (títulos y texto), precargadas: el primer pintado ya sale con la marca
+import headingFont from '@fontsource/playfair-display/files/playfair-display-latin-700-normal.woff2?url'
+import bodyFont from '@fontsource/poppins/files/poppins-latin-400-normal.woff2?url'
 
 interface Props {
   locale: Locale
@@ -42,12 +45,10 @@ const [store, content] = await Promise.all([getStoreInfo(), getSiteContent(local
     <link rel="alternate" hreflang="en" href={new URL(localizedPath(currentPath, 'en'), site)} />
     <link rel="alternate" hreflang="es" href={new URL(localizedPath(currentPath, 'es'), site)} />
     <link rel="alternate" hreflang="x-default" href={new URL(localizedPath(currentPath, 'en'), site)} />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600&display=swap"
-    />
+    <link rel="icon" href={store.faviconUrl ?? '/favicon.png'} />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preload" href={headingFont} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={bodyFont} as="font" type="font/woff2" crossorigin />
   </head>
   <body class="min-h-dvh">
     <a
