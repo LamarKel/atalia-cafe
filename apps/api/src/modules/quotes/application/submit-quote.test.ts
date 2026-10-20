@@ -48,6 +48,7 @@ function setup(opts: { captcha?: boolean; recent?: number; rules?: StoredRule[] 
     stores: {
       defaultStore: () => Promise.resolve({ id: STORE, timezone: 'America/New_York' }),
       pickupLocationIds: () => Promise.resolve([PICKUP]),
+      termsVersion: () => Promise.resolve(null),
       rules: () => Promise.resolve(opts.rules ?? [recipientsRule]),
     },
     catalog: {

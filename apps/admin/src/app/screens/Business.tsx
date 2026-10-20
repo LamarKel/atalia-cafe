@@ -507,6 +507,12 @@ function StoreTab({ store, onSaved }: { store: Store; onSaved: (s: Store) => voi
               onChange={(v) => setSettings({ ...settings, tiktok: nul(v) })}
               maxLength={200}
             />
+            <TextField
+              label={t('biz.x')}
+              value={settings.x ?? ''}
+              onChange={(v) => setSettings({ ...settings, x: nul(v) })}
+              maxLength={200}
+            />
           </div>
           <div className="mt-4 flex justify-end">
             <Button

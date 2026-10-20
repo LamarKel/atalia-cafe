@@ -100,3 +100,14 @@ export function perPersonCents(priceCents: number | null, serves: number | null)
   if (priceCents === null || serves === null || serves <= 0) return null
   return Math.round(priceCents / serves)
 }
+
+/** Solo enlaces https (un valor raro en la BD nunca se convierte en un javascript: en el sitio). */
+export function safeUrl(url: string | null | undefined): string | null {
+  if (url === null || url === undefined || url.trim() === '') return null
+  try {
+    const u = new URL(url.trim())
+    return u.protocol === 'https:' ? u.toString() : null
+  } catch {
+    return null
+  }
+}

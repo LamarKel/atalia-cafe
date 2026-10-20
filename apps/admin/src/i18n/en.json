@@ -463,5 +463,7 @@
   "rf.menu_part": "menu {state}",
   "rf.customer_message": "Message for the customer (goes in the email)",
   "rf.customer_message_hint": "For example: \"Our oven broke and we cannot have your order ready on time.\"",
-  "rf.email_note": "When cancelling, the customer gets an email with the apology, the refund and this message."
+  "rf.email_note": "When cancelling, the customer gets an email with the apology, the refund and this message.",
+  "orders.terms_accepted": "Accepted the terms and policies on {when} (version {version}).",
+  "biz.x": "X / Twitter (link)"
 }

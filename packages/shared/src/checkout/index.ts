@@ -91,6 +91,8 @@ export const checkoutRequestSchema = z.object({
   note: z.string().trim().max(500).default(''),
   items: cartSchema,
   promoCode: promoCodeInputSchema,
+  /** Aceptó términos, privacidad y política de cancelación (casilla obligatoria en el paso de pago). */
+  acceptTerms: z.literal(true, 'terms_required'),
 })
 
 export type CheckoutRequest = z.input<typeof checkoutRequestSchema>

@@ -34,6 +34,10 @@ export interface CheckoutFlowProps {
   cartHref: string
   /** Tiendas con sus puntos de recogida (en la tienda, en el carro…). */
   stores: PickupStore[]
+  /** Páginas legales que el cliente acepta al pagar. */
+  legal: { terms: string; privacy: string; policies: string }
+  /** Aviso de alérgenos (site_content legal.allergens). */
+  allergenNotice: string | null
 }
 
 type Step = 0 | 1 | 2
@@ -62,7 +66,14 @@ function tokenFor(fingerprint: string): string {
   return token
 }
 
-export default function CheckoutFlow({ locale, messages: m, cartHref, stores }: CheckoutFlowProps) {
+export default function CheckoutFlow({
+  locale,
+  messages: m,
+  cartHref,
+  stores,
+  legal,
+  allergenNotice,
+}: CheckoutFlowProps) {
   const tf = (key: MessageKey, params: Record<string, string | number>) =>
     m[key].replace(/\{(\w+)\}/g, (match, name: string) => (name in params ? String(params[name]) : match))
   const usd = (value: number) => formatUSD(cents(value), locale)
@@ -93,6 +104,9 @@ export default function CheckoutFlow({ locale, messages: m, cartHref, stores }: 
   const [errors, setErrors] = useState<FieldErrors>({})
   const [banner, setBanner] = useState<MessageKey | null>(null)
   const [paying, setPaying] = useState(false)
+  // Consentimiento: hay que aceptar términos, privacidad y cancelación para pagar (queda guardado en el pedido).
+  const [accepted, setAccepted] = useState(false)
+  const [consentError, setConsentError] = useState(false)
   // Cupón: lo que escribe, el que quedó aplicado y por qué no se aplicó (lo decide el Worker).
   const [promoOpen, setPromoOpen] = useState(false)
   const [promoInput, setPromoInput] = useState('')
@@ -221,6 +235,11 @@ export default function CheckoutFlow({ locale, messages: m, cartHref, stores }: 
 
   const pay = async () => {
     if (chosen === null || date === null || time === null || cart === null) return
+    if (!accepted) {
+      setConsentError(true)
+      document.getElementById('checkout-consent')?.focus()
+      return
+    }
     setPaying(true)
     setBanner(null)
     const body: Omit<CheckoutRequest, 'checkoutToken'> = {
@@ -231,6 +250,7 @@ export default function CheckoutFlow({ locale, messages: m, cartHref, stores }: 
       note,
       items,
       promoCode: appliedPromo ?? '',
+      acceptTerms: true,
     }
     try {
       const res = await api.checkout({ ...body, checkoutToken: tokenFor(JSON.stringify(body)) })
@@ -448,6 +468,45 @@ export default function CheckoutFlow({ locale, messages: m, cartHref, stores }: 
             {quote === null && (
               <p className="rounded-xl bg-sand px-4 py-3 text-sm">{m['checkout.unpriced_block']}</p>
             )}
+            {allergenNotice !== null && <p className="text-sm text-muted">{allergenNotice}</p>}
+            <div className="rounded-2xl bg-white p-4">
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  id="checkout-consent"
+                  type="checkbox"
+                  checked={accepted}
+                  onChange={(e) => {
+                    setAccepted(e.target.checked)
+                    if (e.target.checked) setConsentError(false)
+                  }}
+                  aria-invalid={consentError}
+                  aria-describedby={consentError ? 'checkout-consent-error' : undefined}
+                  className="mt-0.5 size-6 shrink-0 cursor-pointer accent-secondary"
+                />
+                <span className="text-sm leading-relaxed">
+                  {consentParts(m['legal.consent']).map((part, i) =>
+                    part.link === null ? (
+                      <span key={i}>{part.text}</span>
+                    ) : (
+                      <a
+                        key={i}
+                        href={legal[part.link]}
+                        target="_blank"
+                        rel="noopener"
+                        className="font-semibold text-secondary underline underline-offset-2"
+                      >
+                        {m[CONSENT_LINKS[part.link]]}
+                      </a>
+                    ),
+                  )}
+                </span>
+              </label>
+              {consentError && (
+                <p id="checkout-consent-error" role="alert" className="mt-2 text-sm text-toast-error">
+                  {m['legal.consent_required']}
+                </p>
+              )}
+            </div>
             <div>
               <Button variant="outline" onClick={() => setStep(1)}>
                 {m['checkout.back']}
@@ -538,6 +597,25 @@ export default function CheckoutFlow({ locale, messages: m, cartHref, stores }: 
       </aside>
     </div>
   )
+}
+
+const CONSENT_LINKS = {
+  terms: 'legal.consent_terms',
+  privacy: 'legal.consent_privacy',
+  policies: 'legal.consent_policies',
+} as const satisfies Record<string, MessageKey>
+
+/** "Acepto los {terms}, la {privacy} y la {policies}." → texto y enlaces, sin HTML. */
+function consentParts(sentence: string): Array<{ text: string; link: keyof typeof CONSENT_LINKS | null }> {
+  return sentence
+    .split(/(\{terms\}|\{privacy\}|\{policies\})/)
+    .filter((s) => s !== '')
+    .map((s) => {
+      const name = s.replace(/[{}]/g, '')
+      return name in CONSENT_LINKS && s.startsWith('{')
+        ? { text: '', link: name as keyof typeof CONSENT_LINKS }
+        : { text: s, link: null }
+    })
 }
 
 /** "¿Tienes un código de descuento?": se abre a pedido para no distraer a quien no tiene uno. */

@@ -1,8 +1,9 @@
 // Confirmación (docs/design/06-confirmacion.png). El pedido se marca pagado SOLO en el webhook: si el cliente
-// llega antes que el webhook, esta página espera unos segundos y vuelve a consultar.
+// llega antes que el webhook, esta página espera unos segundos y vuelve a consultar. Después de pagado sigue
+// el pedido (confirmado → en preparación → listo → recogido) consultando cada 30 s mientras la página está abierta.
 import type { OrderSummary } from '@atalia/shared/checkout'
 import { cents, formatUSD } from '@atalia/shared/money'
-import { ButtonLink } from '@atalia/ui'
+import { ButtonLink, Stepper } from '@atalia/ui'
 import { useEffect, useState } from 'react'
 import { api, ApiRequestError } from '../lib/api'
 import { clearCart } from '../lib/cart'
@@ -24,6 +25,18 @@ export interface OrderConfirmationProps {
 
 const POLL_MS = 2000
 const POLL_LIMIT = 15
+const TRACK_MS = 30_000
+
+/** Pasos que ve el cliente; el resto de estados (cancelado, no se recogió) tienen su propio mensaje. */
+const TRACK_STEPS = ['confirmed', 'preparing', 'ready', 'picked_up'] as const
+const TRACK_LABELS: Record<(typeof TRACK_STEPS)[number], MessageKey> = {
+  confirmed: 'order.track_confirmed',
+  preparing: 'order.track_preparing',
+  ready: 'order.track_ready',
+  picked_up: 'order.track_picked_up',
+}
+const isActive = (status: string) => status === 'confirmed' || status === 'preparing' || status === 'ready'
+const isClosed = (status: string) => status === 'cancelled' || status === 'refunded'
 
 type View =
   | { kind: 'loading' }
@@ -47,13 +60,17 @@ export default function OrderConfirmation(props: OrderConfirmationProps) {
     let tries = 0
     let timer: ReturnType<typeof setTimeout> | undefined
     let stopped = false
+    let tracking = false
     const check = async () => {
       try {
         const order = await api.order(token)
         if (stopped) return
-        if (order.paymentStatus === 'paid' || order.status === 'cancelled') {
+        tracking = order.paymentStatus !== 'unpaid'
+        if (order.paymentStatus !== 'unpaid' || isClosed(order.status)) {
           if (order.paymentStatus === 'paid') clearCart()
           setView({ kind: 'order', order })
+          // Seguimiento: mientras el pedido avanza, se vuelve a consultar (sin límite de intentos).
+          if (isActive(order.status)) timer = setTimeout(() => void check(), TRACK_MS)
           return
         }
         tries++
@@ -62,7 +79,10 @@ export default function OrderConfirmation(props: OrderConfirmationProps) {
       } catch (err) {
         if (stopped) return
         if (err instanceof ApiRequestError && err.status === 404) setView({ kind: 'missing' })
-        else {
+        else if (tracking) {
+          // Ya se mostró el pedido: un fallo de red no lo borra, se reintenta más tarde.
+          timer = setTimeout(() => void check(), TRACK_MS)
+        } else {
           tries++
           setView({ kind: 'pending', slow: tries >= POLL_LIMIT })
           if (tries < POLL_LIMIT) timer = setTimeout(() => void check(), POLL_MS)
@@ -101,7 +121,7 @@ export default function OrderConfirmation(props: OrderConfirmationProps) {
     )
 
   const { order } = view
-  if (order.status === 'cancelled')
+  if (isClosed(order.status))
     return (
       <div className="py-20 text-center">
         <h1 className="font-heading text-3xl font-bold">{m['order.cancelled_title']}</h1>
@@ -164,6 +184,26 @@ export default function OrderConfirmation(props: OrderConfirmationProps) {
       <p className="mt-4 inline-flex rounded-full border border-dark/15 bg-white px-4 py-1.5 text-sm font-semibold">
         {tf('order.code', { code: order.code })}
       </p>
+
+      {order.status === 'no_show' ? (
+        <p className="mx-auto mt-6 max-w-xl rounded-2xl bg-sand px-4 py-3">{m['order.track_no_show']}</p>
+      ) : (
+        <div className="mx-auto mt-8 max-w-2xl text-left">
+          <Stepper
+            label={m['order.track_label']}
+            steps={TRACK_STEPS.map((s) => m[TRACK_LABELS[s]])}
+            current={Math.max(0, TRACK_STEPS.indexOf(order.status as (typeof TRACK_STEPS)[number]))}
+          />
+          {/* Se anuncia cuando cambia el estado (cada consulta trae el nuevo). */}
+          <p role="status" className="sr-only">
+            {tf('order.track_now', {
+              status:
+                m[TRACK_LABELS[order.status as (typeof TRACK_STEPS)[number]] ?? 'order.track_confirmed'],
+            })}
+          </p>
+          {isActive(order.status) && <p className="mt-3 text-sm text-muted">{m['order.track_auto']}</p>}
+        </div>
+      )}
 
       <div className="mt-8 grid gap-6 rounded-3xl bg-white p-6 text-left shadow-sm md:grid-cols-2 md:p-8">
         <div className="grid content-start gap-5">

@@ -2,7 +2,7 @@
 // Más adelante se leerán por el Worker con caché en el edge (/catalog, RNF-C01); la forma de los datos no cambia.
 import type { StoredRule } from '@atalia/shared/rules'
 import type { Locale } from '../i18n'
-import { fromPrice, sizeAmounts, sizePrice, type ProductType, type SizeRow } from './catalog-format'
+import { fromPrice, safeUrl, sizeAmounts, sizePrice, type ProductType, type SizeRow } from './catalog-format'
 import { supabase } from './supabase'
 
 type Localized = { name_en: string; name_es: string | null }
@@ -125,6 +125,9 @@ export interface StoreInfo {
   address: string | null
   phone: string | null
   whatsapp: string | null
+  email: string | null
+  /** Redes sociales cargadas en el panel (solo las que tienen URL). */
+  socials: Array<{ network: 'instagram' | 'facebook' | 'tiktok' | 'x'; url: string }>
   lat: number | null
   lng: number | null
   hours: Array<{ weekday: number; opens_at: string; closes_at: string }>
@@ -132,7 +135,12 @@ export interface StoreInfo {
 
 export async function getStoreInfo(): Promise<StoreInfo> {
   const [settings, store] = await Promise.all([
-    supabase.from('business_settings').select('business_name, phone, whatsapp_number').maybeSingle(),
+    supabase
+      .from('business_settings')
+      .select(
+        'business_name, phone, whatsapp_number, email, instagram_url, facebook_url, tiktok_url, twitter_url',
+      )
+      .maybeSingle(),
     supabase
       .from('stores')
       .select(
@@ -153,6 +161,18 @@ export async function getStoreInfo(): Promise<StoreInfo> {
     address: address || null,
     phone: s?.phone ?? settings.data?.phone ?? null,
     whatsapp: settings.data?.whatsapp_number ?? null,
+    email: settings.data?.email ?? null,
+    socials: (
+      [
+        ['instagram', settings.data?.instagram_url],
+        ['facebook', settings.data?.facebook_url],
+        ['tiktok', settings.data?.tiktok_url],
+        ['x', settings.data?.twitter_url],
+      ] as const
+    ).flatMap(([network, url]) => {
+      const safe = safeUrl(url)
+      return safe === null ? [] : [{ network, url: safe }]
+    }),
     lat: s?.lat ?? null,
     lng: s?.lng ?? null,
     hours: s?.hours ?? [],

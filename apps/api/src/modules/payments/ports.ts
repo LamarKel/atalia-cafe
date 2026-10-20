@@ -34,6 +34,9 @@ export interface NewOrder {
   tipCents: number
   totalCents: number
   rulesSnapshot: Record<string, unknown>
+  /** Cuándo aceptó los términos y qué versión (prueba legal). */
+  termsAcceptedAt: string
+  termsVersion: string | null
   lines: PricedLine[]
   reservations: Array<{ date: string; slotStart: string; category: ProductType; qty: number }>
 }
@@ -60,6 +63,8 @@ export interface StoreRepo {
   rules(storeId: string): Promise<StoredRule[]>
   /** Ids de los puntos de recogida activos de la tienda. */
   pickupLocationIds(storeId: string): Promise<string[]>
+  /** Versión vigente de los textos legales (site_content legal.updated), o null si no hay. */
+  termsVersion(): Promise<string | null>
 }
 
 export interface PromoRepo {

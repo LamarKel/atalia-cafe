@@ -61,7 +61,12 @@ export function TextField(props: {
   return (
     <FieldShell id={id} label={props.label} hint={props.hint} error={props.error}>
       {props.multiline === true ? (
-        <textarea {...common} rows={3} onChange={(e) => props.onChange(e.target.value)} />
+        <textarea
+          {...common}
+          // Los textos legales son largos: más filas para editarlos cómodo.
+          rows={props.value.length > 400 ? 14 : 3}
+          onChange={(e) => props.onChange(e.target.value)}
+        />
       ) : (
         <input {...common} inputMode={props.inputMode} onChange={(e) => props.onChange(e.target.value)} />
       )}

@@ -60,6 +60,16 @@ export function storeRepo(db: SupabaseClient): StoreRepo {
       if (error) fail('pickup_locations', error)
       return (data as Array<{ id: string }>).map((r) => r.id)
     },
+    async termsVersion() {
+      const { data, error } = await db
+        .from('site_content')
+        .select('value')
+        .eq('key', 'legal.updated')
+        .eq('locale', 'en')
+        .maybeSingle<{ value: string }>()
+      if (error) fail('site_content', error)
+      return data?.value ?? null
+    },
   }
 }
 
@@ -275,6 +285,8 @@ export function ordersRepo(db: SupabaseClient): OrdersRepo {
           tip_cents: order.tipCents,
           total_cents: order.totalCents,
           rules_snapshot: order.rulesSnapshot,
+          terms_accepted_at: order.termsAcceptedAt,
+          terms_version: order.termsVersion,
         },
         p_items: order.lines.map((l) => ({
           product_id: l.productId,

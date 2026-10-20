@@ -19,6 +19,13 @@ const dayName = (d: number) => t(locale, `day.${d}` as MessageKey)
 const dayRange = (days: number[]) =>
   days.length > 1 ? `${dayName(days[0] ?? 0)}–${dayName(days.at(-1) ?? 0)}` : dayName(days[0] ?? 0)
 const whatsappUrl = store.whatsapp ? `https://wa.me/${store.whatsapp}` : null
+const SOCIAL_NAMES = { instagram: 'Instagram', facebook: 'Facebook', tiktok: 'TikTok', x: 'X' } as const
+const LEGAL_LINKS: Array<[string, MessageKey]> = [
+  ['/terms', 'footer.terms'],
+  ['/privacy', 'footer.privacy'],
+  ['/policies', 'footer.cancellations'],
+  ['/accessibility', 'footer.accessibility'],
+]
 ---
 
 <footer class="bg-secondary pb-28 pt-14 text-white md:pb-12">
@@ -90,17 +97,58 @@ const whatsappUrl = store.whatsapp ? `https://wa.me/${store.whatsapp}` : null
       >
         {t(locale, 'nav.quote')}
       </a>
-      <a
-        href={localizedPath('/policies', locale)}
-        class="inline-flex min-h-11 items-center underline underline-offset-4"
-      >
-        {t(locale, 'footer.policies')}
-      </a>
+      {
+        store.email && (
+          <a href={`mailto:${store.email}`} class="flex min-h-11 items-center">
+            {store.email}
+          </a>
+        )
+      }
+      {
+        store.socials.length > 0 && (
+          <>
+            <h2 class="mt-4 font-semibold">{t(locale, 'footer.follow')}</h2>
+            <ul class="mt-1 flex flex-wrap gap-x-4">
+              {store.socials.map((s) => (
+                <li>
+                  <a
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex min-h-11 items-center underline underline-offset-4"
+                  >
+                    {SOCIAL_NAMES[s.network]}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </>
+        )
+      }
     </div>
   </div>
 
-  <p class="mx-auto mt-10 max-w-7xl border-t border-white/15 px-4 pt-6 text-sm text-white/75 md:px-8">
-    © {year}
-    {store.businessName}. {t(locale, 'footer.rights')}
-  </p>
+  <div
+    class="mx-auto mt-10 flex max-w-7xl flex-col gap-3 border-t border-white/15 px-4 pt-4 text-sm text-white/85 md:flex-row md:items-center md:justify-between md:px-8"
+  >
+    <nav aria-label={t(locale, 'footer.legal')}>
+      <ul class="flex flex-wrap gap-x-5">
+        {
+          LEGAL_LINKS.map(([path, key]) => (
+            <li>
+              <a
+                href={localizedPath(path, locale)}
+                class="inline-flex min-h-11 items-center underline-offset-4 hover:underline"
+              >
+                {t(locale, key)}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+    <p class="text-white/75">
+      {`© ${String(year)} ${store.businessName}. ${t(locale, 'footer.rights')}`}
+    </p>
+  </div>
 </footer>

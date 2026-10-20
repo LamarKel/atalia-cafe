@@ -1,6 +1,7 @@
 ---
 // Menú del café. Datos de la BD (categorías, productos, tamaños, extras, nutrición, tiendas); la interacción
 // vive en la isla MenuBrowser.
+import AllergenNotice from './AllergenNotice.astro'
 import MenuBrowser from '../islands/MenuBrowser'
 import BaseLayout from '../layouts/BaseLayout.astro'
 import { getMenu, getPickupStores } from '../lib/catalog'
@@ -22,4 +23,5 @@ const [categories, stores] = await Promise.all([getMenu(locale), getPickupStores
     categories={categories}
     stores={stores}
   />
+  <AllergenNotice locale={locale} class="pb-16" />
 </BaseLayout>

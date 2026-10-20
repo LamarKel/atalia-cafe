@@ -53,13 +53,15 @@ interface Order {
   refunded_cents: number
   needs_review: boolean
   review_reason: string | null
+  terms_accepted_at: string | null
+  terms_version: string | null
   pickup: { name_es: string | null; name_en: string } | null
   items: OrderItem[]
 }
 
 const SELECT = `id, code, status, payment_status, payment_method, scheduled_for, created_at, customer_name,
   customer_phone, customer_email, note, subtotal_cents, discount_cents, tax_cents, tip_cents, total_cents, refunded_cents,
-  needs_review, review_reason,
+  needs_review, review_reason, terms_accepted_at, terms_version,
   pickup:pickup_locations(name_es, name_en),
   items:order_items(id, product_name_snapshot, size_label_snapshot, quantity, line_total_cents, notes, extras,
     components:order_item_components(piece_label_snapshot, qty))`
@@ -716,6 +718,15 @@ function OrderDetail(props: {
           <h3 className="mt-6 font-semibold">{t('orders.note')}</h3>
           <p className="mt-2 rounded-2xl bg-sand px-4 py-3">{o.note}</p>
         </>
+      )}
+
+      {o.terms_accepted_at !== null && (
+        <p className="mt-4 text-sm text-muted">
+          {t('orders.terms_accepted', {
+            when: new Date(o.terms_accepted_at).toLocaleString(locale === 'es' ? 'es-US' : 'en-US'),
+            version: o.terms_version ?? '—',
+          })}
+        </p>
       )}
 
       <h3 className="mt-6 font-semibold">{t('orders.payment')}</h3>
