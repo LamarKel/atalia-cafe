@@ -465,5 +465,8 @@
   "rf.customer_message_hint": "Por ejemplo: \"Se nos dañó el horno y no podremos tener tu pedido a tiempo.\"",
   "rf.email_note": "Al cancelar, el cliente recibe un correo con la disculpa, el reembolso y este mensaje.",
   "orders.terms_accepted": "Aceptó los términos y políticas el {when} (versión {version}).",
-  "biz.x": "X / Twitter (enlace)"
+  "biz.x": "X / Twitter (enlace)",
+  "biz.uber_eats": "Uber Eats (enlace)",
+  "biz.doordash": "DoorDash (enlace)",
+  "biz.delivery_hint": "Si lo dejas vacío, el botón no aparece en el inicio."
 }
