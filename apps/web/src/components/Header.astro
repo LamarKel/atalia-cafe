@@ -18,12 +18,15 @@ const links = [
   { href: '/', label: t(locale, 'nav.home') },
   { href: '/catering', label: t(locale, 'nav.catering') },
   { href: '/menu', label: t(locale, 'nav.menu') },
+  // Delivery: la sección "Pide a tu manera" del inicio (recoger, para llevar y las apps de delivery)
+  { href: '/#pedir', label: t(locale, 'nav.delivery') },
   { href: '/about', label: t(locale, 'nav.about') },
   { href: '/contact', label: t(locale, 'nav.contact') },
 ] as const
 
 const basePath = localizedPath(currentPath, 'en')
-const isActive = (href: string) => (href === '/' ? basePath === '/' : basePath.startsWith(href))
+const isActive = (href: string) =>
+  href.includes('#') ? false : href === '/' ? basePath === '/' : basePath.startsWith(href)
 ---
 
 <header class="sticky top-0 z-40 border-b border-dark/5 bg-white/95 backdrop-blur">

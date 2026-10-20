@@ -1,0 +1,56 @@
+---
+// Contacto: teléfono, WhatsApp, correo, horario y mapa (de la BD), cotización para eventos y redes.
+import BaseLayout from '../layouts/BaseLayout.astro'
+import VisitSection from './home/VisitSection.astro'
+import QuoteCta from './QuoteCta.astro'
+import { getSiteContent, getStoreInfo } from '../lib/catalog'
+import { t, type Locale } from '../i18n'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+const [c, store] = await Promise.all([getSiteContent(locale), getStoreInfo()])
+const title = c['contact.title'] ?? t(locale, 'nav.contact')
+const SOCIAL_NAMES = { instagram: 'Instagram', facebook: 'Facebook', tiktok: 'TikTok', x: 'X' } as const
+---
+
+<BaseLayout locale={locale} title={title} description={c['contact.lead']}>
+  <div class="mx-auto max-w-7xl px-4 pb-10 pt-12 md:px-8 md:pt-16" data-reveal>
+    <h1 class="font-heading text-5xl font-bold tracking-tight md:text-7xl" data-reveal-item>{title}</h1>
+    {
+      c['contact.lead'] && (
+        <p class="mt-5 max-w-2xl text-xl leading-relaxed text-muted" data-reveal-item>
+          {c['contact.lead']}
+        </p>
+      )
+    }
+    {
+      store.socials.length > 0 && (
+        <ul class="mt-6 flex flex-wrap gap-3" data-reveal-item>
+          {store.socials.map((s) => (
+            <li>
+              <a
+                href={s.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex min-h-11 items-center rounded-full border border-dark/15 bg-white px-5 font-medium hover:border-secondary"
+              >
+                {SOCIAL_NAMES[s.network]}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </div>
+  <VisitSection locale={locale} c={c} store={store} full />
+  <div class="mx-auto max-w-7xl px-4 pb-20 md:px-8 md:pb-28">
+    <QuoteCta locale={locale} />
+  </div>
+</BaseLayout>
+
+<script>
+  import '../scripts/home-motion'
+</script>
