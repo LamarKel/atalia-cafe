@@ -17,18 +17,13 @@ import {
 import { refundPorts } from './adapters/supabase/refunds'
 import { teamPorts } from './adapters/supabase/team'
 import { turnstileVerifier } from './adapters/turnstile'
+import { required } from './config'
 import { createApp, type Bindings } from './http/app'
 import type { CheckoutWiring } from './http/checkout-routes'
 import type { QuoteWiring } from './http/quote-routes'
 import type { RefundWiring } from './http/refund-routes'
 import type { TeamWiring } from './http/team-routes'
 import { releaseExpired, type CheckoutDeps } from './modules/payments/application/checkout'
-
-function required(env: Bindings, key: keyof Bindings): string {
-  const value = env[key]
-  if (typeof value !== 'string' || value === '') throw new Error(`Falta la variable ${key}`)
-  return value
-}
 
 function deps(env: Bindings): CheckoutDeps {
   const db = supabaseClient(required(env, 'SUPABASE_URL'), required(env, 'SUPABASE_SERVICE_ROLE_KEY'))
