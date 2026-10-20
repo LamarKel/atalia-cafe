@@ -3,3 +3,36 @@
 
 /* Tailwind tiene que leer los componentes del paquete compartido para generar sus clases. */
 @source '../../../../packages/ui/src';
+
+/*
+ * Inicio v2: lo que anima Motion arranca oculto, pero solo cuando el script va a correr
+ * (data-motion-pending lo pone BaseLayout si no se pidió "reducir movimiento"; si Motion no arranca en 3 s, se quita).
+ */
+html[data-motion-pending] :is([data-hero-item], [data-hero-media], [data-hero-card], [data-reveal]) {
+  opacity: 0;
+}
+
+/* Franja que se desplaza: dos copias seguidas y un desplazamiento infinito (solo transform). */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-track {
+  animation: marquee 40s linear infinite;
+}
+
+.marquee:hover .marquee-track,
+.marquee:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}

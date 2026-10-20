@@ -15,9 +15,11 @@ export async function getSiteContent(locale: Locale): Promise<Record<string, str
     console.error('[catalog] site_content', error.message)
     return {}
   }
+  // Un texto vacío cuenta como "no hay": así el panel oculta un elemento (cifras, reseñas) sin borrarlo.
+  const filled = data.filter((r) => typeof r.value === 'string' && r.value.trim() !== '')
   const out: Record<string, string> = {}
-  for (const row of data.filter((r) => r.locale === 'en')) out[row.key] = row.value
-  if (locale === 'es') for (const row of data.filter((r) => r.locale === 'es')) out[row.key] = row.value
+  for (const row of filled.filter((r) => r.locale === 'en')) out[row.key] = row.value
+  if (locale === 'es') for (const row of filled.filter((r) => r.locale === 'es')) out[row.key] = row.value
   return out
 }
 
@@ -126,6 +128,10 @@ export interface StoreInfo {
   phone: string | null
   whatsapp: string | null
   email: string | null
+  /** Plataformas de delivery (solo las que tienen enlace https). */
+  delivery: Array<{ name: 'Uber Eats' | 'DoorDash'; url: string }>
+  /** Zona horaria de la tienda, para "Abierto hoy" calculado en el navegador. */
+  timezone: string
   /** Redes sociales cargadas en el panel (solo las que tienen URL). */
   socials: Array<{ network: 'instagram' | 'facebook' | 'tiktok' | 'x'; url: string }>
   lat: number | null
@@ -138,13 +144,13 @@ export async function getStoreInfo(): Promise<StoreInfo> {
     supabase
       .from('business_settings')
       .select(
-        'business_name, phone, whatsapp_number, email, instagram_url, facebook_url, tiktok_url, twitter_url',
+        'business_name, phone, whatsapp_number, email, instagram_url, facebook_url, tiktok_url, twitter_url, uber_eats_url, doordash_url',
       )
       .maybeSingle(),
     supabase
       .from('stores')
       .select(
-        'id, address, city, state, zip_code, phone, lat, lng, hours:business_hours(weekday, opens_at, closes_at)',
+        'id, address, city, state, zip_code, phone, lat, lng, timezone, hours:business_hours(weekday, opens_at, closes_at)',
       )
       .order('sort_order')
       .limit(1)
@@ -162,6 +168,16 @@ export async function getStoreInfo(): Promise<StoreInfo> {
     phone: s?.phone ?? settings.data?.phone ?? null,
     whatsapp: settings.data?.whatsapp_number ?? null,
     email: settings.data?.email ?? null,
+    delivery: (
+      [
+        ['Uber Eats', settings.data?.uber_eats_url],
+        ['DoorDash', settings.data?.doordash_url],
+      ] as const
+    ).flatMap(([name, url]) => {
+      const safe = safeUrl(url)
+      return safe === null ? [] : [{ name, url: safe }]
+    }),
+    timezone: s?.timezone ?? 'America/New_York',
     socials: (
       [
         ['instagram', settings.data?.instagram_url],

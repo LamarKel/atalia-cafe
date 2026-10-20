@@ -25,6 +25,16 @@ const [store, content] = await Promise.all([getStoreInfo(), getSiteContent(local
 <!doctype html>
 <html lang={locale}>
   <head>
+    <!-- Animaciones del inicio: ocultar antes de pintar lo que Motion va a mostrar (ver global.css). -->
+    <script is:inline>
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const d = document.documentElement
+        d.setAttribute('data-motion-pending', '')
+        setTimeout(function () {
+          if (d.dataset.motion !== 'on') d.removeAttribute('data-motion-pending')
+        }, 3000)
+      }
+    </script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{pageTitle}</title>

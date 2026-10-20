@@ -1,0 +1,22 @@
+---
+// Título editable: "\n" = salto de línea, *palabra* = cursiva verde (diseño 01-inicio-v2). Sin HTML.
+import { richTitle } from '../../lib/home'
+
+interface Props {
+  text: string
+  /** Color de la cursiva (verde sobre crema; más claro sobre fondo oscuro). */
+  emClass?: string
+}
+
+const { text, emClass = 'text-primary-ink' } = Astro.props
+const lines = richTitle(text)
+---
+
+{
+  lines.map((line, i) => (
+    <>
+      {i > 0 && <br />}
+      {line.map((part) => (part.em ? <em class:list={['italic', emClass]}>{part.text}</em> : part.text))}
+    </>
+  ))
+}

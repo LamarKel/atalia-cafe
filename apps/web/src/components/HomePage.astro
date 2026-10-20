@@ -1,251 +1,545 @@
 ---
-// Inicio (docs/design/01-inicio.png): hero, "¿Qué vas a celebrar?" (3 categorías), "Así de fácil"
-// y "Visítanos" con el mapa (pedido de la clienta, 2026-10-18).
-// Los textos vienen de site_content y las categorías de la BD; nada queda escrito en el código.
-import { Image } from 'astro:assets'
-import heroFallback from '../assets/hero.png'
+// Inicio v2 (docs/design/01-inicio-v2.html): hero con tarjetas flotantes, franja, catering en mosaico,
+// "Pide a tu manera", "Prueba la diferencia", reseñas reales, llamada final y "Visítanos" con el mapa.
+// Textos e imágenes de site_content, catálogo y tienda de la BD; un texto vacío oculta su elemento.
+// Animaciones: src/scripts/home-motion.ts (Motion, solo transform/opacity, respeta "reducir movimiento").
+import { cents, formatUSD } from '@atalia/shared/money'
 import BaseLayout from '../layouts/BaseLayout.astro'
-import QuoteCta from './QuoteCta.astro'
-import { getCateringCategories, getSiteContent, getStoreInfo } from '../lib/catalog'
-import { directionsUrl, groupHours } from '../lib/catalog-format'
-import { localizedPath, t, type Locale, type MessageKey } from '../i18n'
+import CtaSection from './home/CtaSection.astro'
+import RichTitle from './home/RichTitle.astro'
+import StorySection from './home/StorySection.astro'
+import VisitSection from './home/VisitSection.astro'
+import {
+  getCateringCategories,
+  getCateringProducts,
+  getPicaderaBuilder,
+  getSiteContent,
+  getStoreInfo,
+} from '../lib/catalog'
+import { contentImage, marqueeItems } from '../lib/home'
+import { localizedPath, t, type Locale } from '../i18n'
 
 interface Props {
   locale: Locale
 }
 
 const { locale } = Astro.props
-const [c, categories, store] = await Promise.all([
+const [c, categories, products, picadera, store] = await Promise.all([
   getSiteContent(locale),
   getCateringCategories(locale),
+  getCateringProducts(locale),
+  getPicaderaBuilder(locale),
   getStoreInfo(),
 ])
-const hours = groupHours(store.hours)
-const directions = directionsUrl(store.lat, store.lng)
-const mapSrc =
-  store.lat !== null && store.lng !== null
-    ? `https://maps.google.com/maps?q=${store.lat},${store.lng}&z=16&hl=${locale}&output=embed`
-    : null
-const dayName = (d: number) => t(locale, `day.${d}` as MessageKey)
-const dayRange = (days: number[]) =>
-  days.length > 1 ? `${dayName(days[0] ?? 0)}–${dayName(days.at(-1) ?? 0)}` : dayName(days[0] ?? 0)
-const heroUrl = c['home.hero.image_url']
-const remoteHero = heroUrl?.startsWith('https://') ? heroUrl : null
 
-// Tono del recuadro de foto mientras no haya imagen (como el diseño)
-const tints = ['bg-sage-soft', 'bg-blush', 'bg-sand'] as const
-// Picaderas tiene su propio armador; las demás categorías abren el catálogo filtrado
-const categoryHref = (slug: string) =>
-  slug === 'picaderas'
-    ? localizedPath('/picadera', locale)
-    : `${localizedPath('/catering', locale)}?category=${slug}`
+const heroImage = contentImage(c['home.hero.image_url'])
+const featured =
+  products.find((p) => p.type === 'tray' && p.fromPriceCents !== null && p.imageUrl !== null) ??
+  products.find((p) => p.fromPriceCents !== null) ??
+  null
+const stats = [
+  c['home.stats.events'] && { value: c['home.stats.events'], label: c['home.stats.events_label'] },
+  picadera && { value: `${String(picadera.product.minLeadHours)} h`, label: c['home.stats.picadera_label'] },
+  c['home.stats.rating'] && { value: `★ ${c['home.stats.rating']}`, label: c['home.stats.rating_label'] },
+].filter((s): s is { value: string; label: string | undefined } => Boolean(s))
 
+const marquee = marqueeItems(c['home.marquee'])
+
+// Mosaico de catering: la primera categoría grande, picaderas en verde, la siguiente con foto.
+const picaderaCat = categories.find((cat) => cat.slug === 'picaderas') ?? null
+const others = categories.filter((cat) => cat.slug !== 'picaderas')
+const big = others[0] ?? null
+const small = others[1] ?? null
+const categoryHref = (slug: string) => `${localizedPath('/catering', locale)}?category=${slug}`
 const steps = [1, 2, 3].map((n) => ({
   n,
   title: c[`home.how.step${n}.title`],
   body: c[`home.how.step${n}.body`],
 }))
+
+const ways = [1, 2, 3]
+  .map((n) => ({ n, title: c[`home.ways.item${n}.title`], body: c[`home.ways.item${n}.body`] }))
+  // Delivery solo si hay alguna plataforma cargada en el panel
+  .filter((w) => w.title !== undefined && (w.n !== 3 || store.delivery.length > 0))
+const waysImages = [contentImage(c['home.ways.image1']), contentImage(c['home.ways.image2'])]
+
+const reviews = [1, 2, 3]
+  .map((n) => ({ text: c[`home.reviews.${n}.text`], name: c[`home.reviews.${n}.name`] }))
+  .filter((r): r is { text: string; name: string | undefined } => r.text !== undefined)
+const reviewsUrl = c['home.reviews.url']?.startsWith('https://') ? c['home.reviews.url'] : null
+
+const openLabels = {
+  open: t(locale, 'home.open_now'),
+  later: t(locale, 'home.open_later'),
+  closed_today: t(locale, 'home.closed_today'),
+}
 ---
 
 <BaseLayout locale={locale}>
   <!-- Hero -->
-  <section class="relative isolate overflow-hidden">
-    {
-      remoteHero ? (
-        <img
-          src={remoteHero}
-          alt=""
-          class="absolute inset-0 -z-10 size-full object-cover"
-          fetchpriority="high"
-        />
-      ) : (
-        <Image
-          src={heroFallback}
-          alt=""
-          widths={[640, 1024, 1600, 2200]}
-          sizes="100vw"
-          class="absolute inset-0 -z-10 size-full object-cover"
-          loading="eager"
-          fetchpriority="high"
-        />
-      )
-    }
-    <div class="absolute inset-0 -z-10 bg-gradient-to-r from-black/70 via-black/45 to-black/10"></div>
+  <section class="overflow-hidden" data-hero>
     <div
-      class="mx-auto flex min-h-[520px] max-w-7xl flex-col justify-center px-4 py-20 md:min-h-[560px] md:px-8"
+      class="mx-auto grid max-w-7xl items-center gap-12 px-4 pb-16 pt-8 md:px-8 md:pb-20 lg:grid-cols-[1fr_1.05fr] lg:gap-14"
     >
-      {
-        c['home.hero.badge'] && (
-          <p class="mb-5 inline-flex w-fit rounded-full bg-primary-ink px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-white">
-            {c['home.hero.badge']}
-          </p>
-        )
-      }
-      <h1 class="max-w-2xl font-heading text-4xl font-bold leading-tight text-white md:text-6xl">
-        {c['home.hero.title']}
-      </h1>
-      {
-        c['home.hero.subtitle'] && (
-          <p class="mt-5 max-w-xl text-lg text-white/90">{c['home.hero.subtitle']}</p>
-        )
-      }
-      <div class="mt-8 flex flex-wrap gap-3">
-        <a href={localizedPath('/catering', locale)} class="btn-primary">{c['home.hero.cta_primary']}</a>
-        <a
-          href={localizedPath('/menu', locale)}
-          class="inline-flex min-h-11 items-center rounded-full bg-accent px-6 py-3 font-medium text-dark transition-colors hover:bg-white"
+      <div class="grid gap-6 md:gap-7">
+        <p
+          class="inline-flex min-h-9 w-fit items-center gap-2 rounded-full bg-sage-soft px-4 text-xs font-semibold uppercase tracking-wider text-sage-ink data-[state=closed]:bg-blush data-[state=closed]:text-secondary"
+          data-open-today
+          data-hours={JSON.stringify(store.hours)}
+          data-tz={store.timezone}
+          data-labels={JSON.stringify(openLabels)}
+          data-hero-item
+          hidden
         >
-          {c['home.hero.cta_secondary']}
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- ¿Qué vas a celebrar? -->
-  <section class="py-16 md:py-24" aria-labelledby="celebrate-title">
-    <div class="mx-auto max-w-7xl px-4 md:px-8">
-      <h2 id="celebrate-title" class="text-center font-heading text-3xl font-bold md:text-5xl">
-        {c['home.categories.title']}
-      </h2>
-      {
-        c['home.categories.subtitle'] && (
-          <p class="mt-3 text-center text-muted">{c['home.categories.subtitle']}</p>
-        )
-      }
-
-      <ul class="mt-10 grid gap-6 md:grid-cols-3">
+          <span aria-hidden="true" class="size-2 rounded-full bg-current"></span>
+          <span data-open-text></span>
+        </p>
+        <h1
+          class="font-heading text-5xl font-bold leading-[1.02] tracking-tight text-dark sm:text-6xl xl:text-[84px]"
+          data-hero-item
+        >
+          <RichTitle text={c['home.hero.title'] ?? t(locale, 'brand.name')} />
+        </h1>
         {
-          categories.map((cat, i) => (
-            <li class="overflow-hidden rounded-2xl bg-white shadow-sm transition-shadow hover:shadow-md">
-              <a href={categoryHref(cat.slug)} class="group block h-full focus-visible:outline-offset-[-4px]">
-                {cat.imageUrl ? (
-                  <img src={cat.imageUrl} alt="" loading="lazy" class="h-56 w-full object-cover md:h-60" />
-                ) : (
-                  <div
-                    class:list={['flex h-56 items-center justify-center md:h-60', tints[i % tints.length]]}
-                    aria-hidden="true"
-                  >
-                    <span class="text-sm text-muted">{t(locale, 'catalog.photo_placeholder')}</span>
-                  </div>
-                )}
-                <div class="p-6">
-                  <h3 class="font-heading text-2xl font-bold">{cat.name}</h3>
-                  {cat.description && <p class="mt-1 text-sm text-muted">{cat.description}</p>}
-                  {cat.ctaLabel && (
-                    <p class="mt-4 inline-flex items-center gap-1 font-semibold text-secondary">
-                      {cat.ctaLabel}
-                      <span
-                        aria-hidden="true"
-                        class="transition-transform motion-safe:group-hover:translate-x-1"
-                      >
-                        →
-                      </span>
-                    </p>
-                  )}
+          c['home.hero.subtitle'] && (
+            <p class="max-w-xl text-lg leading-relaxed text-muted md:text-[19px]" data-hero-item>
+              {c['home.hero.subtitle']}
+            </p>
+          )
+        }
+        <div class="flex flex-wrap gap-3" data-hero-item>
+          <a href={localizedPath('/catering', locale)} class="btn-primary group !min-h-14 !px-8">
+            {c['home.hero.cta_primary']}
+            <span aria-hidden="true" class="transition-transform motion-safe:group-hover:translate-x-1"
+              >→</span
+            >
+          </a>
+          <a
+            href={localizedPath('/menu', locale)}
+            class="inline-flex min-h-14 items-center rounded-full border border-dark/10 bg-white px-8 font-semibold text-dark transition-colors hover:border-secondary"
+          >
+            {c['home.hero.cta_secondary']}
+          </a>
+        </div>
+        {
+          stats.length > 0 && (
+            <dl class="flex flex-wrap gap-x-8 gap-y-4 pt-2" data-hero-item>
+              {stats.map((s, i) => (
+                <div class:list={['flex flex-col-reverse', i > 0 && 'border-l border-dark/15 pl-8']}>
+                  <dt class="text-[13px] text-muted">{s.label}</dt>
+                  <dd class="font-heading text-3xl font-bold tabular-nums md:text-[34px]" data-count>
+                    {s.value}
+                  </dd>
                 </div>
-              </a>
-            </li>
-          ))
-        }
-      </ul>
-    </div>
-  </section>
-
-  <!-- Así de fácil -->
-  <section class="pb-20 md:pb-28" aria-labelledby="how-title">
-    <div class="mx-auto max-w-7xl px-4 md:px-8">
-      <h2 id="how-title" class="text-center font-heading text-3xl font-bold md:text-5xl">
-        {c['home.how.title']}
-      </h2>
-      <ol class="mt-10 grid gap-6 md:grid-cols-3">
-        {
-          steps.map((step) => (
-            <li class="rounded-2xl bg-white p-7 shadow-sm">
-              <span
-                class="inline-flex size-11 items-center justify-center rounded-full bg-secondary font-semibold text-white"
-                aria-hidden="true"
-              >
-                {step.n}
-              </span>
-              <h3 class="mt-5 text-lg font-semibold">
-                <span class="sr-only">{t(locale, 'home.how.step', { n: step.n })}: </span>
-                {step.title}
-              </h3>
-              {step.body && <p class="mt-2 text-muted">{step.body}</p>}
-            </li>
-          ))
-        }
-      </ol>
-      <!-- Evento grande o a la medida → cotización (RF-Q02) -->
-      <div class="mt-10 md:mt-12">
-        <QuoteCta locale={locale} />
-      </div>
-    </div>
-  </section>
-  <!-- Visítanos: datos a la izquierda, mapa con el punto de la tienda en la esquina derecha -->
-  <section class="pb-20 md:pb-28" aria-labelledby="visit-title">
-    <div class="mx-auto grid max-w-7xl items-stretch gap-6 px-4 md:px-8 lg:grid-cols-[1fr_1.3fr]">
-      <div class="rounded-2xl bg-white p-7 shadow-sm md:p-10">
-        <h2 id="visit-title" class="font-heading text-3xl font-bold md:text-4xl">{c['home.visit.title']}</h2>
-        {c['home.visit.subtitle'] && <p class="mt-2 text-muted">{c['home.visit.subtitle']}</p>}
-        <dl class="mt-8 space-y-6">
-          {
-            store.address && (
-              <div>
-                <dt class="font-semibold">{t(locale, 'home.visit.address')}</dt>
-                <dd class="mt-1 text-muted">{store.address}</dd>
-              </div>
-            )
-          }
-          <div>
-            <dt class="font-semibold">{t(locale, 'home.visit.hours')}</dt>
-            <dd class="mt-1">
-              <ul class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-muted">
-                {
-                  hours.map((g) => (
-                    <li class="contents">
-                      <span>{dayRange(g.days)}</span>
-                      <span>{g.text ?? t(locale, 'footer.closed')}</span>
-                    </li>
-                  ))
-                }
-              </ul>
-            </dd>
-          </div>
-          {
-            store.phone && (
-              <div>
-                <dt class="font-semibold">{t(locale, 'home.visit.phone')}</dt>
-                <dd class="mt-1">
-                  <a href={`tel:${store.phone}`} class="inline-flex min-h-11 items-center text-muted">
-                    {store.phone}
-                  </a>
-                </dd>
-              </div>
-            )
-          }
-        </dl>
-        {
-          directions && (
-            <a href={directions} target="_blank" rel="noopener" class="btn-primary mt-8">
-              {t(locale, 'footer.directions')}
-            </a>
+              ))}
+            </dl>
           )
         }
       </div>
-      {
-        mapSrc && (
-          <div class="min-h-80 overflow-hidden rounded-2xl bg-sage-soft shadow-sm">
-            <iframe
-              src={mapSrc}
-              title={t(locale, 'home.visit.map_title')}
-              class="size-full min-h-80 border-0"
-              loading="lazy"
-              referrerpolicy="no-referrer-when-downgrade"
-            />
+
+      <div class="relative h-[420px] sm:h-[520px] lg:h-[640px]" data-hero-media>
+        <div class="absolute inset-y-0 right-0 w-full overflow-hidden rounded-[40px] bg-sage-soft lg:w-[87%]">
+          {
+            heroImage && (
+              <img
+                src={heroImage}
+                alt=""
+                class="absolute -top-[8%] left-0 h-[116%] w-full object-cover"
+                fetchpriority="high"
+                data-parallax
+              />
+            )
+          }
+        </div>
+        {
+          featured && (
+            <a
+              href={localizedPath(`/catering/${featured.slug}`, locale)}
+              class="absolute left-3 top-6 block w-60 rounded-3xl bg-white p-4 shadow-[0_24px_48px_rgba(43,33,28,0.14)] transition-transform motion-safe:hover:-translate-y-1 sm:left-0 sm:top-16 sm:w-64"
+              data-hero-card
+            >
+              <span class="flex items-center gap-3.5" data-float>
+                {featured.imageUrl && (
+                  <img
+                    src={featured.imageUrl}
+                    alt=""
+                    loading="lazy"
+                    class="size-16 shrink-0 rounded-2xl object-cover"
+                  />
+                )}
+                <span class="grid">
+                  {c['home.hero.featured_label'] && (
+                    <span class="text-xs text-muted">{c['home.hero.featured_label']}</span>
+                  )}
+                  <span class="text-[15px] font-semibold leading-snug">{featured.name}</span>
+                  {featured.fromPriceCents !== null && (
+                    <span class="text-[13px] font-semibold text-secondary">
+                      {t(locale, 'catalog.from', {
+                        price: formatUSD(cents(featured.fromPriceCents), locale),
+                      })}
+                    </span>
+                  )}
+                </span>
+              </span>
+            </a>
+          )
+        }
+        <!-- Ilustración del seguimiento del pedido (decorativa: el real está en la confirmación) -->
+        <div
+          class="absolute bottom-6 left-3 rounded-[22px] bg-espresso px-5 py-4 text-white shadow-[0_24px_48px_rgba(43,33,28,0.25)] sm:bottom-14 sm:left-10"
+          aria-hidden="true"
+          data-hero-card
+        >
+          <div class="grid gap-1.5" data-float>
+            <span class="text-xs text-latte">{t(locale, 'home.order_card.label')}</span>
+            <span class="font-semibold">{t(locale, 'home.order_card.status')}</span>
+            <span class="block h-1.5 w-52 overflow-hidden rounded-full bg-espresso-soft">
+              <span
+                class="block h-full w-full origin-left scale-x-75 rounded-full bg-sage-bright"
+                data-progress></span>
+            </span>
           </div>
-        )
-      }
+        </div>
+      </div>
     </div>
   </section>
+
+  <!-- Franja -->
+  {
+    marquee.length > 0 && (
+      <div class="marquee overflow-hidden bg-secondary py-5 text-accent">
+        <div class="marquee-track flex w-max">
+          {[0, 1].map((copy) => (
+            <ul class="flex shrink-0 items-center gap-12 pr-12" aria-hidden={copy === 1 ? 'true' : undefined}>
+              {marquee.map((item) => (
+                <>
+                  <li class="whitespace-nowrap font-heading text-2xl italic md:text-[26px]">{item}</li>
+                  <li aria-hidden="true" class="text-xl">
+                    ✦
+                  </li>
+                </>
+              ))}
+            </ul>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  <!-- Catering -->
+  <section id="catering" class="scroll-mt-24 py-20 md:py-28" aria-labelledby="catering-title">
+    <div class="mx-auto grid max-w-7xl gap-10 px-4 md:px-8 md:gap-11">
+      <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between" data-reveal>
+        <div class="grid gap-3.5" data-reveal-item>
+          {
+            c['home.catering.eyebrow'] && (
+              <p class="w-fit rounded-full bg-blush px-4 py-2 text-xs font-semibold uppercase tracking-wider text-secondary">
+                {c['home.catering.eyebrow']}
+              </p>
+            )
+          }
+          <h2
+            id="catering-title"
+            class="font-heading text-4xl font-bold leading-[1.05] tracking-tight md:text-6xl"
+          >
+            <RichTitle text={c['home.catering.title'] ?? c['home.categories.title'] ?? ''} />
+          </h2>
+        </div>
+        {
+          c['home.catering.subtitle'] && (
+            <p class="max-w-sm text-[17px] leading-relaxed text-muted" data-reveal-item>
+              {c['home.catering.subtitle']}
+            </p>
+          )
+        }
+      </div>
+
+      <div class="grid gap-5 md:grid-cols-[1.3fr_1fr_1fr] md:grid-rows-[300px_300px]" data-reveal>
+        {
+          big && (
+            <a
+              href={categoryHref(big.slug)}
+              class="group relative min-h-96 overflow-hidden rounded-[32px] bg-sage-soft md:row-span-2 md:min-h-0"
+              data-reveal-item
+            >
+              {big.imageUrl && (
+                <img
+                  src={big.imageUrl}
+                  alt=""
+                  loading="lazy"
+                  class="absolute inset-0 size-full object-cover transition-transform duration-700 motion-safe:group-hover:scale-105"
+                />
+              )}
+              <span class="absolute inset-0 bg-gradient-to-b from-transparent from-40% to-espresso/85" />
+              <span class="absolute inset-x-8 bottom-8 flex items-end justify-between gap-4 text-white">
+                <span class="grid">
+                  <span class="font-heading text-4xl font-bold">{big.name}</span>
+                  {big.description && <span class="text-[15px] text-white/90">{big.description}</span>}
+                </span>
+                <span
+                  aria-hidden="true"
+                  class="flex size-14 shrink-0 items-center justify-center rounded-full bg-white text-xl text-dark transition-transform motion-safe:group-hover:rotate-45"
+                >
+                  ↗
+                </span>
+              </span>
+            </a>
+          )
+        }
+        {
+          picadera && (
+            <a
+              href={localizedPath('/picadera', locale)}
+              class="group flex min-h-64 flex-col justify-between rounded-[32px] bg-primary-ink p-8 text-white transition-transform motion-safe:hover:-translate-y-1"
+              data-reveal-item
+            >
+              <span class="font-heading text-[34px] font-bold leading-tight">
+                {picaderaCat?.name ?? picadera.product.name}
+              </span>
+              <span class="flex items-end justify-between gap-4">
+                {picaderaCat?.description && <span class="text-sm">{picaderaCat.description}</span>}
+                <span
+                  aria-hidden="true"
+                  class="flex size-12 shrink-0 items-center justify-center rounded-full bg-white text-lg text-dark transition-transform motion-safe:group-hover:rotate-45"
+                >
+                  ↗
+                </span>
+              </span>
+            </a>
+          )
+        }
+        {
+          small && (
+            <a
+              href={categoryHref(small.slug)}
+              class="group relative min-h-64 overflow-hidden rounded-[32px] bg-sage-soft"
+              data-reveal-item
+            >
+              {small.imageUrl && (
+                <img
+                  src={small.imageUrl}
+                  alt=""
+                  loading="lazy"
+                  class="absolute inset-0 size-full object-cover transition-transform duration-700 motion-safe:group-hover:scale-105"
+                />
+              )}
+              <span class="absolute inset-0 bg-gradient-to-b from-transparent from-30% to-espresso/80" />
+              <span class="absolute bottom-7 left-7 right-7 grid text-white">
+                <span class="font-heading text-3xl font-bold">{small.name}</span>
+                {small.description && <span class="text-sm text-white/90">{small.description}</span>}
+              </span>
+            </a>
+          )
+        }
+        <div
+          class="flex flex-col gap-8 rounded-[32px] border border-dark/10 bg-white p-8 md:col-span-2 lg:flex-row lg:items-center lg:justify-between lg:px-9"
+          data-reveal-item
+        >
+          <ol class="grid gap-6 sm:grid-cols-3 sm:gap-8">
+            {
+              steps.map((step) => (
+                <li class="grid gap-1.5">
+                  <span
+                    class="font-heading text-[44px] font-bold leading-none text-primary-ink"
+                    aria-hidden="true"
+                  >
+                    {String(step.n).padStart(2, '0')}
+                  </span>
+                  <span class="font-semibold">
+                    <span class="sr-only">{t(locale, 'home.how.step', { n: step.n })}: </span>
+                    {step.title}
+                  </span>
+                  {step.body && <span class="text-[13px] text-muted">{step.body}</span>}
+                </li>
+              ))
+            }
+          </ol>
+          <a href={localizedPath('/catering', locale)} class="btn-primary !min-h-14 shrink-0 !px-8">
+            {c['home.how.cta'] ?? t(locale, 'nav.order_catering')}
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pide a tu manera -->
+  {
+    c['home.ways.title'] && (
+      <section id="pedir" class="scroll-mt-24 bg-espresso text-accent" aria-labelledby="ways-title">
+        <div
+          class="mx-auto grid max-w-7xl items-center gap-12 px-4 py-20 md:px-8 md:py-28 lg:grid-cols-[minmax(0,0.9fr)_1fr] lg:gap-16"
+          data-reveal
+        >
+          <div class="relative mx-auto h-[420px] w-full max-w-[560px] md:h-[600px]" aria-hidden="true">
+            {waysImages[0] && (
+              <img
+                src={waysImages[0]}
+                alt=""
+                loading="lazy"
+                class="absolute left-0 top-0 h-[85%] w-[78%] rounded-[32px] object-cover"
+                data-reveal-item
+              />
+            )}
+            {waysImages[1] && (
+              <img
+                src={waysImages[1]}
+                alt=""
+                loading="lazy"
+                class="absolute bottom-0 right-0 h-1/2 w-1/2 rounded-[28px] border-8 border-espresso bg-white object-cover"
+                data-reveal-item
+              />
+            )}
+          </div>
+          <div class="grid gap-7">
+            {c['home.ways.eyebrow'] && (
+              <p
+                class="w-fit rounded-full bg-espresso-soft px-4 py-2 text-xs font-semibold uppercase tracking-wider text-sage-light"
+                data-reveal-item
+              >
+                {c['home.ways.eyebrow']}
+              </p>
+            )}
+            <h2
+              id="ways-title"
+              class="font-heading text-4xl font-bold leading-[1.05] tracking-tight md:text-6xl"
+              data-reveal-item
+            >
+              <RichTitle text={c['home.ways.title']} emClass="text-sage-light" />
+            </h2>
+            {c['home.ways.subtitle'] && (
+              <p class="max-w-xl text-[17px] leading-relaxed text-latte" data-reveal-item>
+                {c['home.ways.subtitle']}
+              </p>
+            )}
+            <ul class:list={['grid gap-4', ways.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2']}>
+              {ways.map((w) => (
+                <li class="grid content-start gap-2.5 rounded-3xl bg-espresso-soft p-6" data-reveal-item>
+                  <span
+                    class="flex size-11 items-center justify-center rounded-2xl bg-primary-ink text-white"
+                    aria-hidden="true"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      class="size-5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                    >
+                      {w.n === 1 && (
+                        <path d="M3 10.5 12 4l9 6.5V20H3zM9.5 20v-5h5v5" stroke-linejoin="round" />
+                      )}
+                      {w.n === 2 && (
+                        <path
+                          d="M5 9h11v5a5 5 0 0 1-10 0zM16 10h1.5a2.5 2.5 0 0 1 0 5H16M8 3v3M11 3v3"
+                          stroke-linecap="round"
+                        />
+                      )}
+                      {w.n === 3 && (
+                        <path d="M4 12h13M12 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round" />
+                      )}
+                    </svg>
+                  </span>
+                  <span class="text-[17px] font-semibold">{w.title}</span>
+                  {w.body && <span class="text-sm text-latte">{w.body}</span>}
+                </li>
+              ))}
+            </ul>
+            {store.delivery.length > 0 && (
+              <div class="grid gap-3.5 pt-2" data-reveal-item>
+                {c['home.ways.partners_label'] && (
+                  <p class="text-sm text-latte">{c['home.ways.partners_label']}</p>
+                )}
+                <ul class="flex flex-wrap gap-3">
+                  {store.delivery.map((d) => (
+                    <li>
+                      <a
+                        href={d.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex min-h-[52px] items-center gap-2 rounded-full bg-accent px-6 font-semibold text-dark transition-transform motion-safe:hover:-translate-y-0.5"
+                      >
+                        {d.name}
+                        <span aria-hidden="true">↗</span>
+                        <span class="sr-only">({t(locale, 'a11y.new_tab')})</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <StorySection c={c} id="nosotros" />
+
+  <!-- Reseñas: solo reales (si no hay, la sección no se muestra) -->
+  {
+    reviews.length > 0 && (
+      <section class="bg-linen" aria-labelledby="reviews-title">
+        <div class="mx-auto grid max-w-7xl gap-10 px-4 py-20 md:px-8 md:py-24" data-reveal>
+          <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between" data-reveal-item>
+            <h2
+              id="reviews-title"
+              class="font-heading text-4xl font-bold leading-[1.05] tracking-tight md:text-[56px]"
+            >
+              <RichTitle text={c['home.reviews.title'] ?? ''} />
+            </h2>
+            {c['home.reviews.source_label'] &&
+              (reviewsUrl ? (
+                <a
+                  href={reviewsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex min-h-11 items-center text-[15px] text-muted underline underline-offset-4"
+                >
+                  {c['home.reviews.source_label']}
+                </a>
+              ) : (
+                <p class="text-[15px] text-muted">{c['home.reviews.source_label']}</p>
+              ))}
+          </div>
+          <ul class="grid gap-5 md:grid-cols-3">
+            {reviews.map((r, i) => (
+              <li
+                class:list={[
+                  'flex flex-col gap-4 rounded-[28px] p-8',
+                  i === 1 ? 'bg-espresso text-accent' : 'bg-white',
+                ]}
+                data-reveal-item
+              >
+                <figure class="grid gap-4">
+                  <span
+                    role="img"
+                    class="tracking-[4px] text-star"
+                    aria-label={t(locale, 'home.reviews.stars')}
+                  >
+                    ★★★★★
+                  </span>
+                  <blockquote class="font-heading text-[22px] leading-snug">“{r.text}”</blockquote>
+                  {r.name && (
+                    <figcaption class:list={['text-sm font-semibold', i === 1 ? 'text-latte' : 'text-muted']}>
+                      — {r.name}
+                    </figcaption>
+                  )}
+                </figure>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  <div class="pt-20 md:pt-28">
+    <CtaSection locale={locale} c={c} store={store} />
+  </div>
+
+  <VisitSection locale={locale} c={c} store={store} id="visitanos" />
 </BaseLayout>
+
+<script>
+  import '../scripts/home-motion'
+</script>

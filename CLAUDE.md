@@ -4,6 +4,7 @@ Lee PLAN.md antes de cualquier tarea.
 
 ## Referencias (decisión de la clienta, 2026-10-18)
 - **Diseño visual (cómo se ve) — manda esto:** las 6 pantallas aprobadas en docs/design/. Nada más.
+  La pantalla 01 (Inicio) es ahora docs/design/01-inicio-v2.html (2026-10-19); 01-inicio.png queda como historial.
   Lo que no tiene pantalla propia (el menú del café, el carrito, el admin) sigue el mismo lenguaje visual
   de esas pantallas; el menú, en particular, el de la pantalla 02 (Catálogo).
 - **Funciones (qué hace cada pantalla):** las dos apps viejas, SOLO LECTURA, nunca modificarlas:

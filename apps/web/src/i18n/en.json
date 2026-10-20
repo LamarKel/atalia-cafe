@@ -286,5 +286,15 @@
   "order.track_picked_up": "Picked up",
   "order.track_now": "Order status: {status}",
   "order.track_auto": "This page updates by itself while we prepare your order.",
-  "order.track_no_show": "This order was not picked up on the scheduled day. If you think this is a mistake, contact us."
+  "order.track_no_show": "This order was not picked up on the scheduled day. If you think this is a mistake, contact us.",
+  "home.open_now": "Open today · {from} – {to}",
+  "home.open_later": "Opening today · {from} – {to}",
+  "home.closed_today": "Closed today",
+  "home.order_card.label": "Your order",
+  "home.order_card.status": "Ready for pickup · 11:00 AM",
+  "home.reviews.stars": "5 out of 5 stars",
+  "contact.whatsapp_cta": "Message us on WhatsApp",
+  "contact.email": "Email",
+  "a11y.new_tab": "opens in a new tab",
+  "nav.delivery": "Delivery"
 }
