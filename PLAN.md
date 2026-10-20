@@ -359,6 +359,7 @@ Cada fase se cierra con un PR revisado, el CI en verde y el deploy a staging.
 - [ ] Correos: verificar el dominio de la clienta en Resend y cambiar el remitente (en desarrollo se usa kemenu.app, dominio de prueba del desarrollador).
 - [ ] Dominio y DNS en Cloudflare.
 - [ ] Prueba con un pago real pequeño y su reembolso.
+- [ ] Textos legales (Términos, Privacidad, Cancelaciones, Accesibilidad, aviso de alérgenos): **que un abogado de Nueva Jersey los revise** antes de publicar, y cargar en el panel el correo, la dirección y el teléfono del negocio (si faltan, las páginas muestran "(dato pendiente)"). Al cambiar un texto legal, actualizar `legal.updated` (es la versión que queda guardada en cada pedido).
 - [ ] Capacitación de la clienta en el admin.
 - [ ] Plan de mantenimiento mensual (costos de Supabase Pro, etc.).
 

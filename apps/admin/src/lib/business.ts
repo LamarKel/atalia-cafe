@@ -286,6 +286,7 @@ export interface Settings {
   instagram: string | null
   facebook: string | null
   tiktok: string | null
+  x: string | null
 }
 
 export async function getSettings(): Promise<Settings> {
@@ -303,6 +304,7 @@ export async function getSettings(): Promise<Settings> {
     instagram: (s.instagram_url as string | null | undefined) ?? null,
     facebook: (s.facebook_url as string | null | undefined) ?? null,
     tiktok: (s.tiktok_url as string | null | undefined) ?? null,
+    x: (s.twitter_url as string | null | undefined) ?? null,
   }
 }
 
@@ -317,6 +319,7 @@ export async function saveSettings(s: Settings): Promise<void> {
     instagram_url: s.instagram,
     facebook_url: s.facebook,
     tiktok_url: s.tiktok,
+    twitter_url: s.x,
   })
   check('save_settings', error)
 }

@@ -463,5 +463,7 @@
   "rf.menu_part": "menú {state}",
   "rf.customer_message": "Mensaje para el cliente (va en el correo)",
   "rf.customer_message_hint": "Por ejemplo: \"Se nos dañó el horno y no podremos tener tu pedido a tiempo.\"",
-  "rf.email_note": "Al cancelar, el cliente recibe un correo con la disculpa, el reembolso y este mensaje."
+  "rf.email_note": "Al cancelar, el cliente recibe un correo con la disculpa, el reembolso y este mensaje.",
+  "orders.terms_accepted": "Aceptó los términos y políticas el {when} (versión {version}).",
+  "biz.x": "X / Twitter (enlace)"
 }
