@@ -92,6 +92,7 @@ function setup(opts: { rules?: StoredRule[]; slots?: SlotRow[]; created?: Partia
       attachStripeSession: attach,
       confirmPaid: () => Promise.resolve('confirmed'),
       cancelUnpaid: () => Promise.resolve('cancelled'),
+      syncRefund: () => Promise.resolve('partially_refunded'),
       summaryByAccessToken: () => Promise.resolve(null),
       summaryBySession: () =>
         Promise.resolve({
@@ -113,6 +114,7 @@ function setup(opts: { rules?: StoredRule[]; slots?: SlotRow[]; created?: Partia
         }),
     },
     payments: {
+      refund: () => Promise.resolve({ id: 're_1' }),
       createCheckoutSession: (input) => {
         sessions.push(input)
         return Promise.resolve({ id: 'cs_test_1', url: 'https://checkout.stripe.com/c/pay/cs_test_1' })
@@ -290,5 +292,29 @@ describe('getAvailability', () => {
     await expect(
       getAvailability(deps, { from: '2026-01-01', to: '2026-12-31', locale: 'en', items: [] }),
     ).rejects.toEqual(new CheckoutError('range_too_long'))
+  })
+})
+
+describe('reembolso por webhook', () => {
+  it('charge.refunded actualiza lo reembolsado con sync_refund', async () => {
+    const { deps } = setup()
+    const sync = vi.fn(() => Promise.resolve('partially_refunded'))
+    deps.orders.syncRefund = sync
+    const result = await handlePaymentEvent(deps, {
+      id: 'evt_r',
+      type: 'charge.refunded',
+      sessionId: '',
+      paymentStatus: null,
+      paymentIntentId: 'pi_1',
+      amountTotalCents: 500,
+      paymentMethod: null,
+    })
+    expect(result).toBe('partially_refunded')
+    expect(sync).toHaveBeenCalledWith({
+      eventId: 'evt_r',
+      eventType: 'charge.refunded',
+      paymentIntentId: 'pi_1',
+      amountRefundedCents: 500,
+    })
   })
 })

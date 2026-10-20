@@ -2,6 +2,7 @@
 // acceso. Listar e invitar van por el Worker (necesitan la clave de servicio); el resto, directo con la RLS.
 import { Button, Dialog, useToast } from '@atalia/ui'
 import { useCallback, useEffect, useState } from 'react'
+import { workerApi as api } from '../../lib/api'
 import { supabase } from '../../lib/supabase'
 import type { AdminKey } from '../../i18n'
 import { SelectField, TextField } from '../components/Fields'
@@ -16,23 +17,6 @@ interface Member {
   active: boolean
   lastSignInAt: string | null
   mfa: boolean
-}
-
-const API = import.meta.env.PUBLIC_API_URL.replace(/\/$/, '')
-
-async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const { data } = await supabase.auth.getSession()
-  const res = await fetch(`${API}${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${data.session?.access_token ?? ''}`,
-      ...init?.headers,
-    },
-  })
-  const body = (await res.json().catch(() => ({}))) as T & { error?: { message?: string } }
-  if (!res.ok) throw new Error(body.error?.message ?? String(res.status))
-  return body
 }
 
 export function Team({ selfEmail }: { selfEmail: string }) {

@@ -225,6 +225,15 @@ export async function handlePaymentEvent(deps: CheckoutDeps, event: PaymentEvent
       return confirm(deps, event)
     case 'checkout.session.async_payment_succeeded':
       return confirm(deps, event)
+    case 'charge.refunded':
+      // amountTotalCents trae lo reembolsado acumulado del cargo
+      if (event.paymentIntentId === null || event.amountTotalCents === null) return 'ignored'
+      return deps.orders.syncRefund({
+        eventId: event.id,
+        eventType: event.type,
+        paymentIntentId: event.paymentIntentId,
+        amountRefundedCents: event.amountTotalCents,
+      })
     case 'checkout.session.expired':
     case 'checkout.session.async_payment_failed':
       return deps.orders.cancelUnpaid({

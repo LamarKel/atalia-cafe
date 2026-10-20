@@ -4,6 +4,7 @@ import { HTTPException } from 'hono/http-exception'
 import { secureHeaders } from 'hono/secure-headers'
 import { checkoutRoutes, type CheckoutWiring } from './checkout-routes'
 import { quoteRoutes, type QuoteWiring } from './quote-routes'
+import { refundRoutes, type RefundWiring } from './refund-routes'
 import { teamRoutes, type TeamWiring } from './team-routes'
 import { ApiError, errorBody } from './errors'
 
@@ -30,7 +31,12 @@ export type AppEnv = { Bindings: Bindings }
 
 export const API_VERSION = '0.1.0'
 
-export function createApp(wiring?: CheckoutWiring, quotes?: QuoteWiring, team?: TeamWiring): Hono<AppEnv> {
+export function createApp(
+  wiring?: CheckoutWiring,
+  quotes?: QuoteWiring,
+  team?: TeamWiring,
+  refunds?: RefundWiring,
+): Hono<AppEnv> {
   const app = new Hono<AppEnv>()
 
   // RNF-S02: encabezados de seguridad. La API solo devuelve JSON.
@@ -69,6 +75,7 @@ export function createApp(wiring?: CheckoutWiring, quotes?: QuoteWiring, team?: 
   if (wiring !== undefined) checkoutRoutes(app, wiring)
   if (quotes !== undefined) quoteRoutes(app, quotes)
   if (team !== undefined) teamRoutes(app, team)
+  if (refunds !== undefined) refundRoutes(app, refunds)
 
   app.notFound((c) => c.json(errorBody('not_found', 'Ruta no encontrada'), 404))
 

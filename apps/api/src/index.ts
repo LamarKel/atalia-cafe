@@ -12,11 +12,13 @@ import {
   storeRepo,
   supabaseClient,
 } from './adapters/supabase'
+import { refundPorts } from './adapters/supabase/refunds'
 import { teamPorts } from './adapters/supabase/team'
 import { turnstileVerifier } from './adapters/turnstile'
 import { createApp, type Bindings } from './http/app'
 import type { CheckoutWiring } from './http/checkout-routes'
 import type { QuoteWiring } from './http/quote-routes'
+import type { RefundWiring } from './http/refund-routes'
 import type { TeamWiring } from './http/team-routes'
 import type { CheckoutDeps } from './modules/payments/application/checkout'
 
@@ -87,4 +89,12 @@ const team: TeamWiring = {
   adminUrl: (env) => required(env, 'ADMIN_URL'),
 }
 
-export default createApp(wiring, quotes, team)
+const refunds: RefundWiring = {
+  ports: (env) =>
+    refundPorts(
+      supabaseClient(required(env, 'SUPABASE_URL'), required(env, 'SUPABASE_SERVICE_ROLE_KEY')),
+      paymentGateway(stripeClient(required(env, 'STRIPE_SECRET_KEY'))),
+    ),
+}
+
+export default createApp(wiring, quotes, team, refunds)

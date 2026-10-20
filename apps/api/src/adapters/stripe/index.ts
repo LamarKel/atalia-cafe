@@ -10,6 +10,13 @@ export function stripeClient(secretKey: string): Stripe {
 
 export function paymentGateway(stripe: Stripe): PaymentGateway {
   return {
+    async refund(input) {
+      const refund = await stripe.refunds.create(
+        { payment_intent: input.paymentIntentId, amount: input.amountCents, metadata: input.metadata },
+        { idempotencyKey: input.idempotencyKey },
+      )
+      return { id: refund.id }
+    },
     async createCheckoutSession(input) {
       const session = await stripe.checkout.sessions.create(
         {
@@ -73,6 +80,21 @@ export async function verifyPaymentEvent(
     undefined,
     cryptoProvider,
   )
+  // Reembolso (desde el panel o desde el dashboard de Stripe): lo acumulado reembolsado del cargo.
+  if (event.type === 'charge.refunded') {
+    const charge = event.data.object as Stripe.Charge
+    const pi =
+      typeof charge.payment_intent === 'string' ? charge.payment_intent : (charge.payment_intent?.id ?? null)
+    return {
+      id: event.id,
+      type: event.type,
+      sessionId: '',
+      paymentStatus: null,
+      paymentIntentId: pi,
+      amountTotalCents: charge.amount_refunded,
+      paymentMethod: null,
+    }
+  }
   if (!event.type.startsWith('checkout.session.')) return null
   const session = event.data.object as Stripe.Checkout.Session
   const paymentIntentId =

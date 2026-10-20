@@ -86,6 +86,13 @@ export interface OrdersRepo {
     amountTotalCents: number | null
     paymentMethod: string | null
   }): Promise<ConfirmResult>
+  /** charge.refunded → sync_refund (idempotente con stripe_events). */
+  syncRefund(event: {
+    eventId: string
+    eventType: string
+    paymentIntentId: string
+    amountRefundedCents: number
+  }): Promise<string>
   cancelUnpaid(event: {
     eventId: string
     eventType: string
@@ -111,6 +118,12 @@ export interface CheckoutSessionInput {
 }
 
 export interface PaymentGateway {
+  refund(input: {
+    paymentIntentId: string
+    amountCents: number
+    idempotencyKey: string
+    metadata: Record<string, string>
+  }): Promise<{ id: string }>
   createCheckoutSession(input: CheckoutSessionInput): Promise<{ id: string; url: string }>
   /** Sesión ya creada (reintento con el mismo checkout_token). */
   getCheckoutSession(id: string): Promise<{ id: string; url: string | null; status: string }>
