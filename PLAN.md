@@ -346,6 +346,7 @@ Cada fase se cierra con un PR revisado, el CI en verde y el deploy a staging.
 ### Fase 5 — Endurecimiento
 - [ ] Headers de seguridad, reglas de WAF y rate limiting, Turnstile.
 - [ ] Revisión de las políticas RLS y de los advisors de Supabase.
+- [ ] Desactivar la cuenta de pruebas `qa-admin@atalia.test` (admin_profiles.active = false y borrar el usuario en Auth) y quitar `http://127.0.0.1:4322/**` de las Redirect URLs de Supabase.
 - [ ] Supabase Auth (se dejó para el final a propósito, mientras dure el desarrollo): desactivar "Allow new users to sign up", activar la protección contra contraseñas filtradas, cambiar la contraseña del usuario owner y exigir 2FA (TOTP).
 - [ ] Auditoría de accesibilidad (axe + teclado) con la checklist de UI UX Pro Max.
 - [ ] Lighthouse móvil ≥ 90 en rendimiento y accesibilidad.
