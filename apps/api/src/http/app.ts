@@ -2,21 +2,30 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { HTTPException } from 'hono/http-exception'
 import { secureHeaders } from 'hono/secure-headers'
+import { checkoutRoutes, type CheckoutWiring } from './checkout-routes'
 import { ApiError, errorBody } from './errors'
 
 export interface Bindings {
   ENVIRONMENT: 'development' | 'staging' | 'production'
   /** Orígenes permitidos separados por coma (el sitio Astro). */
   ALLOWED_ORIGINS: string
+  /** URL pública del sitio (vuelta desde Stripe y enlaces de los correos). */
+  SITE_URL?: string
+  /** Remitente de los correos, p. ej. "Atalia Café <pedidos@dominio>". */
+  EMAIL_FROM?: string
+  // Secretos (wrangler secret put / .dev.vars): nunca en wrangler.jsonc ni en el frontend.
   SUPABASE_URL?: string
   SUPABASE_SERVICE_ROLE_KEY?: string
+  STRIPE_SECRET_KEY?: string
+  STRIPE_WEBHOOK_SECRET?: string
+  RESEND_API_KEY?: string
 }
 
 export type AppEnv = { Bindings: Bindings }
 
 export const API_VERSION = '0.1.0'
 
-export function createApp(): Hono<AppEnv> {
+export function createApp(wiring?: CheckoutWiring): Hono<AppEnv> {
   const app = new Hono<AppEnv>()
 
   // RNF-S02: encabezados de seguridad. La API solo devuelve JSON.
@@ -51,6 +60,8 @@ export function createApp(): Hono<AppEnv> {
       time: new Date().toISOString(),
     }),
   )
+
+  if (wiring !== undefined) checkoutRoutes(app, wiring)
 
   app.notFound((c) => c.json(errorBody('not_found', 'Ruta no encontrada'), 404))
 

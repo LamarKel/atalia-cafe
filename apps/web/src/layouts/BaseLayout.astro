@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css'
 import Footer from '../components/Footer.astro'
+import CheckoutHeader from '../components/CheckoutHeader.astro'
 import Header from '../components/Header.astro'
 import MobileNav from '../components/MobileNav.astro'
 import { getSiteContent, getStoreInfo } from '../lib/catalog'
@@ -10,9 +11,11 @@ interface Props {
   locale: Locale
   title?: string | undefined
   description?: string | undefined
+  /** Checkout y confirmación (diseños 05 y 06): encabezado mínimo, sin pie ni barra inferior. */
+  checkout?: boolean
 }
 
-const { locale, title, description } = Astro.props
+const { locale, title, description, checkout = false } = Astro.props
 const currentPath = Astro.url.pathname
 const pageTitle = title ? `${title} · ${t(locale, 'brand.name')}` : t(locale, 'brand.name')
 const site = Astro.site ?? new URL('https://atalia.cafe')
@@ -43,11 +46,17 @@ const [store, content] = await Promise.all([getStoreInfo(), getSiteContent(local
     >
       {t(locale, 'a11y.skip_to_content')}
     </a>
-    <Header locale={locale} currentPath={currentPath} />
+    {checkout ? <CheckoutHeader locale={locale} /> : <Header locale={locale} currentPath={currentPath} />}
     <main id="main">
       <slot />
     </main>
-    <Footer locale={locale} store={store} tagline={content['footer.tagline']} />
-    <MobileNav locale={locale} currentPath={currentPath} />
+    {
+      !checkout && (
+        <>
+          <Footer locale={locale} store={store} tagline={content['footer.tagline']} />
+          <MobileNav locale={locale} currentPath={currentPath} />
+        </>
+      )
+    }
   </body>
 </html>

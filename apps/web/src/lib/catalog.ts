@@ -1,5 +1,6 @@
 // Datos del sitio público, leídos de Supabase al construir las páginas (RLS: solo lo activo).
 // Más adelante se leerán por el Worker con caché en el edge (/catalog, RNF-C01); la forma de los datos no cambia.
+import type { StoredRule } from '@atalia/shared/rules'
 import type { Locale } from '../i18n'
 import { fromPrice, sizeAmounts, sizePrice, type ProductType, type SizeRow } from './catalog-format'
 import { supabase } from './supabase'
@@ -312,4 +313,17 @@ export async function getPicaderaBuilder(locale: Locale): Promise<PicaderaBuilde
       imageUrl: o.image_url,
     })),
   }
+}
+
+/**
+ * Reglas públicas (business_rules) para leer con getRule() de packages/shared. Si la RLS no deja leer
+ * alguna, getRule usa el valor por defecto del registro.
+ */
+export async function getPublicRuleRows(): Promise<StoredRule[]> {
+  const { data, error } = await supabase.from('business_rules').select('key, store_id, value, effective_from')
+  if (error) {
+    console.error('[catalog] business_rules', error.message)
+    return []
+  }
+  return data as StoredRule[]
 }
