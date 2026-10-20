@@ -226,6 +226,7 @@ export async function startCheckout(
     throw new CheckoutError('pickup_unavailable')
   }
 
+  const termsVersion = await deps.stores.termsVersion()
   const order = await deps.orders.createCheckoutOrder({
     checkoutToken: req.checkoutToken,
     storeId: store.id,
@@ -242,6 +243,8 @@ export async function startCheckout(
     tipCents: cart.totals.tipCents,
     totalCents: cart.totals.totalCents,
     rulesSnapshot: snapshotRules(rows, { storeId: store.id, at: now }),
+    termsAcceptedAt: now.toISOString(),
+    termsVersion,
     lines: cart.lines,
     reservations: Object.entries(cart.needs).map(([category, qty]) => ({
       date: req.pickup.date,

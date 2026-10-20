@@ -13,6 +13,8 @@ export interface QuoteFormProps {
   products: Array<{ id: string; name: string }>
   turnstileSiteKey: string
   cateringHref: string
+  /** Política de privacidad (aviso junto al botón de enviar). */
+  privacyHref: string
 }
 
 type Field = 'name' | 'phone' | 'email' | 'eventDate' | 'eventType' | 'guests' | 'captcha'
@@ -26,6 +28,7 @@ export default function QuoteForm({
   products,
   turnstileSiteKey,
   cateringHref,
+  privacyHref,
 }: QuoteFormProps) {
   const tf = (key: MessageKey, params: Record<string, string | number>) =>
     m[key].replace(/\{(\w+)\}/g, (match, name: string) => (name in params ? String(params[name]) : match))
@@ -339,6 +342,13 @@ export default function QuoteForm({
         >
           {m['quote.submit']}
         </Button>
+        <p className="mt-3 text-sm text-muted">
+          {m['legal.quote_notice'].split('{privacy}')[0]}
+          <a href={privacyHref} className="font-semibold text-secondary underline underline-offset-2">
+            {m['legal.consent_privacy']}
+          </a>
+          {m['legal.quote_notice'].split('{privacy}')[1]}
+        </p>
       </div>
     </form>
   )

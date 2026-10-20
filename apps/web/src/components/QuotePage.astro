@@ -26,6 +26,7 @@ const products = (await getCateringProducts(locale)).map((p) => ({ id: p.id, nam
       products={products}
       turnstileSiteKey={import.meta.env.PUBLIC_TURNSTILE_SITE_KEY}
       cateringHref={localizedPath('/catering', locale)}
+      privacyHref={localizedPath('/privacy', locale)}
     />
   </div>
 </BaseLayout>

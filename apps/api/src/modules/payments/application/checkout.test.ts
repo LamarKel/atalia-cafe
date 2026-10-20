@@ -49,6 +49,7 @@ const request: CheckoutRequest = {
   pickup: { date: '2026-10-21', time: '11:00' },
   customer: { name: 'Ana Pérez', phone: '+1 973 555 0100', email: 'ana@example.com' },
   items: [{ productId: TRAY, sizeId: S10, quantity: 2 }],
+  acceptTerms: true,
 }
 
 const slot = (over: Partial<SlotRow> = {}): SlotRow => ({
@@ -95,6 +96,7 @@ function setup(
     stores: {
       defaultStore: () => Promise.resolve({ id: STORE, timezone: 'America/New_York' }),
       pickupLocationIds: () => Promise.resolve([PICKUP]),
+      termsVersion: () => Promise.resolve('2026-10-19'),
       rules: () => Promise.resolve(opts.rules ?? []),
     },
     catalog: {
@@ -179,6 +181,8 @@ describe('startCheckout', () => {
       taxCents: 1193,
       totalCents: 19193,
       reservations: [{ date: '2026-10-21', slotStart: '11:00', category: 'tray', qty: 2 }],
+      termsAcceptedAt: '2026-10-18T12:00:00.000Z',
+      termsVersion: '2026-10-19',
     })
     expect(order?.rulesSnapshot['tax.rate_ppm']).toBe(66250)
 
@@ -227,6 +231,14 @@ describe('startCheckout', () => {
     const res = await run(deps)
     expect(res.url).toBe('https://checkout.stripe.com/old')
     expect(sessions).toHaveLength(0)
+  })
+})
+
+describe('consentimiento', () => {
+  it('sin aceptar los términos no hay checkout', () => {
+    const r = checkoutRequestSchema.safeParse({ ...request, acceptTerms: false })
+    expect(r.success).toBe(false)
+    expect(checkoutRequestSchema.safeParse({ ...request, acceptTerms: undefined }).success).toBe(false)
   })
 })
 
