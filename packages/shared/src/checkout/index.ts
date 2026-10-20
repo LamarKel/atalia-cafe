@@ -1,6 +1,6 @@
 // Contrato del checkout entre el sitio y el Worker (PLAN.md §6). El navegador solo manda QUÉ quiere
 // (productos, opción, cantidad, piezas, hora y datos de contacto); los precios los calcula el Worker (A8).
-import { z } from 'zod'
+import { z } from '../zod'
 import { picaderaComponentSchema } from '../picadera'
 import { promoCodeInputSchema, type PromoRejection } from '../promos'
 

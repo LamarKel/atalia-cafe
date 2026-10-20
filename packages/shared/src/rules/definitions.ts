@@ -1,6 +1,6 @@
 // Reglas de negocio del sitio (docs/REGLAS.md, sección B). Agregar una regla = agregar una entrada aquí.
 // Los valores por defecto marcados "provisional" esperan la respuesta de la clienta (PLAN.md §13).
-import { z } from 'zod'
+import { z } from '../zod'
 import { MAX_CENTS, PPM_SCALE } from '../money/index'
 import { defineRule } from './define'
 

@@ -1,12 +1,14 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { HTTPException } from 'hono/http-exception'
+import { bodyLimit } from 'hono/body-limit'
 import { secureHeaders } from 'hono/secure-headers'
 import { checkoutRoutes, type CheckoutWiring } from './checkout-routes'
 import { quoteRoutes, type QuoteWiring } from './quote-routes'
 import { refundRoutes, type RefundWiring } from './refund-routes'
 import { teamRoutes, type TeamWiring } from './team-routes'
 import { ApiError, errorBody } from './errors'
+import { rateLimit } from './rate-limit'
 
 export interface Bindings {
   ENVIRONMENT: 'development' | 'staging' | 'production'
@@ -25,6 +27,9 @@ export interface Bindings {
   TURNSTILE_SECRET?: string
   /** URL del panel (correo de invitación al equipo). */
   ADMIN_URL?: string
+  /** Límites por IP (ratelimits en wrangler.jsonc): estricto para pagar/cotizar/admin, normal para leer. */
+  RL_STRICT?: RateLimit
+  RL_NORMAL?: RateLimit
 }
 
 export type AppEnv = { Bindings: Bindings }
@@ -61,6 +66,21 @@ export function createApp(
       maxAge: 600,
     })(c, next)
   })
+
+  // Cuerpos chicos: el carrito más grande cabe de sobra en 64 KB; el webhook de Stripe puede ser más grande.
+  app.use('*', async (c, next) =>
+    bodyLimit({
+      maxSize: c.req.path === '/webhooks/stripe' ? 512 * 1024 : 64 * 1024,
+      onError: (ctx) => ctx.json(errorBody('bad_request', 'Solicitud demasiado grande'), 413),
+    })(c, next),
+  )
+
+  // Límites por IP. El webhook no lleva límite: lo llama Stripe y ya va firmado.
+  app.use('/checkout', rateLimit('RL_STRICT', 'checkout'))
+  app.use('/quotes', rateLimit('RL_STRICT', 'quotes'))
+  app.use('/admin/*', rateLimit('RL_STRICT', 'admin'))
+  app.use('/availability', rateLimit('RL_NORMAL', 'availability'))
+  app.use('/orders/*', rateLimit('RL_NORMAL', 'orders'))
 
   // Vivo: no toca la BD, para que el monitor de uptime no dependa de Supabase (RNF-D04).
   app.get('/health', (c) =>

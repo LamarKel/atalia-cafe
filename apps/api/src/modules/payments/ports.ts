@@ -108,6 +108,8 @@ export interface OrdersRepo {
     sessionId: string
     reason: string
   }): Promise<string>
+  /** Libera los cupos vencidos y cancela sus pedidos sin pagar (release_expired_holds). */
+  releaseExpiredHolds(): Promise<number>
   summaryByAccessToken(accessToken: string): Promise<OrderSummary | null>
   summaryBySession(sessionId: string): Promise<PaidOrderContact | null>
 }

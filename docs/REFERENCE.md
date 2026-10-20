@@ -1,6 +1,6 @@
 # Referencia: `D:\Dev\atalia-cafe-react`
 
-> **Actualización 2026-10-18.** La app **publicada** ([ataliacafe.netlify.app](https://ataliacafe.netlify.app/)) **no es esta**, sino `D:\Dev\cafe` (rama `v2-supabase`, HTML + JS + funciones de Netlify). Es más completa: i18n EN/ES real, búsqueda, info nutricional, puntos de recogida, cupones, Stripe (`netlify/functions/create-checkout.js`), seguimiento del pedido (`/track`) y admin con Supabase Auth, tamaños, extras e imágenes. Ahora es la **referencia funcional principal** (ver `CLAUDE.md`, "Referencias"); este documento queda como apoyo. Sus capturas están en `docs/screenshots/netlify/`. Su auditoría completa está pendiente (PLAN.md, Fase 1).
+> **Actualización 2026-10-18.** La app **publicada** ([ataliacafe.netlify.app](https://ataliacafe.netlify.app/)) **no es esta**, sino `D:\Dev\cafe` (rama `v2-supabase`, HTML + JS + funciones de Netlify). Es más completa: i18n EN/ES real, búsqueda, info nutricional, puntos de recogida, cupones, Stripe (`netlify/functions/create-checkout.js`), seguimiento del pedido (`/track`) y admin con Supabase Auth, tamaños, extras e imágenes. Ahora es la **referencia funcional principal** (ver `CLAUDE.md`, "Referencias"); este documento queda como apoyo. Sus capturas están en `docs/screenshots/netlify/`. Su auditoría de funciones está en el §10 de este documento (2026-10-19).
 >
 > El **aspecto** ya no se copia de ninguna de las dos apps viejas: lo definen las 6 pantallas aprobadas (`docs/design/`).
 
@@ -331,3 +331,58 @@ En la v3 todo esto se reemplaza por Supabase Auth + TOTP + RLS por rol (RNF-S03,
 
 - **Capturas en `docs/screenshots/`**: no se hicieron en esta sesión porque no había un navegador automatizado disponible. Para tomarlas: `npm run dev` en la referencia (puerto 3000) y capturar, en móvil (390 px) y en escritorio (1280 px), `/`, `/menu`, el modal de producto, el modal de tienda, `/cart` con productos, `/checkout`, y en `/admin` cada sección y cada modal. Se puede hacer con Playwright cuando se instale en la Fase 1.
 - Confirmar el esquema real de Supabase de la v2 (las 14 tablas, las políticas RLS y los buckets) antes de escribir `db/migrations`.
+
+---
+
+## 10. Auditoría de `D:\Dev\cafe` (rama `v2-supabase`, la app publicada) frente a la v3
+
+> 2026-10-19. Solo lectura: se revisaron `index.html`, `menu.html`, `cart.html`, `checkout.html`, `order-track.html`,
+> `admin.html` y `js/*.js` (funciones, textos de i18n y tablas que consultan). Resultado: qué hace cada pantalla
+> y dónde quedó en la v3.
+
+### 10.1 Sitio público
+
+| Función de la app vieja | Dónde está en la v3 |
+|---|---|
+| Inicio: categorías y productos destacados, horario, contacto | Inicio (`HomePage.astro`), datos de la BD |
+| Inicio: mapa de la tienda | Inicio, iframe de Google Maps con las coordenadas de la tienda |
+| Inicio: **enlaces a Uber Eats y DoorDash** (`business_settings.uber_eats_url`, `doordash_url`) | **Falta.** El esquema v3 no tiene esas columnas |
+| Inicio: **reseñas** (carrusel; Google Places si hay clave, si no reseñas simuladas) | **Falta.** Pendiente de la clienta (PLAN.md §13: reseñas reales con permiso). No se portan las simuladas |
+| Pie: **redes sociales** (`instagram_url`, `facebook_url`, `tiktok_url`, `twitter_url`) | **Falta en el sitio.** El panel ya las edita (Negocio → Tienda), pero el pie no las muestra |
+| Pie: términos, privacidad, política de reembolso | Pie, con la política de cancelación |
+| Menú: categorías con barra lateral, búsqueda, tarjeta, agregar rápido | Menú (`MenuBrowser`) |
+| Menú: modal con tamaños, extras, cantidad e info nutricional | Menú (`ProductDialog`) |
+| Menú: selector de tienda / punto de recogida | Menú (`PickupDialog`) y checkout |
+| Carrito: cantidades, quitar, vaciar, subtotal | Carrito (`CartView`) |
+| Carrito / checkout: **pedir por WhatsApp** | No se porta: solo pagos en línea con Stripe (CLAUDE.md, Pagos). WhatsApp queda como contacto en el pie |
+| Checkout: **efectivo** | No se porta (CLAUDE.md: no hay efectivo) |
+| Checkout: **delivery con dirección** | Fase 2 del producto (pendiente de confirmar con la clienta) |
+| Checkout: recogida en tienda o en el carro | Checkout (puntos de recogida) |
+| Checkout: cupón (`validate_promo_code` en el navegador) | Checkout, validado en el Worker (PR #14) |
+| Checkout: pago con tarjeta (Stripe) | Checkout con Stripe Checkout, idempotente, confirmado por webhook |
+| **Seguimiento del pedido** (`order-track.html`: buscar por código, pasos del pedido, Realtime) | **Parcial.** La confirmación (pantalla 06) muestra el pedido pagado, pero no sigue los estados después (en preparación, listo, entregado) ni se busca por código |
+
+### 10.2 Panel
+
+| Función de la app vieja | Dónde está en la v3 |
+|---|---|
+| Login | Login + 2FA obligatorio + recuperar contraseña + invitaciones |
+| Tablero con gráfica de ventas | Tablero y Reportes (gráficas con tabla equivalente) |
+| Pedidos con Realtime, cambio de estado, detalle | Pedidos (tablero en vivo, detalle, estados) |
+| **Imprimir ticket** del pedido (`printTicket`) | **Falta** |
+| Historial con detalle y CSV | Pedidos → historial; CSV en Reportes |
+| Productos: tamaños, extras, imagen (subida a Storage) | Catálogo → menú (más nutrición, orden, activo) |
+| Categorías | Catálogo |
+| Tiendas y puntos de recogida | Negocio → Tienda / puntos de recogida |
+| Promociones | Promociones (más estados, límites y aplicación real en el checkout) |
+| Ajustes del negocio | Negocio (horario, días cerrados, capacidad, textos, reglas) |
+| — | Nuevo en la v3: catering, picaderas, cotizaciones, reembolsos, equipo, reglas |
+
+### 10.3 Faltantes a decidir
+
+1. Enlaces a Uber Eats / DoorDash en el inicio (migración: dos columnas en `business_settings` + campo en el panel).
+2. Redes sociales en el pie (los datos ya existen).
+3. Seguimiento del pedido después del pago (estados en vivo en la confirmación).
+4. Imprimir ticket desde el detalle del pedido en el panel.
+5. Reseñas: solo con reseñas reales y permiso de la clienta.
+

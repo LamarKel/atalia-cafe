@@ -1,6 +1,6 @@
 // Reglas del armador de picaderas (RF05–RF07). Las usan el navegador (botón activo, "Combínalas por mí")
 // y el Worker (validación antes de crear el pedido). La BD vuelve a validar la suma (check_picadera_item).
-import { z } from 'zod'
+import { z } from '../zod'
 
 export const picaderaComponentSchema = z.object({
   optionId: z.uuid(),

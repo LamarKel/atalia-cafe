@@ -363,6 +363,16 @@ async function confirm(deps: CheckoutDeps, event: PaymentEvent): Promise<string>
   return result
 }
 
+/**
+ * Cron (cada 5 min): respaldo por si Stripe nunca manda checkout.session.expired. Libera los cupos
+ * retenidos vencidos y cancela esos pedidos sin pagar, para que la hora vuelva a estar disponible.
+ */
+export async function releaseExpired(deps: Pick<CheckoutDeps, 'orders'>): Promise<number> {
+  const released = await deps.orders.releaseExpiredHolds()
+  if (released > 0) console.log(`[cron] cupos vencidos liberados: ${String(released)}`)
+  return released
+}
+
 export function getOrderSummary(deps: CheckoutDeps, accessToken: string): Promise<OrderSummary | null> {
   return deps.orders.summaryByAccessToken(accessToken)
 }

@@ -537,4 +537,29 @@ select public.t_expect_error($q$ update public.quote_requests set status = 'paid
   'check constraint', 'solo estados válidos');
 rollback;
 
+-- ════ 9. Funciones de rol fuera de la API (advisor 0029) ════
+do $$
+begin
+  if exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+             where n.nspname = 'public' and p.proname in ('admin_role', 'has_admin_role', 'is_admin')) then
+    raise exception 'FAIL: las funciones de rol siguen en public (expuestas como /rpc)';
+  end if;
+  if has_function_privilege('anon', 'private.is_admin()', 'execute') then
+    raise exception 'FAIL: anon puede ejecutar private.is_admin()';
+  end if;
+  raise notice 'PASS: admin_role / has_admin_role / is_admin viven en private y anon no las ejecuta';
+end $$;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "09b5dce9-55d8-4859-844e-47bae15d71fd", "aal": "aal2"}';
+do $$
+begin
+  if not private.has_admin_role('owner') or (select count(*) from public.quote_requests) <> 1 then
+    raise exception 'FAIL: el owner perdió acceso al mover las funciones';
+  end if;
+  raise notice 'PASS: las políticas RLS siguen funcionando con las funciones en private';
+end $$;
+rollback;
+
 \echo '=== TODAS LAS PRUEBAS PASARON ==='
