@@ -1,49 +1,344 @@
 ---
-// Nosotros: presentación (site_content about.*), "Prueba la diferencia" y la llamada final.
+// Nosotros (v2): una página propia sobre el café, distinta del inicio. Portada con foto panorámica, la
+// historia, "del grano a tu taza", una frase, lo que nos importa, galería e invitación final. Todo sale de
+// site_content (about.*), editable en el panel; una sección sin título no se muestra. Animaciones: las del
+// inicio (home-motion), solo transform/opacity y nada con "reducir movimiento".
 import BaseLayout from '../layouts/BaseLayout.astro'
-import CtaSection from './home/CtaSection.astro'
-import StorySection from './home/StorySection.astro'
-import { getSiteContent, getStoreInfo } from '../lib/catalog'
+import RichTitle from './home/RichTitle.astro'
+import { getSiteContent } from '../lib/catalog'
+import { contentImage } from '../lib/home'
 import { parseLegal } from '../lib/legal'
-import { t, type Locale } from '../i18n'
+import { localizedPath, t, type Locale } from '../i18n'
 
 interface Props {
   locale: Locale
 }
 
 const { locale } = Astro.props
-const [c, store] = await Promise.all([getSiteContent(locale), getStoreInfo()])
+const c = await getSiteContent(locale)
 const title = c['about.title'] ?? t(locale, 'nav.about')
-// El texto largo (opcional) usa el mismo formato sencillo que las páginas legales: párrafos y "## " títulos.
-const body = parseLegal(c['about.body'] ?? '')
+const heroImage = contentImage(c['about.hero_image'])
+const storyImage = contentImage(c['about.story.image'])
+// La historia usa el mismo formato sencillo que las páginas legales: párrafos y "## " títulos.
+const story = parseLegal(c['about.body'] ?? '')
+const steps = [1, 2, 3, 4]
+  .map((n) => ({ n, title: c[`about.process.step${n}.title`], body: c[`about.process.step${n}.body`] }))
+  .filter((s) => s.title !== undefined && s.title !== '')
+const values = [1, 2, 3]
+  .map((n) => ({ n, title: c[`about.values.item${n}.title`], body: c[`about.values.item${n}.body`] }))
+  .filter((v) => v.title !== undefined && v.title !== '')
+const gallery = [1, 2, 3, 4]
+  .map((n) => contentImage(c[`about.gallery.image${n}`]))
+  .filter((src): src is string => src !== null)
+// Íconos decorativos de "lo que nos importa" (al lado de un texto que ya lo dice todo)
+const VALUE_ICONS = [
+  'M4 20h16M6 20V9l6-5 6 5v11M10 20v-6h4v6',
+  'M3 12h18M5 12a7 7 0 0 0 14 0M12 5V3M8 6 7 4.5M16 6l1-1.5',
+  'M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z',
+]
 ---
 
 <BaseLayout locale={locale} title={title} description={c['about.lead']}>
-  <div class="mx-auto max-w-7xl px-4 pt-12 md:px-8 md:pt-16">
-    <h1 class="font-heading text-5xl font-bold tracking-tight md:text-7xl">{title}</h1>
-    {c['about.lead'] && <p class="mt-5 max-w-2xl text-xl leading-relaxed text-muted">{c['about.lead']}</p>}
+  <!-- Portada: título centrado y foto panorámica (el inicio tiene la foto al lado; aquí va debajo) -->
+  <section class="overflow-hidden pb-16 pt-12 md:pb-24 md:pt-16" data-hero>
+    <div class="mx-auto max-w-5xl px-4 text-center md:px-8">
+      {
+        c['about.eyebrow'] && (
+          <p
+            class="mx-auto w-fit rounded-full bg-sage-soft px-4 py-2 text-xs font-semibold uppercase tracking-wider text-sage-ink"
+            data-hero-item
+          >
+            {c['about.eyebrow']}
+          </p>
+        )
+      }
+      <h1
+        class="mt-6 font-heading text-5xl font-bold leading-[1.02] tracking-tight sm:text-6xl xl:text-[84px]"
+        data-hero-title
+      >
+        <RichTitle text={c['about.headline'] ?? title} />
+      </h1>
+      {
+        c['about.lead'] && (
+          <p class="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted md:text-xl" data-hero-item>
+            {c['about.lead']}
+          </p>
+        )
+      }
+    </div>
     {
-      body.length > 0 && (
-        <div class="mt-8 grid max-w-3xl gap-4 text-lg leading-relaxed">
-          {body.map((b) =>
-            b.kind === 'h2' ? (
-              <h2 class="mt-4 font-heading text-2xl font-bold">{b.text}</h2>
-            ) : b.kind === 'ul' ? (
-              <ul class="grid list-disc gap-2 pl-6">
-                {b.items.map((i) => (
-                  <li>{i}</li>
-                ))}
-              </ul>
-            ) : b.kind === 'p' ? (
-              <p>{b.text}</p>
-            ) : null,
-          )}
+      heroImage && (
+        <div class="mx-auto mt-12 max-w-7xl px-4 md:mt-16 md:px-8" data-hero-media>
+          <div class="relative h-[300px] overflow-hidden rounded-[40px] bg-sage-soft sm:h-[420px] lg:h-[560px]">
+            <img
+              src={heroImage}
+              alt=""
+              class="absolute -top-[8%] left-0 h-[116%] w-full object-cover"
+              fetchpriority="high"
+              data-parallax
+            />
+          </div>
         </div>
       )
     }
-  </div>
-  <StorySection c={c} headingId="about-story" />
-  <CtaSection locale={locale} c={c} store={store} />
+  </section>
+
+  <!-- La historia -->
+  {
+    c['about.story.title'] && (
+      <section class="pb-20 md:pb-28" aria-labelledby="about-story-title" data-reveal>
+        <div class="mx-auto grid max-w-7xl items-center gap-12 px-4 md:px-8 lg:grid-cols-[5fr_6fr] lg:gap-20">
+          {storyImage && (
+            <div class="relative order-last lg:order-first" data-reveal-item>
+              <div class="h-[420px] overflow-hidden rounded-[32px] md:h-[560px]">
+                <img src={storyImage} alt="" loading="lazy" class="size-full object-cover" />
+              </div>
+              <span
+                aria-hidden="true"
+                class="absolute -bottom-6 -right-3 hidden size-32 rounded-full bg-primary-ink sm:block md:-right-6 md:size-40"
+              />
+            </div>
+          )}
+          <div class="grid gap-6">
+            {c['about.story.eyebrow'] && (
+              <p
+                class="w-fit rounded-full bg-sand px-4 py-2 text-xs font-semibold uppercase tracking-wider text-secondary"
+                data-reveal-item
+              >
+                {c['about.story.eyebrow']}
+              </p>
+            )}
+            <h2
+              id="about-story-title"
+              class="font-heading text-4xl font-bold leading-[1.05] tracking-tight md:text-6xl"
+              data-reveal-item
+            >
+              <RichTitle text={c['about.story.title']} />
+            </h2>
+            {story.length > 0 && (
+              <div class="grid gap-4 text-lg leading-relaxed text-dark/85" data-reveal-item>
+                {story.map((b) =>
+                  b.kind === 'h2' ? (
+                    <h3 class="mt-2 font-heading text-2xl font-bold text-dark">{b.text}</h3>
+                  ) : b.kind === 'ul' ? (
+                    <ul class="grid list-disc gap-2 pl-6">
+                      {b.items.map((i) => (
+                        <li>{i}</li>
+                      ))}
+                    </ul>
+                  ) : b.kind === 'p' ? (
+                    <p>{b.text}</p>
+                  ) : null,
+                )}
+              </div>
+            )}
+            {c['about.story.signature'] && (
+              <p class="font-heading text-xl italic text-secondary" data-reveal-item>
+                {c['about.story.signature']}
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- Del grano a tu taza -->
+  {
+    c['about.process.title'] && (
+      <section
+        class="bg-espresso py-20 text-accent md:py-28"
+        aria-labelledby="about-process-title"
+        data-reveal
+      >
+        <div class="mx-auto max-w-7xl px-4 md:px-8">
+          <div class="grid gap-6 lg:grid-cols-2 lg:items-end">
+            <div class="grid gap-5">
+              {c['about.process.eyebrow'] && (
+                <p
+                  class="w-fit rounded-full bg-espresso-soft px-4 py-2 text-xs font-semibold uppercase tracking-wider text-sage-light"
+                  data-reveal-item
+                >
+                  {c['about.process.eyebrow']}
+                </p>
+              )}
+              <h2
+                id="about-process-title"
+                class="font-heading text-4xl font-bold leading-[1.05] tracking-tight md:text-6xl"
+                data-reveal-item
+              >
+                <RichTitle text={c['about.process.title']} emClass="text-sage-light" />
+              </h2>
+            </div>
+            {c['about.process.subtitle'] && (
+              <p class="max-w-md text-lg text-latte lg:justify-self-end" data-reveal-item>
+                {c['about.process.subtitle']}
+              </p>
+            )}
+          </div>
+          {steps.length > 0 && (
+            <ol class="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {steps.map((s) => (
+                <li class="grid content-start gap-3 rounded-3xl bg-espresso-soft p-6 md:p-7" data-reveal-item>
+                  <span class="font-heading text-5xl font-bold text-sage-light" aria-hidden="true">
+                    {String(s.n).padStart(2, '0')}
+                  </span>
+                  <span class="h-px w-12 bg-latte/40" aria-hidden="true" />
+                  <h3 class="text-xl font-semibold">{s.title}</h3>
+                  {s.body && <p class="text-latte">{s.body}</p>}
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      </section>
+    )
+  }
+
+  <!-- La frase -->
+  {
+    c['about.quote'] && (
+      <section class="bg-linen py-20 md:py-28" data-reveal>
+        <figure class="mx-auto max-w-4xl px-4 text-center md:px-8" data-reveal-item>
+          <span aria-hidden="true" class="block font-heading text-8xl leading-none text-primary-ink">
+            “
+          </span>
+          <blockquote class="-mt-6 font-heading text-3xl font-bold leading-tight md:text-5xl">
+            <p>{c['about.quote']}</p>
+          </blockquote>
+          {c['about.quote_author'] && (
+            <figcaption class="mt-6 text-sm font-semibold uppercase tracking-wider text-muted">
+              {c['about.quote_author']}
+            </figcaption>
+          )}
+        </figure>
+      </section>
+    )
+  }
+
+  <!-- Lo que nos importa -->
+  {
+    c['about.values.title'] && values.length > 0 && (
+      <section class="py-20 md:py-28" aria-labelledby="about-values-title" data-reveal>
+        <div class="mx-auto max-w-7xl px-4 md:px-8">
+          <div class="grid gap-5 text-center">
+            {c['about.values.eyebrow'] && (
+              <p
+                class="mx-auto w-fit rounded-full bg-sage-soft px-4 py-2 text-xs font-semibold uppercase tracking-wider text-sage-ink"
+                data-reveal-item
+              >
+                {c['about.values.eyebrow']}
+              </p>
+            )}
+            <h2
+              id="about-values-title"
+              class="font-heading text-4xl font-bold leading-[1.05] tracking-tight md:text-6xl"
+              data-reveal-item
+            >
+              <RichTitle text={c['about.values.title']} />
+            </h2>
+          </div>
+          <ul class="mt-14 grid gap-4 md:grid-cols-3">
+            {values.map((v, i) => (
+              <li class="grid content-start gap-4 rounded-3xl bg-white p-7 md:p-8" data-reveal-item>
+                <span
+                  class="flex size-14 items-center justify-center rounded-2xl bg-sage-soft text-sage-ink"
+                  aria-hidden="true"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    class="size-7"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d={VALUE_ICONS[i]} />
+                  </svg>
+                </span>
+                <h3 class="text-xl font-semibold">{v.title}</h3>
+                {v.body && <p class="text-muted">{v.body}</p>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- Galería -->
+  {
+    gallery.length > 0 && (
+      <section class="pb-20 md:pb-28" aria-labelledby="about-gallery-title" data-reveal>
+        <div class="mx-auto max-w-7xl px-4 md:px-8">
+          <h2
+            id="about-gallery-title"
+            class:list={[
+              'font-heading text-3xl font-bold md:text-4xl',
+              !c['about.gallery.title'] && 'sr-only',
+            ]}
+            data-reveal-item
+          >
+            {c['about.gallery.title'] ?? title}
+          </h2>
+          <ul class="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+            {gallery.map((src, i) => (
+              <li
+                class:list={[
+                  'overflow-hidden rounded-[28px]',
+                  i % 2 === 0 ? 'h-56 md:h-80' : 'h-56 md:mt-12 md:h-80',
+                ]}
+                data-reveal-item
+              >
+                <img
+                  src={src}
+                  alt=""
+                  loading="lazy"
+                  class="size-full object-cover transition-transform duration-700 motion-safe:hover:scale-105"
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- Invitación final -->
+  {
+    c['about.cta.title'] && (
+      <section class="pb-20 md:pb-28" aria-labelledby="about-cta-title" data-reveal>
+        <div class="mx-auto max-w-7xl px-4 md:px-8">
+          <div class="grid gap-8 rounded-[40px] bg-secondary px-7 py-12 text-white md:px-16 md:py-16 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div class="grid gap-4" data-reveal-item>
+              <h2
+                id="about-cta-title"
+                class="font-heading text-4xl font-bold leading-[1.05] tracking-tight md:text-5xl"
+              >
+                <RichTitle text={c['about.cta.title']} emClass="text-sand" />
+              </h2>
+              {c['about.cta.text'] && <p class="max-w-xl text-lg">{c['about.cta.text']}</p>}
+            </div>
+            <div class="flex flex-wrap gap-3" data-reveal-item>
+              <a
+                href={localizedPath('/menu', locale)}
+                class="inline-flex min-h-14 items-center justify-center rounded-full bg-white px-8 font-semibold text-dark transition-transform motion-safe:hover:-translate-y-0.5"
+              >
+                {t(locale, 'nav.menu')}
+              </a>
+              <a
+                href={localizedPath('/contact', locale)}
+                class="inline-flex min-h-14 items-center justify-center rounded-full border-[1.5px] border-white px-8 font-semibold transition-transform motion-safe:hover:-translate-y-0.5"
+              >
+                {t(locale, 'nav.contact')}
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    )
+  }
 </BaseLayout>
 
 <script>
