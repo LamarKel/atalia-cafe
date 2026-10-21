@@ -5,6 +5,7 @@ import { I18nProvider, useI18n } from './i18n-context'
 import { Dashboard } from './screens/Dashboard'
 import { Business } from './screens/Business'
 import { Catalog } from './screens/Catalog'
+import { Messages } from './screens/Messages'
 import { Orders } from './screens/Orders'
 import { Promos } from './screens/Promos'
 import { Quotes } from './screens/Quotes'
@@ -73,6 +74,8 @@ function Panel({ role, email, onSignOut }: { role: Role; email: string; onSignOu
         <Business role={role} />
       ) : route === 'quotes' ? (
         <Quotes role={role} />
+      ) : route === 'messages' ? (
+        <Messages role={role} />
       ) : route === 'promos' ? (
         <Promos />
       ) : route === 'reports' ? (

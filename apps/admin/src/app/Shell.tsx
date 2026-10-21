@@ -8,7 +8,16 @@ import { useI18n } from './i18n-context'
 import { PublishStatus } from './components/PublishStatus'
 
 export type Route =
-  'dashboard' | 'orders' | 'catalog' | 'catering' | 'business' | 'quotes' | 'promos' | 'team' | 'reports'
+  | 'dashboard'
+  | 'orders'
+  | 'catalog'
+  | 'catering'
+  | 'business'
+  | 'quotes'
+  | 'messages'
+  | 'promos'
+  | 'team'
+  | 'reports'
 
 interface NavItem {
   route: Route
@@ -35,6 +44,7 @@ export const NAV: NavItem[] = [
     roles: ['owner', 'admin'],
   },
   { route: 'quotes', label: 'nav.quotes', icon: 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6', roles: ALL },
+  { route: 'messages', label: 'nav.messages', icon: 'M3 6h18v12H3zM3 7l9 6 9-6', roles: ALL },
   {
     route: 'business',
     label: 'nav.business',
