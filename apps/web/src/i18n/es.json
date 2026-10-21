@@ -320,6 +320,13 @@
   "home.reviews.stars": "5 de 5 estrellas",
   "contact.whatsapp_cta": "Escríbenos por WhatsApp",
   "contact.email": "Correo",
+  "contact.quick_title": "Otras formas de hablar con nosotros",
+  "contact.call": "Llámanos",
+  "contact.call_hint": "En horario de tienda",
+  "contact.whatsapp": "WhatsApp",
+  "contact.whatsapp_hint": "La forma más rápida",
+  "contact.email_hint": "Te respondemos por correo",
+  "contact.follow": "Síguenos",
   "a11y.new_tab": "se abre en otra pestaña",
   "nav.delivery": "Delivery"
 }

@@ -320,6 +320,13 @@
   "home.reviews.stars": "5 out of 5 stars",
   "contact.whatsapp_cta": "Message us on WhatsApp",
   "contact.email": "Email",
+  "contact.quick_title": "Other ways to reach us",
+  "contact.call": "Call us",
+  "contact.call_hint": "During store hours",
+  "contact.whatsapp": "WhatsApp",
+  "contact.whatsapp_hint": "The fastest way",
+  "contact.email_hint": "We reply by email",
+  "contact.follow": "Follow us",
   "a11y.new_tab": "opens in a new tab",
   "nav.delivery": "Delivery"
 }
