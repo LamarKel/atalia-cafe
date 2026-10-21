@@ -7,6 +7,7 @@ import BaseLayout from '../layouts/BaseLayout.astro'
 import VisitSection from './home/VisitSection.astro'
 import QuoteCta from './QuoteCta.astro'
 import { getSiteContent, getStoreInfo } from '../lib/catalog'
+import { contentImage } from '../lib/home'
 import { localizedPath, messagesFor, t, type Locale } from '../i18n'
 
 interface Props {
@@ -17,6 +18,7 @@ const { locale } = Astro.props
 const [c, store] = await Promise.all([getSiteContent(locale), getStoreInfo()])
 const title = c['contact.title'] ?? t(locale, 'nav.contact')
 const SOCIAL_NAMES = { instagram: 'Instagram', facebook: 'Facebook', tiktok: 'TikTok', x: 'X' } as const
+const image = contentImage(c['contact.image'])
 
 interface Quick {
   href: string
@@ -139,6 +141,13 @@ if (store.email)
               ))}
             </ul>
           </>
+        )
+      }
+      {
+        image && (
+          <div class="mt-8 hidden h-64 overflow-hidden rounded-[28px] bg-sage-soft lg:block">
+            <img src={image} alt="" loading="lazy" class="size-full object-cover" />
+          </div>
         )
       }
     </div>
