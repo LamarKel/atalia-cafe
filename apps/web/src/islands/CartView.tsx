@@ -1,9 +1,17 @@
 // Carrito (sin pantalla propia en el diseño: sigue el lenguaje visual de las pantallas 03 y 04).
 // Lee el carrito local; los precios son solo para mostrar, el Worker recalcula todo al pagar.
 import { cents, formatUSD, multiplyCents } from '@atalia/shared/money'
-import { ButtonLink, QuantityStepper } from '@atalia/ui'
+import { ButtonLink, QuantityStepper, ToastProvider, useToast } from '@atalia/ui'
 import { useEffect, useState } from 'react'
-import { cartSubtotal, getCart, onCartChange, removeLine, updateQuantity, type CartItem } from '../lib/cart'
+import {
+  cartSubtotal,
+  getCart,
+  onCartChange,
+  removeLine,
+  restoreLine,
+  updateQuantity,
+  type CartItem,
+} from '../lib/cart'
 import type { Locale, MessageKey } from '../i18n'
 
 export interface CartViewProps {
@@ -16,11 +24,23 @@ export interface CartViewProps {
 
 const MAX_QUANTITY = 20
 
-export default function CartView({ locale, messages: m, cateringHref, checkoutHref }: CartViewProps) {
+export default function CartView(props: CartViewProps) {
+  return (
+    <ToastProvider
+      closeLabel={props.messages['a11y.close']}
+      regionLabel={props.messages['a11y.notifications']}
+    >
+      <Cart {...props} />
+    </ToastProvider>
+  )
+}
+
+function Cart({ locale, messages: m, cateringHref, checkoutHref }: CartViewProps) {
   const tf = (key: MessageKey, params: Record<string, string | number>) =>
     m[key].replace(/\{(\w+)\}/g, (match, name: string) => (name in params ? String(params[name]) : match))
   const usd = (value: number) => formatUSD(cents(value), locale)
 
+  const toast = useToast()
   const [items, setItems] = useState<CartItem[] | null>(null)
   useEffect(() => {
     setItems(getCart())
@@ -41,6 +61,16 @@ export default function CartView({ locale, messages: m, cateringHref, checkoutHr
   }
 
   const subtotal = cartSubtotal(items)
+
+  // Quitar (con la papelera del contador o con "Quitar") siempre se puede deshacer unos segundos.
+  const remove = (item: CartItem) => {
+    const index = items.findIndex((i) => i.lineId === item.lineId)
+    removeLine(item.lineId)
+    toast(tf('cart.removed', { name: item.name }), {
+      durationMs: 6000,
+      action: { label: m['cart.undo'], onClick: () => restoreLine(item, index) },
+    })
+  }
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_22rem]">
@@ -84,10 +114,12 @@ export default function CartView({ locale, messages: m, cateringHref, checkoutHr
                 onChange={(n) => updateQuantity(item.lineId, n)}
                 decreaseLabel={m['a11y.decrease']}
                 increaseLabel={m['a11y.increase']}
+                onRemove={() => remove(item)}
+                removeLabel={tf('cart.remove_item', { name: item.name })}
               />
               <button
                 type="button"
-                onClick={() => removeLine(item.lineId)}
+                onClick={() => remove(item)}
                 aria-label={tf('cart.remove_item', { name: item.name })}
                 className="min-h-11 rounded-full px-4 text-sm font-medium text-secondary underline underline-offset-2 hover:bg-secondary/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary"
               >

@@ -200,6 +200,38 @@ describe('QuantityStepper', () => {
       expect(btn.className).toContain('size-11')
     }
   })
+
+  it('con onRemove, en el mínimo el − es una papelera que quita la línea (carrito)', async () => {
+    const onRemove = vi.fn()
+    function Cart() {
+      const [value, setValue] = useState(2)
+      return (
+        <QuantityStepper
+          label="Cantidad: Latte"
+          value={value}
+          min={1}
+          onChange={setValue}
+          decreaseLabel="Quitar uno"
+          increaseLabel="Agregar uno"
+          onRemove={onRemove}
+          removeLabel="Quitar Latte"
+        />
+      )
+    }
+    render(<Cart />)
+    await userEvent.click(screen.getByRole('button', { name: 'Quitar uno: Cantidad: Latte' }))
+    expect(screen.getByRole('status')).toHaveTextContent('1')
+    const trash = screen.getByRole('button', { name: 'Quitar Latte' })
+    expect(trash).toBeEnabled()
+    expect(trash.className).toContain('size-11')
+    await userEvent.click(trash)
+    expect(onRemove).toHaveBeenCalledTimes(1)
+  })
+
+  it('sin onRemove, en el mínimo el − sigue desactivado (elegir cantidad antes de agregar)', () => {
+    render(<Demo min={1} initial={1} />)
+    expect(screen.getByRole('button', { name: /Quitar uno/ })).toBeDisabled()
+  })
 })
 
 describe('Toast', () => {
@@ -233,6 +265,32 @@ describe('Toast', () => {
     } finally {
       vi.useRealTimers()
     }
+  })
+
+  it('un aviso con acción ("Deshacer") la ejecuta y se cierra', async () => {
+    const undo = vi.fn()
+    function Removed() {
+      const toast = useToast()
+      return (
+        <button
+          type="button"
+          onClick={() => toast('Quitaste Latte', { action: { label: 'Deshacer', onClick: undo } })}
+        >
+          Quitar
+        </button>
+      )
+    }
+    render(
+      <ToastProvider closeLabel="Cerrar" regionLabel="Notificaciones">
+        <Removed />
+      </ToastProvider>,
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'Quitar' }))
+    const action = screen.getByRole('button', { name: 'Deshacer' })
+    expect(action.className).toContain('min-h-11')
+    await userEvent.click(action)
+    expect(undo).toHaveBeenCalledTimes(1)
+    await vi.waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument())
   })
 
   it('un error se anuncia como alert y no se cierra solo', async () => {
