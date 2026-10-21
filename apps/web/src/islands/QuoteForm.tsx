@@ -85,6 +85,20 @@ export default function QuoteForm({
     return next
   }
 
+  // Un error marcado se quita apenas el dato queda bien (no aparecen errores nuevos mientras escribe).
+  useEffect(() => {
+    setErrors((prev) => {
+      if (Object.keys(prev).length === 0) return prev
+      const failing = validate()
+      const next: Errors = {}
+      for (const [field, key] of Object.entries(prev) as [keyof Errors, MessageKey][]) {
+        if (failing[field] !== undefined) next[field] = key
+      }
+      return Object.keys(next).length === Object.keys(prev).length ? prev : next
+    })
+    // validate lee form y token: por eso son las dependencias
+  }, [form, token])
+
   const submit = async () => {
     setBanner(null)
     const next = validate()

@@ -696,4 +696,20 @@ select public.t_expect_error($q$ update public.contact_messages set message = 'o
   'contact_field_not_editable', 'nadie del admin cambia lo que escribió el cliente en contacto');
 rollback;
 
+-- Textos legales sin nombres de proveedores (20261021000100)
+do $$
+declare
+  hits int;
+begin
+  select count(*) into hits from public.site_content
+  where key like 'legal.%' and value ~* '(stripe|supabase|cloudflare|resend|google|klarna|afterpay|affirm)';
+  if hits > 0 then
+    raise exception 'FAIL: % textos legales todavía nombran a un proveedor', hits;
+  end if;
+  if (select count(*) from public.site_content where key = 'legal.privacy.body' and value like '%procesador de pagos certificado%') <> 1 then
+    raise exception 'FAIL: la privacidad en español no quedó con la categoría de proveedor';
+  end if;
+  raise notice 'PASS: los textos legales describen proveedores por categoría, sin nombres';
+end $$;
+
 \echo '=== TODAS LAS PRUEBAS PASARON ==='

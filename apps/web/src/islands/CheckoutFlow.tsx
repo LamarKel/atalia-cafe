@@ -212,6 +212,20 @@ export default function CheckoutFlow({
   // "octubre de 2026" → "Octubre de 2026" (solo la primera letra, como en el diseño)
   const monthTitle = monthName.charAt(0).toLocaleUpperCase(intlLocale) + monthName.slice(1)
 
+  // Un error marcado se quita apenas el dato queda bien (no aparecen errores nuevos mientras escribe).
+  useEffect(() => {
+    setErrors((prev) => {
+      if (Object.keys(prev).length === 0) return prev
+      const parsed = customerSchema.safeParse(customer)
+      const failing = new Set(parsed.success ? [] : parsed.error.issues.map((i) => i.path[0]))
+      const next: FieldErrors = {}
+      for (const [field, key] of Object.entries(prev) as [keyof Customer, MessageKey][]) {
+        if (failing.has(field)) next[field] = key
+      }
+      return Object.keys(next).length === Object.keys(prev).length ? prev : next
+    })
+  }, [customer])
+
   const validate = (): boolean => {
     const parsed = customerSchema.safeParse(customer)
     if (parsed.success) {
