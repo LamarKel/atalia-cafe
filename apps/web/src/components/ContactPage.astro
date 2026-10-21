@@ -1,10 +1,12 @@
 ---
-// Contacto: teléfono, WhatsApp, correo, horario y mapa (de la BD), cotización para eventos y redes.
+// Contacto: el formulario (isla) junto a la presentación y las redes; después teléfono, WhatsApp, correo,
+// horario y mapa (de la BD) y la cotización para eventos.
+import ContactForm from '../islands/ContactForm'
 import BaseLayout from '../layouts/BaseLayout.astro'
 import VisitSection from './home/VisitSection.astro'
 import QuoteCta from './QuoteCta.astro'
 import { getSiteContent, getStoreInfo } from '../lib/catalog'
-import { t, type Locale } from '../i18n'
+import { localizedPath, messagesFor, t, type Locale } from '../i18n'
 
 interface Props {
   locale: Locale
@@ -17,31 +19,42 @@ const SOCIAL_NAMES = { instagram: 'Instagram', facebook: 'Facebook', tiktok: 'Ti
 ---
 
 <BaseLayout locale={locale} title={title} description={c['contact.lead']}>
-  <div class="mx-auto max-w-7xl px-4 pb-10 pt-12 md:px-8 md:pt-16">
-    <h1 class="font-heading text-5xl font-bold tracking-tight md:text-7xl">{title}</h1>
-    {
-      c['contact.lead'] && (
-        <p class="mt-5 max-w-2xl text-xl leading-relaxed text-muted">{c['contact.lead']}</p>
-      )
-    }
-    {
-      store.socials.length > 0 && (
-        <ul class="mt-6 flex flex-wrap gap-3">
-          {store.socials.map((s) => (
-            <li>
-              <a
-                href={s.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex min-h-11 items-center rounded-full border border-dark/15 bg-white px-5 font-medium hover:border-secondary"
-              >
-                {SOCIAL_NAMES[s.network]}
-              </a>
-            </li>
-          ))}
-        </ul>
-      )
-    }
+  <div
+    class="mx-auto grid max-w-7xl gap-10 px-4 pb-10 pt-12 md:px-8 md:pt-16 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16"
+  >
+    <div>
+      <h1 class="font-heading text-5xl font-bold tracking-tight md:text-7xl">{title}</h1>
+      {
+        c['contact.lead'] && (
+          <p class="mt-5 max-w-2xl text-xl leading-relaxed text-muted">{c['contact.lead']}</p>
+        )
+      }
+      {
+        store.socials.length > 0 && (
+          <ul class="mt-6 flex flex-wrap gap-3">
+            {store.socials.map((s) => (
+              <li>
+                <a
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex min-h-11 items-center rounded-full border border-dark/15 bg-white px-5 font-medium hover:border-secondary"
+                >
+                  {SOCIAL_NAMES[s.network]}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </div>
+    <ContactForm
+      client:load
+      locale={locale}
+      messages={messagesFor(locale)}
+      turnstileSiteKey={import.meta.env.PUBLIC_TURNSTILE_SITE_KEY}
+      privacyHref={localizedPath('/privacy', locale)}
+    />
   </div>
   <VisitSection locale={locale} c={c} store={store} full />
   <div class="mx-auto max-w-7xl px-4 pb-20 md:px-8 md:pb-28">

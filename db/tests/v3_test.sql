@@ -628,4 +628,72 @@ begin
 end $$;
 rollback;
 
+-- ─────────────────────────────────────────────────────────────
+-- Formulario de contacto (20261021000200)
+-- ─────────────────────────────────────────────────────────────
+insert into public.contact_messages (id, name, email, phone, language, topic, message)
+values ('dddd0000-0000-4000-8000-000000000001', 'Ana Pérez', 'ana@example.com', null, 'es', 'general',
+  '¿Tienen leche de almendras?');
+
+do $$
+declare m public.contact_messages;
+begin
+  select * into m from public.contact_messages where id = 'dddd0000-0000-4000-8000-000000000001';
+  if m.code !~ '^MS-[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}$' or m.status <> 'new' then
+    raise exception 'FAIL: mensaje con código o estado incorrecto: % %', m.code, m.status;
+  end if;
+  if not exists (select 1 from public.audit_log where entity = 'contact_messages' and action = 'INSERT') then
+    raise exception 'FAIL: la bitácora no registró el mensaje';
+  end if;
+  raise notice 'PASS: el Worker guarda el mensaje de contacto (código %, estado new, bitácora)', m.code;
+end $$;
+
+select public.t_expect_error($q$ insert into public.contact_messages (name, email, topic, message) values ('Ana', 'ana@example.com', 'general', 'corto') $q$,
+  'check constraint', 'un mensaje de contacto tiene al menos 10 caracteres');
+
+begin;
+set local role anon;
+select public.t_expect_error($q$ insert into public.contact_messages (name, email, topic, message) values ('Bot', 'bot@x.com', 'other', 'compra seguidores baratos') $q$,
+  'row-level security', 'anon no puede crear mensajes directo en la BD');
+do $$
+begin
+  if (select count(*) from public.contact_messages) <> 0 then
+    raise exception 'FAIL: anon ve mensajes de contacto';
+  end if;
+  raise notice 'PASS: anon no ve los mensajes de contacto';
+end $$;
+rollback;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "aaaaaaaa-0000-4000-8000-000000000002", "aal": "aal2"}';
+do $$
+begin
+  if (select count(*) from public.contact_messages) <> 1 then
+    raise exception 'FAIL: staff no ve los mensajes';
+  end if;
+  update public.contact_messages set status = 'archived';
+  if (select status from public.contact_messages where id = 'dddd0000-0000-4000-8000-000000000001') <> 'new' then
+    raise exception 'FAIL: staff cambió el estado de un mensaje';
+  end if;
+  raise notice 'PASS: staff ve los mensajes pero no cambia su estado';
+end $$;
+rollback;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "09b5dce9-55d8-4859-844e-47bae15d71fd", "aal": "aal2"}';
+do $$
+begin
+  update public.contact_messages set status = 'answered', internal_notes = 'Le escribí por correo'
+   where id = 'dddd0000-0000-4000-8000-000000000001';
+  if (select status from public.contact_messages where id = 'dddd0000-0000-4000-8000-000000000001') <> 'answered' then
+    raise exception 'FAIL: el owner no pudo marcar el mensaje como respondido';
+  end if;
+  raise notice 'PASS: el owner cambia el estado y las notas internas de un mensaje';
+end $$;
+select public.t_expect_error($q$ update public.contact_messages set message = 'otro texto cualquiera' where id = 'dddd0000-0000-4000-8000-000000000001' $q$,
+  'contact_field_not_editable', 'nadie del admin cambia lo que escribió el cliente en contacto');
+rollback;
+
 \echo '=== TODAS LAS PRUEBAS PASARON ==='

@@ -6,6 +6,8 @@ import { deployHook } from './adapters/deploy'
 import { promoRepo } from './adapters/supabase/promos'
 import { publishPorts } from './adapters/supabase/publish'
 import { sendCancellation } from './adapters/resend/cancellation'
+import { resendContactMailer } from './adapters/resend/contact'
+import { contactRepo } from './adapters/supabase/contact'
 import { resendQuoteMailer } from './adapters/resend/quotes'
 import { stripeClient, paymentGateway, verifyPaymentEvent } from './adapters/stripe'
 import {
@@ -24,6 +26,7 @@ import { createApp, type Bindings } from './http/app'
 import type { PublishWiring } from './http/publish-routes'
 import { publishIfDirty } from './modules/publish/publish'
 import type { CheckoutWiring } from './http/checkout-routes'
+import type { ContactWiring } from './http/contact-routes'
 import type { QuoteWiring } from './http/quote-routes'
 import type { RefundWiring } from './http/refund-routes'
 import type { TeamWiring } from './http/team-routes'
@@ -114,7 +117,27 @@ const publish: PublishWiring = {
         ),
 }
 
-const app = createApp(wiring, quotes, team, refunds, publish)
+const contact: ContactWiring = {
+  deps(env) {
+    const db = supabaseClient(required(env, 'SUPABASE_URL'), required(env, 'SUPABASE_SERVICE_ROLE_KEY'))
+    const stores = storeRepo(db)
+    return {
+      stores,
+      messages: contactRepo(db),
+      captcha: turnstileVerifier(required(env, 'TURNSTILE_SECRET')),
+      mailer: resendContactMailer({
+        apiKey: required(env, 'RESEND_API_KEY'),
+        from: required(env, 'EMAIL_FROM'),
+        businessLocale: async () => {
+          const store = await stores.defaultStore()
+          return getRule('notifications.staff_locale', await stores.rules(store.id), { storeId: store.id })
+        },
+      }),
+    }
+  },
+}
+
+const app = createApp(wiring, quotes, team, refunds, publish, contact)
 
 export default {
   fetch: app.fetch,

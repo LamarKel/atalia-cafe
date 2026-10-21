@@ -4,6 +4,7 @@ import { HTTPException } from 'hono/http-exception'
 import { bodyLimit } from 'hono/body-limit'
 import { secureHeaders } from 'hono/secure-headers'
 import { checkoutRoutes, type CheckoutWiring } from './checkout-routes'
+import { contactRoutes, type ContactWiring } from './contact-routes'
 import { quoteRoutes, type QuoteWiring } from './quote-routes'
 import { publishRoutes, type PublishWiring } from './publish-routes'
 import { refundRoutes, type RefundWiring } from './refund-routes'
@@ -45,6 +46,7 @@ export function createApp(
   team?: TeamWiring,
   refunds?: RefundWiring,
   publish?: PublishWiring,
+  contact?: ContactWiring,
 ): Hono<AppEnv> {
   const app = new Hono<AppEnv>()
 
@@ -82,6 +84,7 @@ export function createApp(
   // Límites por IP. El webhook no lleva límite: lo llama Stripe y ya va firmado.
   app.use('/checkout', rateLimit('RL_STRICT', 'checkout'))
   app.use('/quotes', rateLimit('RL_STRICT', 'quotes'))
+  app.use('/contact', rateLimit('RL_STRICT', 'contact'))
   app.use('/admin/*', rateLimit('RL_STRICT', 'admin'))
   app.use('/availability', rateLimit('RL_NORMAL', 'availability'))
   app.use('/orders/*', rateLimit('RL_NORMAL', 'orders'))
@@ -101,6 +104,7 @@ export function createApp(
   if (team !== undefined) teamRoutes(app, team)
   if (refunds !== undefined) refundRoutes(app, refunds)
   if (publish !== undefined) publishRoutes(app, publish)
+  if (contact !== undefined) contactRoutes(app, contact)
 
   app.notFound((c) => c.json(errorBody('not_found', 'Ruta no encontrada'), 404))
 

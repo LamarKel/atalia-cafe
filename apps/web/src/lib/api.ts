@@ -6,6 +6,7 @@ import type {
   CheckoutResponse,
   OrderSummary,
 } from '@atalia/shared/checkout'
+import type { ContactRequest, ContactResponse } from '@atalia/shared/contact'
 import type { QuoteRequest, QuoteResponse } from '@atalia/shared/quotes'
 import type { CartItem } from './cart'
 
@@ -68,5 +69,7 @@ export const api = {
     call<CheckoutResponse>('/checkout', { method: 'POST', body: JSON.stringify(body) }),
   quote: (body: QuoteRequest) =>
     call<QuoteResponse>('/quotes', { method: 'POST', body: JSON.stringify(body) }),
+  contact: (body: ContactRequest) =>
+    call<ContactResponse>('/contact', { method: 'POST', body: JSON.stringify(body) }),
   order: (accessToken: string) => call<OrderSummary>(`/orders/${encodeURIComponent(accessToken)}`),
 }

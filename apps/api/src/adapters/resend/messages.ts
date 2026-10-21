@@ -113,3 +113,48 @@ const cancelEs: typeof cancelEn = {
 }
 
 export const cancelText = { en: cancelEn, es: cancelEs } as const
+
+const contactEn = {
+  subject: 'New message {code} · {topic} · {name}',
+  title: 'New contact message {code}',
+  intro: 'Someone wrote to you from the contact form. Reply to this email to answer them directly.',
+  name: 'Name',
+  email: 'Email',
+  phone: 'Phone',
+  topic: 'Topic',
+  message: 'Message',
+  language: 'Language',
+  languages: { en: 'English', es: 'Spanish' },
+  topics: {
+    general: 'General question',
+    order: 'An order',
+    catering: 'Catering or events',
+    feedback: 'Feedback',
+    other: 'Other',
+  },
+  footer: 'It is also saved in the admin panel → Messages.',
+}
+
+const contactEs: typeof contactEn = {
+  subject: 'Mensaje nuevo {code} · {topic} · {name}',
+  title: 'Mensaje de contacto {code}',
+  intro:
+    'Alguien te escribió desde el formulario de contacto. Responde a este correo para contestarle directo.',
+  name: 'Nombre',
+  email: 'Correo',
+  phone: 'Teléfono',
+  topic: 'Motivo',
+  message: 'Mensaje',
+  language: 'Idioma',
+  languages: { en: 'Inglés', es: 'Español' },
+  topics: {
+    general: 'Pregunta general',
+    order: 'Un pedido',
+    catering: 'Catering o eventos',
+    feedback: 'Comentarios',
+    other: 'Otro',
+  },
+  footer: 'También quedó guardado en el panel → Mensajes.',
+}
+
+export const contactText = { en: contactEn, es: contactEs } as const

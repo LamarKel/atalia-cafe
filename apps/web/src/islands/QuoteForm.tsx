@@ -3,7 +3,9 @@
 import { customerSchema } from '@atalia/shared/checkout'
 import { EVENT_TYPES, isValidEventDate, type EventType } from '@atalia/shared/quotes'
 import { Button, ButtonLink, ToggleChip } from '@atalia/ui'
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { FormInput, inputClass } from './FormInput'
+import { Turnstile } from './Turnstile'
 import { ApiRequestError, api } from '../lib/api'
 import type { Locale, MessageKey } from '../i18n'
 
@@ -182,7 +184,7 @@ export default function QuoteForm({
         <h2 aria-hidden="true" className="font-heading text-2xl font-bold md:col-span-2">
           {m['quote.section_event']}
         </h2>
-        <Input
+        <FormInput
           id="quote-eventDate"
           label={m['quote.event_date']}
           type="date"
@@ -217,7 +219,7 @@ export default function QuoteForm({
             </p>
           )}
         </div>
-        <Input
+        <FormInput
           id="quote-guests"
           label={m['quote.guests']}
           type="number"
@@ -271,7 +273,7 @@ export default function QuoteForm({
           {m['quote.section_contact']}
         </h2>
         <div className="md:col-span-2">
-          <Input
+          <FormInput
             id="quote-name"
             label={m['checkout.name']}
             autoComplete="name"
@@ -280,7 +282,7 @@ export default function QuoteForm({
             error={err('name')}
           />
         </div>
-        <Input
+        <FormInput
           id="quote-phone"
           label={m['checkout.phone']}
           type="tel"
@@ -290,7 +292,7 @@ export default function QuoteForm({
           onChange={set('phone')}
           error={err('phone')}
         />
-        <Input
+        <FormInput
           id="quote-email"
           label={m['checkout.email']}
           type="email"
@@ -352,129 +354,4 @@ export default function QuoteForm({
       </div>
     </form>
   )
-}
-
-const inputClass =
-  'mt-2 block min-h-11 w-full rounded-xl border bg-white px-4 py-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary'
-
-function Input(props: {
-  id: string
-  label: string
-  value: string
-  onChange: (v: string) => void
-  error: string | null
-  type?: 'text' | 'tel' | 'email' | 'date' | 'number'
-  inputMode?: 'tel' | 'numeric'
-  autoComplete?: string
-  min?: string | number
-  max?: string | number
-}) {
-  return (
-    <div>
-      <label htmlFor={props.id} className="font-medium">
-        {props.label}
-      </label>
-      <input
-        id={props.id}
-        type={props.type ?? 'text'}
-        inputMode={props.inputMode}
-        autoComplete={props.autoComplete}
-        min={props.min}
-        max={props.max}
-        value={props.value}
-        onChange={(e) => props.onChange(e.target.value)}
-        required
-        aria-invalid={props.error !== null}
-        aria-describedby={props.error === null ? undefined : `${props.id}-error`}
-        className={`${inputClass} ${props.error === null ? 'border-dark/15' : 'border-toast-error'}`}
-      />
-      {props.error !== null && (
-        <p id={`${props.id}-error`} className="mt-1 text-sm text-toast-error">
-          {props.error}
-        </p>
-      )}
-    </div>
-  )
-}
-
-interface TurnstileApi {
-  render(
-    el: HTMLElement,
-    opts: {
-      sitekey: string
-      language: string
-      callback: (token: string) => void
-      'expired-callback': () => void
-      'error-callback': () => void
-    },
-  ): string
-  reset(id: string): void
-  remove(id: string): void
-}
-
-declare global {
-  interface Window {
-    turnstile?: TurnstileApi
-  }
-}
-
-const SCRIPT_SRC = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
-
-function loadTurnstile(): Promise<TurnstileApi> {
-  return new Promise((resolve, reject) => {
-    if (window.turnstile !== undefined) {
-      resolve(window.turnstile)
-      return
-    }
-    let script = document.querySelector<HTMLScriptElement>(`script[src="${SCRIPT_SRC}"]`)
-    if (script === null) {
-      script = document.createElement('script')
-      script.src = SCRIPT_SRC
-      script.async = true
-      document.head.appendChild(script)
-    }
-    script.addEventListener('load', () =>
-      window.turnstile ? resolve(window.turnstile) : reject(new Error('turnstile')),
-    )
-    script.addEventListener('error', () => reject(new Error('turnstile')))
-  })
-}
-
-function Turnstile(props: {
-  siteKey: string
-  locale: Locale
-  onToken: (token: string) => void
-  onExpire: () => void
-  registerReset: (fn: () => void) => void
-}) {
-  const ref = useRef<HTMLDivElement>(null)
-  const id = useId()
-  const { siteKey, locale, onToken, onExpire, registerReset } = props
-  useEffect(() => {
-    let widget: string | null = null
-    let api: TurnstileApi | null = null
-    let cancelled = false
-    loadTurnstile()
-      .then((t) => {
-        if (cancelled || ref.current === null) return
-        api = t
-        widget = t.render(ref.current, {
-          sitekey: siteKey,
-          language: locale,
-          callback: onToken,
-          'expired-callback': onExpire,
-          'error-callback': onExpire,
-        })
-        registerReset(() => {
-          if (widget !== null) t.reset(widget)
-        })
-      })
-      .catch(() => onExpire())
-    return () => {
-      cancelled = true
-      if (api !== null && widget !== null) api.remove(widget)
-    }
-    // El widget se monta una vez; los callbacks no cambian de comportamiento.
-  }, [siteKey, locale])
-  return <div ref={ref} id={id} className="min-h-16" />
 }

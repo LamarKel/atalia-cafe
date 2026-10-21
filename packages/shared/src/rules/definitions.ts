@@ -340,6 +340,22 @@ export const RULES = {
     public: false,
   }),
 
+  'notifications.contact_recipients': defineRule({
+    key: 'notifications.contact_recipients',
+    group: 'notifications',
+    label: { en: 'Contact form messages go to', es: 'Mensajes del formulario de contacto a' },
+    help: {
+      en: 'Up to 5 emails. Empty: messages are only saved in Messages.',
+      es: 'Hasta 5 correos. Vacío: los mensajes solo quedan en Mensajes.',
+    },
+    schema: z.array(z.email()).max(5),
+    default: [],
+    unit: 'email_list',
+    editableBy: 'admin',
+    storeScoped: false,
+    public: false,
+  }),
+
   'notifications.staff_locale': defineRule({
     key: 'notifications.staff_locale',
     group: 'notifications',
