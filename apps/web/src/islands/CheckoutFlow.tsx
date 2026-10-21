@@ -325,7 +325,7 @@ export default function CheckoutFlow({
   })()
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_23rem] lg:gap-10">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_23rem] lg:gap-10">
       <div className="min-w-0">
         <div className="max-w-3xl">
           <Stepper
@@ -927,7 +927,8 @@ function ReviewRow(props: { label: string; value: string; edit: string; onEdit: 
     <div className="flex items-start justify-between gap-3 rounded-2xl bg-white p-4">
       <div className="min-w-0">
         <p className="text-sm text-muted">{props.label}</p>
-        <p className="break-words font-medium">{props.value}</p>
+        {/* Correos y nombres largos se parten en cualquier punto: nunca ensanchan la página en el teléfono */}
+        <p className="font-medium wrap-anywhere">{props.value}</p>
       </div>
       <button
         type="button"
