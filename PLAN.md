@@ -356,7 +356,7 @@ Cada fase se cierra con un PR revisado, el CI en verde y el deploy a staging.
 
 ### Fase 6 — Lanzamiento
 - [ ] Stripe en vivo (Radar activo): cambiar las claves de prueba del desarrollador por las de la cuenta de la clienta.
-- [x] Correos: dominio de la clienta verificado en su Resend; remitente `ataliacafe@ataliacafe.com` (EMAIL_FROM en wrangler.jsonc). Falta solo `wrangler secret put RESEND_API_KEY` en producción.
+- [x] Correos: dominio de la clienta verificado en su Resend; remitente `orders@ataliacafe.com` (EMAIL_FROM en wrangler.jsonc). Falta solo `wrangler secret put RESEND_API_KEY` en producción.
 - [ ] Dominio y DNS en Cloudflare.
 - [ ] Publicación automática: crear el deploy hook en Cloudflare Pages (Settings → Builds → Deploy hooks) y guardarlo con `wrangler secret put DEPLOY_HOOK_URL`. Sin él, el panel guarda pero el sitio no se actualiza.
 - [ ] Prueba con un pago real pequeño y su reembolso.
