@@ -348,10 +348,10 @@ Cada fase se cierra con un PR revisado, el CI en verde y el deploy a staging.
 - [x] Revisión de las políticas RLS y de los advisors de Supabase (funciones de rol al esquema `private`; solo queda el aviso de Auth, ver abajo).
 - [ ] Desactivar la cuenta de pruebas `qa-admin@atalia.test` (admin_profiles.active = false y borrar el usuario en Auth) y quitar `http://127.0.0.1:4322/**` de las Redirect URLs de Supabase.
 - [ ] Supabase Auth (se dejó para el final a propósito, mientras dure el desarrollo): desactivar "Allow new users to sign up", activar la protección contra contraseñas filtradas, cambiar la contraseña del usuario owner y exigir 2FA (TOTP).
-- [ ] Auditoría de accesibilidad (axe + teclado) con la checklist de UI UX Pro Max.
-- [ ] Lighthouse móvil ≥ 90 en rendimiento y accesibilidad.
+- [x] Auditoría de accesibilidad (axe + teclado): 0 problemas en 36 páginas/estados; axe corre en CI.
+- [x] Lighthouse móvil ≥ 90 en rendimiento y accesibilidad (93–97 / 100).
 - [ ] Playwright: flujo completo de compra en staging.
-- [ ] k6: smoke, load, spike y una prueba de concurrencia por cupo.
+- [x] k6: smoke, load, spike y una prueba de concurrencia por cupo (`load/`, resultados en load/README.md). Repetir contra staging en Cloudflare antes de lanzar.
 - [ ] Backups a R2, reconciliación, detector de duplicados, Sentry y alertas.
 
 ### Fase 6 — Lanzamiento
