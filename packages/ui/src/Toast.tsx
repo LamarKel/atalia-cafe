@@ -8,16 +8,25 @@ import { cx } from './cx'
 
 export type ToastTone = 'success' | 'error' | 'warning'
 
+export interface ToastAction {
+  /** Texto del botón ("Deshacer"). */
+  label: string
+  onClick: () => void
+}
+
 interface ToastItem {
   id: number
   message: string
   tone: ToastTone
+  action: ToastAction | null
 }
 
 export interface ToastOptions {
   tone?: ToastTone
   /** Milisegundos antes de cerrarse solo. Los errores se quedan hasta que se cierran. */
   durationMs?: number
+  /** Un botón dentro del aviso, por ejemplo "Deshacer" al quitar algo. Al usarlo, el aviso se cierra. */
+  action?: ToastAction
 }
 
 type ShowToast = (message: string, options?: ToastOptions) => void
@@ -53,7 +62,7 @@ export function ToastProvider({ closeLabel, regionLabel, children }: ToastProvid
     (message, options = {}) => {
       const tone = options.tone ?? 'success'
       const id = nextId.current++
-      setToasts((prev) => [...prev, { id, message, tone }])
+      setToasts((prev) => [...prev, { id, message, tone, action: options.action ?? null }])
       if (tone !== 'error') {
         setTimeout(() => dismiss(id), options.durationMs ?? TOAST_DEFAULT_DURATION_MS)
       }
@@ -85,6 +94,18 @@ export function ToastProvider({ closeLabel, regionLabel, children }: ToastProvid
               )}
             >
               <span className="flex-1">{toast.message}</span>
+              {toast.action !== null && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    toast.action?.onClick()
+                    dismiss(toast.id)
+                  }}
+                  className="inline-flex min-h-11 items-center rounded-full px-3 font-semibold underline underline-offset-2 hover:bg-white/15 focus-visible:outline-2 focus-visible:outline-white"
+                >
+                  {toast.action.label}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => dismiss(toast.id)}

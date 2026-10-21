@@ -54,6 +54,13 @@ export interface QuantityStepperProps {
   increaseLabel: string
   /** Desactiva solo el botón +, por ejemplo cuando la picadera ya está completa. */
   increaseDisabled?: boolean
+  /**
+   * En el mínimo, el − se vuelve una papelera que quita la línea (carrito). Sin esto, en el mínimo el −
+   * queda desactivado (al elegir la cantidad antes de agregar).
+   */
+  onRemove?: () => void
+  /** Nombre accesible de la papelera ("Quitar Latte"). Obligatorio si hay onRemove. */
+  removeLabel?: string
 }
 
 export function QuantityStepper({
@@ -66,10 +73,13 @@ export function QuantityStepper({
   decreaseLabel,
   increaseLabel,
   increaseDisabled = false,
+  onRemove,
+  removeLabel,
 }: QuantityStepperProps) {
   const id = useId()
   const canDecrease = value > min
   const canIncrease = value < max && !increaseDisabled
+  const removes = !canDecrease && onRemove !== undefined
   const button =
     'inline-flex size-11 items-center justify-center rounded-full text-xl leading-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary disabled:cursor-not-allowed'
 
@@ -78,15 +88,37 @@ export function QuantityStepper({
       <span id={id} className={showLabel ? 'font-medium' : 'sr-only'}>
         {label}
       </span>
-      <button
-        type="button"
-        aria-label={`${decreaseLabel}: ${label}`}
-        disabled={!canDecrease}
-        onClick={() => onChange(Math.max(min, value - 1))}
-        className={cx(button, 'border border-dark/20 bg-white text-dark disabled:opacity-40')}
-      >
-        <span aria-hidden="true">−</span>
-      </button>
+      {removes ? (
+        <button
+          type="button"
+          aria-label={removeLabel ?? `${decreaseLabel}: ${label}`}
+          onClick={onRemove}
+          className={cx(button, 'border border-dark/20 bg-white text-secondary hover:bg-blush')}
+        >
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            className="size-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+          </svg>
+        </button>
+      ) : (
+        <button
+          type="button"
+          aria-label={`${decreaseLabel}: ${label}`}
+          disabled={!canDecrease}
+          onClick={() => onChange(Math.max(min, value - 1))}
+          className={cx(button, 'border border-dark/20 bg-white text-dark disabled:opacity-40')}
+        >
+          <span aria-hidden="true">−</span>
+        </button>
+      )}
       <output aria-live="polite" className="min-w-6 text-center text-lg font-semibold tabular-nums">
         {value}
       </output>

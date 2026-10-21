@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cartCount, cartSubtotal, type CartItem } from './cart'
+import { cartCount, cartSubtotal, insertLine, type CartItem } from './cart'
 
 const line = (over: Partial<CartItem>): CartItem => ({
   lineId: 'l1',
@@ -35,5 +35,20 @@ describe('carrito', () => {
   })
   it('carrito vacío', () => {
     expect(cartSubtotal([])).toEqual({ cents: 0, hasUnpriced: false })
+  })
+})
+
+describe('deshacer al quitar una línea', () => {
+  const a = line({ lineId: 'a' })
+  const b = line({ lineId: 'b' })
+  const c = line({ lineId: 'c' })
+  it('la devuelve al mismo lugar', () => {
+    expect(insertLine([a, c], b, 1).map((i) => i.lineId)).toEqual(['a', 'b', 'c'])
+  })
+  it('si el carrito cambió, la pone al final sin salirse', () => {
+    expect(insertLine([a], c, 5).map((i) => i.lineId)).toEqual(['a', 'c'])
+  })
+  it('no la duplica si ya está (doble clic en Deshacer)', () => {
+    expect(insertLine([a, b], b, 1).map((i) => i.lineId)).toEqual(['a', 'b'])
   })
 })

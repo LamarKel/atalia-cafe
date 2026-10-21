@@ -101,6 +101,8 @@
   "cart.checkout": "Continue to checkout",
   "cart.remove": "Remove",
   "cart.remove_item": "Remove {name}",
+  "cart.removed": "Removed {name}",
+  "cart.undo": "Undo",
   "cart.serves": "Serves {n}",
   "cart.pieces": "{n} pieces",
   "cart.notes": "Notes: {notes}",

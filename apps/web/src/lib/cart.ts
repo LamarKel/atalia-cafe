@@ -104,6 +104,19 @@ export function removeLine(lineId: string): CartItem[] {
   return items
 }
 
+/** Vuelve a poner una línea en su lugar ("Deshacer" al quitarla). Si ya está, no la duplica. */
+export function insertLine(items: readonly CartItem[], item: CartItem, index: number): CartItem[] {
+  if (items.some((i) => i.lineId === item.lineId)) return [...items]
+  const at = Math.min(Math.max(index, 0), items.length)
+  return [...items.slice(0, at), item, ...items.slice(at)]
+}
+
+export function restoreLine(item: CartItem, index: number): CartItem[] {
+  const items = insertLine(read(), item, index)
+  write(items)
+  return items
+}
+
 export function clearCart(): void {
   write([])
 }

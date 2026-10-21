@@ -101,6 +101,8 @@
   "cart.checkout": "Continuar al pago",
   "cart.remove": "Quitar",
   "cart.remove_item": "Quitar {name}",
+  "cart.removed": "Quitaste {name}",
+  "cart.undo": "Deshacer",
   "cart.serves": "Para {n} personas",
   "cart.pieces": "{n} piezas",
   "cart.notes": "Notas: {notes}",
