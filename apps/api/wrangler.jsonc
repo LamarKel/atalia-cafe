@@ -25,11 +25,21 @@
     "TURNSTILE_SECRET": "1x0000000000000000000000000000000AA",
   },
   "env": {
+    // Staging en la cuenta de Cloudflare de la clienta: sitio y panel en Pages (conectados a GitHub),
+    // base de datos de staging y Stripe de prueba. vars y ratelimits no se heredan: se repiten aquí.
+    // Secretos: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET,
+    // RESEND_API_KEY, TURNSTILE_SECRET y DEPLOY_HOOK_URL, con `wrangler secret put X --env staging`.
     "staging": {
       "name": "atalia-api-staging",
+      "ratelimits": [
+        { "name": "RL_STRICT", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
+        { "name": "RL_NORMAL", "namespace_id": "1002", "simple": { "limit": 120, "period": 60 } },
+      ],
       "vars": {
         "ENVIRONMENT": "staging",
-        "ALLOWED_ORIGINS": "",
+        "ALLOWED_ORIGINS": "https://atalia-web.pages.dev,https://atalia-admin.pages.dev",
+        "SITE_URL": "https://atalia-web.pages.dev",
+        "ADMIN_URL": "https://atalia-admin.pages.dev/",
         "EMAIL_FROM": "Atalia Café <orders@ataliacafe.com>",
       },
     },
